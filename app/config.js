@@ -6,7 +6,7 @@
    (données locales à l'appareil — aucun compte requis).
    ------------------------------------------------------------------ */
 window.OAF_CONFIG = {
-  SUPABASE_URL: '',          // ex. https://abcd1234.supabase.co
-  SUPABASE_ANON_KEY: ''      // clé "anon public"
+  SUPABASE_URL: 'https://qxxjsqctkltnjptqdbye.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_2WGlAPX6X9qLAIc-Bin5GQ_s5kpDutB'
 };
 window.OAF_LIVE = !!(window.OAF_CONFIG.SUPABASE_URL && window.OAF_CONFIG.SUPABASE_ANON_KEY);
