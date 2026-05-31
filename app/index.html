@@ -83,6 +83,7 @@
       <div style="text-align:center;padding:6px 0">
         <div class="avatar" style="width:80px;height:80px;background:var(--yellow);color:#111;font-size:26px;margin:0 auto 10px">AK</div>
         <h3 id="pfName" style="font-size:19px">Amina Keïta</h3><p id="pfRole" style="color:var(--muted);font-size:12.5px"></p>
+        <div style="margin-top:8px"><span class="modepill" id="authBadge">démo</span> <button class="btn" id="signOutBtn" style="display:none;padding:5px 10px;font-size:11px" onclick="authSignOut()">Déconnexion</button></div>
       </div>
       <div class="card"><div class="row"><div class="m"><b id="pfStatT">Mon activité</b><small id="pfStatS"></small></div></div></div>
       <div class="chips"><span>Agritech</span><span>Climat</span><span id="pfFund">Levée de fonds</span><span>EN / FR</span></div>
@@ -103,6 +104,25 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<!-- Login (mode réel uniquement ; masqué en mode démo) -->
+<div class="authgate" id="authGate">
+  <div class="authcard">
+    <svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" rx="72" fill="#FFE400"/><text x="200" y="237" text-anchor="middle" fill="#111" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="188">one</text><text x="203" y="306" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="55" letter-spacing="11">AFRICA</text></svg>
+    <h2 id="authT">Connexion</h2>
+    <p id="authP">Recevez un code de connexion par e-mail.</p>
+    <input id="authEmail" type="email" placeholder="vous@exemple.com" autocomplete="email" />
+    <button class="btn solid" id="authSend" onclick="authSend()">Recevoir un code</button>
+    <div id="authStep2" style="display:none;margin-top:10px">
+      <input id="authCode" inputmode="numeric" placeholder="Code à 6 chiffres" />
+      <button class="btn yellow" id="authVerify" onclick="authVerify()">Se connecter</button>
+    </div>
+    <div class="msg" id="authMsg"></div>
+    <div class="slg">« Empowering South-South cooperation »</div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="supabase.js"></script>
 <script src="store.js"></script>
 <script src="app.js"></script>
 <script>

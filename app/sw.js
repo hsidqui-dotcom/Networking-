@@ -1,8 +1,9 @@
 /* OAF Connect — service worker (offline app shell, cache-first) */
-const CACHE = 'oaf-connect-v1';
+const CACHE = 'oaf-connect-v2';
 const ASSETS = [
   './', './index.html', './admin.html',
   './style.css', './store.js', './app.js', './admin.js',
+  './config.js', './supabase.js',
   './manifest.webmanifest', './icon.svg'
 ];
 

@@ -142,5 +142,37 @@ function renderAll(){renderChrome();renderEvents();renderAgenda();renderPeople()
 window.addEventListener('storage', e=>{ if(e.key===OAF.KEY){ location.reload(); } });
 window.addEventListener('oaf-change', ()=>{ /* same-page change already handled by callers */ });
 
+/* ---- authentication (real mode only; demo mode unaffected) ---- */
+function setAuthBadge(){
+  const b=$('#authBadge'),so=$('#signOutBtn');
+  if(!OAFAuth || !OAFAuth.live()){ b.textContent='démo'; b.className='modepill'; so.style.display='none'; return; }
+  const u=OAFAuth.user();
+  if(u){ b.textContent='● '+(u.email||'connecté'); b.className='modepill live'; so.style.display='inline-flex'; }
+  else { b.textContent=lang==='fr'?'non connecté':'signed out'; b.className='modepill'; so.style.display='none'; }
+}
+async function bootstrapAuth(){
+  if(!OAFAuth || !OAFAuth.live()){ setAuthBadge(); return; }
+  await OAFAuth.ready();
+  const gate=$('#authGate');
+  const refresh=()=>{ gate.classList.toggle('on', !OAFAuth.user()); setAuthBadge(); };
+  OAFAuth.onChange(refresh); refresh();
+}
+function authSend(){
+  const email=$('#authEmail').value.trim(); if(!email)return;
+  $('#authMsg').textContent='…';
+  OAFAuth.sendCode(email).then(({error})=>{
+    if(error){ $('#authMsg').textContent=error.message; return; }
+    $('#authStep2').style.display='block';
+    $('#authMsg').textContent = lang==='fr'?'Code envoyé ✉️ — vérifiez vos e-mails.':'Code sent ✉️ — check your email.';
+  });
+}
+function authVerify(){
+  const email=$('#authEmail').value.trim(), code=$('#authCode').value.trim();
+  if(!code)return; $('#authMsg').textContent='…';
+  OAFAuth.verify(email,code).then(({error})=>{ if(error) $('#authMsg').textContent=error.message; });
+}
+function authSignOut(){ if(OAFAuth&&OAFAuth.signOut) OAFAuth.signOut(); }
+
 renderAll();
 show('events');
+bootstrapAuth();
