@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
+<title>OAF Connect</title>
+<meta name="description" content="OAF Connect — l'app de networking OneAfricaForums (prototype PWA)." />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#FFE400" />
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="OAF Connect" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+  <div class="appbar">
+    <svg class="oa" id="abLogo" viewBox="0 0 400 400"><rect width="400" height="400" rx="72" fill="#FFE400"/><text x="200" y="237" text-anchor="middle" fill="#111" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="188">one</text><text x="203" y="306" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="55" letter-spacing="11">AFRICA</text></svg>
+    <div class="ttl"><b id="abTitle">OAF Connect</b><small id="abSub">OneAfricaForums</small></div>
+    <span class="langtog" onclick="toggleLang()"><b id="lFr">FR</b><b id="lEn">EN</b></span>
+    <button class="ic" id="bell" onclick="show('notif')">🔔<span class="dot"></span></button>
+  </div>
+
+  <div class="scroll" id="scroll">
+    <!-- EVENTS -->
+    <section class="view on" data-v="events">
+      <div class="hero"><div class="k"></div>
+        <h3 id="evWelcome">Bienvenue chez OneAfricaForums 🌍</h3>
+        <p id="evWelcomeSub">Une seule maison pour chaque forum du continent.</p>
+        <div class="slg">« Empowering South-South cooperation »</div>
+      </div>
+      <div class="seg" id="evSeg">
+        <button class="on" data-f="all">Tous</button><button data-f="live">En cours</button>
+        <button data-f="upcoming">À venir</button><button data-f="past">Passés</button>
+      </div>
+      <div id="evList"></div>
+    </section>
+
+    <!-- HOME -->
+    <section class="view" data-v="home">
+      <button class="back" onclick="show('events')" id="bkEvents">‹ Tous les événements</button>
+      <div class="hero"><div class="k"></div>
+        <small style="color:var(--yellow);font-weight:800;font-size:10.5px" id="hKicker"></small>
+        <h3 style="margin-top:5px" id="hTheme"></h3><p id="hCity"></p>
+      </div>
+      <div class="tiles" id="hTiles"></div>
+      <div class="sec"><b id="hNow">🔴 En direct</b></div>
+      <div id="hLive"></div>
+      <div class="sec"><b id="hMeetT">✨ À rencontrer</b></div>
+      <div id="hMatch"></div>
+    </section>
+
+    <!-- PROGRAM -->
+    <section class="view" data-v="program">
+      <h2 class="scr" id="pgT">Programme</h2><div class="sub" id="pgS">Touchez ☆ pour ajouter à votre agenda.</div>
+      <div class="day-tabs" id="dayTabs"></div>
+      <div id="agenda"></div>
+    </section>
+
+    <!-- PEOPLE -->
+    <section class="view" data-v="people">
+      <h2 class="scr" id="plT">Participants</h2><div class="sub" id="plS">Classés par correspondance IA.</div>
+      <div id="plList"></div>
+    </section>
+
+    <!-- NOTIFICATIONS -->
+    <section class="view" data-v="notif">
+      <h2 class="scr" id="ntT">Notifications</h2><div class="sub" id="ntS">Rappels, correspondances & infos.</div>
+      <div id="ntList"></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="view" data-v="profile">
+      <div style="text-align:center;padding:6px 0">
+        <div class="avatar" style="width:80px;height:80px;background:var(--yellow);color:#111;font-size:26px;margin:0 auto 10px">AK</div>
+        <h3 id="pfName" style="font-size:19px">Amina Keïta</h3><p id="pfRole" style="color:var(--muted);font-size:12.5px"></p>
+      </div>
+      <div class="card"><div class="row"><div class="m"><b id="pfStatT">Mon activité</b><small id="pfStatS"></small></div></div></div>
+      <div class="chips"><span>Agritech</span><span>Climat</span><span id="pfFund">Levée de fonds</span><span>EN / FR</span></div>
+      <div class="card"><div class="row"><div class="m"><b id="pfLang">🌐 Langue</b><small id="pfLangS">Français · EN · PT · AR</small></div><button class="btn" onclick="toggleLang()" id="pfLangBtn">EN</button></div></div>
+      <div class="banner">🛠️ <div style="flex:1"><span id="pfAdmin">Espace organisateur (démo)</span></div><a href="admin.html">Admin →</a></div>
+      <div class="card"><div class="row"><div class="m"><b id="pfReset">Réinitialiser la démo</b><small id="pfResetS">Restaurer les données d'exemple</small></div><button class="btn danger" onclick="resetDemo()" id="pfResetBtn">Reset</button></div></div>
+      <p style="text-align:center;color:var(--muted);font-size:11px;margin-top:14px">OAF Connect · prototype PWA · © 2026 OneAfricaForums</p>
+    </section>
+  </div>
+
+  <div class="tabbar" id="tabbar">
+    <button class="on" data-t="home" onclick="show('home')"><span class="gi">🏠</span><span data-l="tab.home">Accueil</span></button>
+    <button data-t="program" onclick="show('program')"><span class="gi">🗓️</span><span data-l="tab.program">Programme</span></button>
+    <button data-t="people" onclick="show('people')"><span class="gi">🤝</span><span data-l="tab.people">Personnes</span></button>
+    <button data-t="notif" onclick="show('notif')"><span class="gi">🔔</span><span data-l="tab.notif">Notifs</span></button>
+    <button data-t="profile" onclick="show('profile')"><span class="gi">👤</span><span data-l="tab.profile">Profil</span></button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="store.js"></script>
+<script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>

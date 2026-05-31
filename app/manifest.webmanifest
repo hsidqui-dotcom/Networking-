@@ -1,0 +1,16 @@
+{
+  "name": "OAF Connect — OneAfricaForums",
+  "short_name": "OAF Connect",
+  "description": "L'app de networking d'événements OneAfricaForums. Empowering South-South cooperation.",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFE400",
+  "theme_color": "#FFE400",
+  "categories": ["business", "events", "social"],
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

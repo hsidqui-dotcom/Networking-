@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OAF Connect — Admin</title>
+<meta name="theme-color" content="#111111" />
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="admin">
+  <div class="adbar">
+    <svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" rx="72" fill="#FFE400"/><text x="200" y="237" text-anchor="middle" fill="#111" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="188">one</text><text x="203" y="306" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="55" letter-spacing="11">AFRICA</text></svg>
+    <div><b>OAF Connect · Admin</b><small id="adEvent">—</small></div>
+    <div class="right">
+      <span class="langtog" onclick="adToggleLang()"><b id="lFr">FR</b><b id="lEn">EN</b></span>
+      <a class="btn yellow" href="index.html" id="openApp">Voir l'app ↗</a>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="adwrap" id="loginWrap">
+    <div class="login">
+      <svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" rx="72" fill="#FFE400"/><text x="200" y="237" text-anchor="middle" fill="#111" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="188">one</text><text x="203" y="306" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="55" letter-spacing="11">AFRICA</text></svg>
+      <h3 id="lgT">Espace organisateur</h3>
+      <p style="color:var(--muted);font-size:13px;margin:6px 0 16px" id="lgS">Réservé à l'équipe OneAfricaForums.</p>
+      <div class="field"><input id="lgPass" type="password" placeholder="Code d'accès (démo : admin)" onkeydown="if(event.key==='Enter')adLogin()" /></div>
+      <button class="btn solid" style="width:100%" onclick="adLogin()" id="lgBtn">Se connecter</button>
+    </div>
+  </div>
+
+  <!-- CONSOLE -->
+  <div class="adwrap" id="console" style="display:none">
+    <div class="adnav" id="adnav">
+      <button class="on" data-p="dash">📊 <span data-l="nDash">Tableau de bord</span></button>
+      <button data-p="program">🗓️ <span data-l="nProgram">Programme</span></button>
+      <button data-p="notif">🔔 <span data-l="nNotif">Notifications</span></button>
+      <button data-p="people">👥 <span data-l="nPeople">Participants</span></button>
+      <button data-p="settings">⚙️ <span data-l="nSettings">Réglages</span></button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="adpage on" data-p="dash">
+      <div class="kpis" id="kpis"></div>
+      <div class="panel"><h3 id="dEngageT">Engagement en direct</h3><div class="desc" id="dEngageS">Mis à jour en temps réel d'après l'activité dans l'app.</div><div id="engage"></div></div>
+    </div>
+
+    <!-- PROGRAM -->
+    <div class="adpage" data-p="program">
+      <div class="panel">
+        <h3 id="pAddT">Ajouter une session</h3><div class="desc" id="pAddS">Elle apparaît immédiatement dans le programme de l'app.</div>
+        <div class="grid2">
+          <div class="field"><label id="fTitle">Titre</label><input id="sTitle" placeholder="Titre de la session" /></div>
+          <div class="field"><label id="fDay">Jour</label><select id="sDay"></select></div>
+          <div class="field"><label id="fTime">Heure</label><input id="sTime" placeholder="09:30" value="14:30" /></div>
+          <div class="field"><label id="fRoom">Salle</label><input id="sRoom" placeholder="Salle A" /></div>
+          <div class="field"><label id="fTrack">Thème</label><input id="sTrack" placeholder="Fintech" /></div>
+          <div class="field"><label id="fDur">Durée</label><input id="sDur" placeholder="45m" value="45m" /></div>
+        </div>
+        <button class="btn solid" onclick="adAddSession()" id="pAddBtn">＋ Ajouter la session</button>
+      </div>
+      <div class="panel"><h3 id="pListT">Programme actuel</h3><div class="desc" id="pListS"></div><div id="progList"></div></div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="adpage" data-p="notif">
+      <div class="panel">
+        <h3 id="nSendT">Envoyer une notification</h3><div class="desc" id="nSendS">Diffusée à tous les participants — visible immédiatement dans l'app.</div>
+        <div class="field"><label id="fIcon">Icône</label>
+          <select id="nIcon"><option>📣</option><option>🔴</option><option>📅</option><option>🤝</option><option>✨</option><option>⚠️</option></select></div>
+        <div class="field"><label id="fMsg">Message</label><input id="nMsg" placeholder="La plénière commence dans 10 min sur la Grande scène" /></div>
+        <button class="btn solid" onclick="adSendNotif()" id="nSendBtn">Diffuser</button>
+      </div>
+      <div class="panel"><h3 id="nHistT">Historique</h3><div id="notifList"></div></div>
+    </div>
+
+    <!-- PEOPLE -->
+    <div class="adpage" data-p="people">
+      <div class="panel"><h3 id="peSpkT">Intervenants</h3><div id="spkList"></div>
+        <div class="grid2" style="margin-top:10px"><div class="field"><input id="spkName" placeholder="Nom de l'intervenant" /></div><div class="field"><input id="spkRole" placeholder="Rôle · Société" /></div></div>
+        <button class="btn" onclick="adAddSpeaker()" id="peSpkBtn">＋ Ajouter</button>
+      </div>
+      <div class="panel"><h3 id="peAttT">Participants</h3><div id="attList"></div></div>
+      <div class="panel"><h3 id="peSpoT">Partenaires</h3><div id="spoList"></div></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="adpage" data-p="settings">
+      <div class="panel"><h3 id="setEvT">Événement actif</h3><div class="desc" id="setEvS">Choisissez l'édition gérée par l'app.</div>
+        <div class="field"><select id="setEvent" onchange="adSetEvent()"></select></div></div>
+      <div class="panel"><h3 id="setRT">Données</h3><div class="desc" id="setRS">Restaurer les données d'exemple.</div>
+        <button class="btn danger" onclick="adReset()" id="setRBtn">Réinitialiser la démo</button>
+        <button class="btn" onclick="adLogout()" id="setOut" style="margin-left:8px">Se déconnecter</button></div>
+    </div>
+  </div>
+</div>
+<div class="adtoast" id="adToast"></div>
+
+<script src="store.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

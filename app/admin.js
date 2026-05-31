@@ -1,0 +1,101 @@
+/* OAF Connect — admin console logic (writes to the shared OAF store) */
+const AL = {
+  fr: { nDash:'Tableau de bord', nProgram:'Programme', nNotif:'Notifications', nPeople:'Participants', nSettings:'Réglages',
+    lgT:'Espace organisateur', lgS:"Réservé à l'équipe OneAfricaForums.", lgBtn:'Se connecter', openApp:"Voir l'app ↗",
+    dEngageT:'Engagement en direct', dEngageS:"Mis à jour en temps réel d'après l'activité dans l'app.",
+    pAddT:'Ajouter une session', pAddS:"Elle apparaît immédiatement dans le programme de l'app.", pAddBtn:'＋ Ajouter la session',
+    pListT:'Programme actuel', fTitle:'Titre', fDay:'Jour', fTime:'Heure', fRoom:'Salle', fTrack:'Thème', fDur:'Durée',
+    nSendT:'Envoyer une notification', nSendS:"Diffusée à tous les participants — visible immédiatement dans l'app.", nSendBtn:'Diffuser', nHistT:'Historique', fIcon:'Icône', fMsg:'Message',
+    peSpkT:'Intervenants', peSpkBtn:'＋ Ajouter', peAttT:'Participants', peSpoT:'Partenaires',
+    setEvT:'Événement actif', setEvS:"Choisissez l'édition gérée par l'app.", setRT:'Données', setRS:"Restaurer les données d'exemple.", setRBtn:'Réinitialiser la démo', setOut:'Se déconnecter',
+    kAtt:'Participants', kSpk:'Intervenants', kSpo:'Partenaires', kSes:'Sessions', kConn:'Connexions', kBook:'Sessions enregistrées',
+    tAdd:'Session ajoutée ✓', tDel:'Session supprimée', tNotif:'Notification diffusée 📣', tSpk:'Intervenant ajouté ✓', tReset:'Démo réinitialisée ✓', tEvent:'Événement actif mis à jour',
+    needTitle:'Saisissez un titre.', needMsg:'Saisissez un message.', confirmDel:'Supprimer cette session ?', empty:'Aucun élément.',
+    engageConn:'connexions créées par les participants', engageBook:'sessions ajoutées aux agendas', wrongPass:'Code incorrect (démo : admin)' },
+  en: { nDash:'Dashboard', nProgram:'Program', nNotif:'Notifications', nPeople:'People', nSettings:'Settings',
+    lgT:'Organizer space', lgS:'For the OneAfricaForums team only.', lgBtn:'Sign in', openApp:'Open app ↗',
+    dEngageT:'Live engagement', dEngageS:'Updated in real time from activity in the app.',
+    pAddT:'Add a session', pAddS:'It appears instantly in the app program.', pAddBtn:'＋ Add session',
+    pListT:'Current program', fTitle:'Title', fDay:'Day', fTime:'Time', fRoom:'Room', fTrack:'Track', fDur:'Duration',
+    nSendT:'Send a notification', nSendS:'Broadcast to all attendees — visible instantly in the app.', nSendBtn:'Broadcast', nHistT:'History', fIcon:'Icon', fMsg:'Message',
+    peSpkT:'Speakers', peSpkBtn:'＋ Add', peAttT:'Attendees', peSpoT:'Partners',
+    setEvT:'Active event', setEvS:'Choose the edition managed by the app.', setRT:'Data', setRS:'Restore sample data.', setRBtn:'Reset demo', setOut:'Sign out',
+    kAtt:'Attendees', kSpk:'Speakers', kSpo:'Partners', kSes:'Sessions', kConn:'Connections', kBook:'Saved sessions',
+    tAdd:'Session added ✓', tDel:'Session removed', tNotif:'Notification broadcast 📣', tSpk:'Speaker added ✓', tReset:'Demo reset ✓', tEvent:'Active event updated',
+    needTitle:'Enter a title.', needMsg:'Enter a message.', confirmDel:'Delete this session?', empty:'No items.',
+    engageConn:'connections made by attendees', engageBook:'sessions added to agendas', wrongPass:'Wrong code (demo: admin)' }
+};
+let lang = OAF.lang();
+const a = k => (AL[lang] && AL[lang][k]) || AL.en[k] || k;
+const ini = n => n.replace(/Dr\.\s|Fmr\.\s/,'').split(' ').map(x=>x[0]).slice(0,2).join('');
+const $ = s => document.querySelector(s);
+let page = 'dash';
+
+function adToast(m){const el=$('#adToast');el.textContent=m;el.classList.add('on');clearTimeout(adToast._t);adToast._t=setTimeout(()=>el.classList.remove('on'),2200);}
+
+/* auth (prototype only) */
+function adLogin(){ if($('#lgPass').value.trim().toLowerCase()==='admin'||$('#lgPass').value===''){ sessionStorage.setItem('oaf_admin','1'); showConsole(); } else adToast(a('wrongPass')); }
+function adLogout(){ sessionStorage.removeItem('oaf_admin'); $('#console').style.display='none'; $('#loginWrap').style.display='block'; }
+function showConsole(){ $('#loginWrap').style.display='none'; $('#console').style.display='block'; renderAll(); }
+
+function nav(p){ page=p; document.querySelectorAll('.adnav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p)); document.querySelectorAll('.adpage').forEach(s=>s.classList.toggle('on',s.dataset.p===p)); renderPage(); }
+
+function renderLabels(){
+  document.documentElement.lang=lang;
+  $('#lFr').classList.toggle('on',lang==='fr');$('#lEn').classList.toggle('on',lang==='en');
+  document.querySelectorAll('[data-l]').forEach(e=>e.textContent=a(e.dataset.l));
+  [['#lgT','lgT'],['#lgS','lgS'],['#lgBtn','lgBtn'],['#openApp','openApp'],['#dEngageT','dEngageT'],['#dEngageS','dEngageS'],['#pAddT','pAddT'],['#pAddS','pAddS'],['#pAddBtn','pAddBtn'],['#pListT','pListT'],['#fTitle','fTitle'],['#fDay','fDay'],['#fTime','fTime'],['#fRoom','fRoom'],['#fTrack','fTrack'],['#fDur','fDur'],['#nSendT','nSendT'],['#nSendS','nSendS'],['#nSendBtn','nSendBtn'],['#nHistT','nHistT'],['#fIcon','fIcon'],['#fMsg','fMsg'],['#peSpkT','peSpkT'],['#peSpkBtn','peSpkBtn'],['#peAttT','peAttT'],['#peSpoT','peSpoT'],['#setEvT','setEvT'],['#setEvS','setEvS'],['#setRT','setRT'],['#setRS','setRS'],['#setRBtn','setRBtn'],['#setOut','setOut']].forEach(([sel,k])=>{const el=$(sel);if(el)el.textContent=a(k);});
+  $('#adEvent').textContent = OAF.currentEvent().name;
+}
+function renderKpis(){
+  const s=OAF.stats();
+  const items=[['kAtt',s.attendees,'#5b8def'],['kSpk',s.speakers,'#1B998B'],['kSpo',s.sponsors,'#9a6b00'],['kSes',s.sessions,'#111'],['kConn',s.connections,'#1E8C5A'],['kBook',s.bookmarks,'#b5559a']];
+  $('#kpis').innerHTML=items.map(([k,v,c])=>`<div class="kpi"><b>${v}</b><small>${a(k)}</small><div class="bar"><i style="width:${Math.min(100,v*8+10)}%;background:${c}"></i></div></div>`).join('');
+  const st=OAF.stats();
+  $('#engage').innerHTML=`<div class="li"><div class="av" style="width:38px;height:38px;background:#1E8C5A">🤝</div><div class="m"><b>${st.connections}</b><small>${a('engageConn')}</small></div></div><div class="li"><div class="av" style="width:38px;height:38px;background:#b5559a">⭐</div><div class="m"><b>${st.bookmarks}</b><small>${a('engageBook')}</small></div></div>`;
+}
+function renderProgram(){
+  const days=OAF.days();
+  $('#sDay').innerHTML=days.map((d,i)=>`<option value="${i}">${d[lang]}</option>`).join('');
+  $('#pListS').textContent=OAF.currentEvent().name;
+  let html='';
+  days.forEach((d,i)=>{const ss=OAF.sessions(OAF.currentEvent().id,i);if(!ss.length)return;
+    html+=`<div style="font-weight:800;font-size:13px;margin:12px 0 8px">${d[lang]}</div>`;
+    html+=ss.map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.color}">🗓️</div><div class="m"><b>${s.time} · ${s.title[lang]}</b><small>${s.room[lang]} · ${s.track[lang]} · ${s.dur}</small></div><button class="btn danger" onclick="adDelSession(${s.id})">✕</button></div>`).join('');
+  });
+  $('#progList').innerHTML=html||`<div class="empty">${a('empty')}</div>`;
+}
+function renderNotifAdmin(){
+  const list=OAF.notifications();
+  $('#notifList').innerHTML=list.length?list.map(n=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:#FFF4BF;color:#111">${n.icon||'🔔'}</div><div class="m"><b>${n.title[lang]||n.title.en||n.title}</b><small>${new Date(n.ts).toLocaleString()}</small></div></div>`).join(''):`<div class="empty">${a('empty')}</div>`;
+}
+function renderPeople(){
+  $('#spkList').innerHTML=OAF.speakers().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${s.color}">${ini(s.name)}</div><div class="m"><b>${s.name}</b><small>${s.role[lang]} · ${s.country}</small></div></div>`).join('');
+  $('#attList').innerHTML=OAF.attendees().map(p=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><span class="tag match">${p.score}</span></div>`).join('');
+  $('#spoList').innerHTML=OAF.sponsors().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.color};color:${s.tc}">${ini(s.name)}</div><div class="m"><b>${s.name}</b></div><span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${s.tier}</span></div>`).join('');
+}
+function renderSettings(){ $('#setEvent').innerHTML=OAF.events().map(e=>`<option value="${e.id}" ${e.id===OAF.currentEvent().id?'selected':''}>${e.name}</option>`).join(''); }
+
+function renderPage(){ if(page==='dash')renderKpis(); else if(page==='program')renderProgram(); else if(page==='notif')renderNotifAdmin(); else if(page==='people')renderPeople(); else if(page==='settings')renderSettings(); }
+function renderAll(){ renderLabels(); renderKpis(); renderProgram(); renderNotifAdmin(); renderPeople(); renderSettings(); }
+
+/* actions */
+function adAddSession(){
+  const title=$('#sTitle').value.trim(); if(!title){adToast(a('needTitle'));return;}
+  const txt=v=>({fr:v,en:v});
+  OAF.addSession({ day:+$('#sDay').value, time:$('#sTime').value||'12:00', dur:$('#sDur').value||'45m', color:'#5b8def',
+    title:txt(title), room:txt($('#sRoom').value||'—'), track:txt($('#sTrack').value||'—'), desc:txt('') });
+  $('#sTitle').value=''; renderProgram(); renderKpis(); adToast(a('tAdd'));
+}
+function adDelSession(id){ if(confirm(a('confirmDel'))){ OAF.removeSession(id); renderProgram(); renderKpis(); adToast(a('tDel')); } }
+function adSendNotif(){ const m=$('#nMsg').value.trim(); if(!m){adToast(a('needMsg'));return;} OAF.addNotification({icon:$('#nIcon').value,title:{fr:m,en:m}}); $('#nMsg').value=''; renderNotifAdmin(); renderKpis(); adToast(a('tNotif')); }
+function adAddSpeaker(){ const n=$('#spkName').value.trim(); if(!n)return; OAF.addSpeaker({name:n,role:{fr:$('#spkRole').value||'—',en:$('#spkRole').value||'—'},country:'🌍',color:'#5b8def'}); $('#spkName').value='';$('#spkRole').value=''; renderPeople(); renderKpis(); adToast(a('tSpk')); }
+function adSetEvent(){ OAF.setCurrentEvent(+$('#setEvent').value); renderAll(); adToast(a('tEvent')); }
+function adReset(){ OAF.reset(); lang=OAF.lang(); renderAll(); adToast(a('tReset')); }
+function adToggleLang(){ lang=lang==='fr'?'en':'fr'; OAF.setLang(lang); renderAll(); }
+
+document.getElementById('adnav').addEventListener('click', e=>{const b=e.target.closest('button[data-p]');if(b)nav(b.dataset.p);});
+
+/* init */
+renderLabels();
+if(sessionStorage.getItem('oaf_admin')==='1') showConsole();
