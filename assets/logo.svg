@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="OneAfrica">
+  <rect width="400" height="400" rx="40" fill="#FFD400"/>
+  <text x="200" y="232" text-anchor="middle" fill="#111111"
+        font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="176">one</text>
+  <text x="202" y="304" text-anchor="middle" fill="#111111"
+        font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="60" letter-spacing="11">AFRICA</text>
+</svg>
