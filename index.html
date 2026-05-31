@@ -214,6 +214,32 @@
   table.cmp tr td:first-child{font-weight:700}.cmp-wrap{overflow-x:auto}
   footer{padding:40px 0;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center}footer b{color:var(--ink)}
   .note{background:#fff;border:1px dashed var(--line);border-radius:12px;padding:13px 15px;font-size:12.5px;color:var(--muted);margin-top:24px}
+
+  /* ===== Gallery / walkthrough mode ===== */
+  #galleryWrap{display:none;padding:34px 0 70px}
+  body.gallery .hero,body.gallery section.block,body.gallery footer{display:none}
+  body.gallery #galleryWrap{display:block}
+  body.gallery header.site{position:static}
+  .gcover{text-align:center;margin-bottom:10px}
+  .gcover .oa{width:66px;height:66px;margin:0 auto 14px}
+  .gcover h1{font-size:34px;letter-spacing:-.5px}
+  .gcover p{color:var(--ink-2);font-size:16px;margin:10px auto 0;max-width:620px;line-height:1.5}
+  .gcover .cta{justify-content:center;margin-top:20px}
+  .gsec{margin-top:42px}
+  .gsec>h2{font-size:21px;margin-bottom:3px}
+  .gsec>.gsub{color:var(--muted);font-size:13.5px;margin-bottom:20px}
+  .gboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:36px 22px;justify-items:center}
+  .gboard figure{width:340px}
+  .gboard .phone{width:340px;height:auto;margin:0 auto;pointer-events:none}
+  .gboard .screen{height:auto;min-height:0}
+  .gboard .views{overflow:visible;flex:none}
+  .gboard .chat-input{position:static;background:none;margin-top:8px}
+  .gboard .chat-thread{padding-bottom:8px}
+  .gboard .toast{display:none}
+  .gboard figcaption{margin-top:13px;text-align:center}
+  .gboard figcaption b{display:block;font-size:14px}
+  .gboard figcaption span{font-size:12px;color:var(--muted)}
+  @media print{header.site{display:none}.gboard .phone{break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -226,8 +252,8 @@
     </div>
     <nav>
       <a href="#prototype">Prototype</a><a href="#pillars">Features</a>
-      <a href="#screens">Pages</a><a href="#compare">Compare</a>
-      <a href="docs/market-research.md">Research</a>
+      <a href="#screens">Pages</a><a href="#" onclick="enterGallery();return false">All screens</a>
+      <a href="#compare">Compare</a><a href="docs/market-research.md">Research</a>
     </nav>
   </div>
 </header>
@@ -241,8 +267,8 @@
         upcoming and past. Tap one to enter its full workspace: agenda, speakers, attendees, AI
         matchmaking, meetings, partners and chat. Your profile and network follow you everywhere.</p>
       <div class="cta">
-        <a class="btn primary" href="#prototype">▶ Try the live mockup</a>
-        <a class="btn ghost" href="docs/product-spec.md">Product spec</a>
+        <a class="btn primary" href="#" onclick="enterGallery();return false">▦ See all screens (for management)</a>
+        <a class="btn ghost" href="#prototype">▶ Try it live</a>
       </div>
       <div class="stats">
         <div><b>5</b><small>events in hub</small></div>
@@ -447,7 +473,7 @@
 
           </div><!-- /views -->
 
-          <div class="tabbar" style="display:none">
+          <div class="tabbar">
             <button data-tab="home" onclick="go('home')"><span class="gi">🏠</span>Home</button>
             <button data-tab="program" onclick="go('program')"><span class="gi">🗓️</span>Program</button>
             <button data-tab="people" onclick="go('people')"><span class="gi">🤝</span>People</button>
@@ -461,6 +487,17 @@
     </div>
   </div>
 </div>
+
+<!-- ============ GALLERY / WALKTHROUGH ============ -->
+<main id="galleryWrap">
+  <div class="gcover wrap">
+    <svg class="oa" viewBox="0 0 400 400" aria-label="OneAfrica"><rect width="400" height="400" rx="72" fill="#FFE400"/><text x="200" y="237" text-anchor="middle" fill="#111" font-family="'Arial Black',Arial,Helvetica,sans-serif" font-weight="900" font-size="188">one</text><text x="203" y="306" text-anchor="middle" fill="#111" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="55" letter-spacing="11">AFRICA</text></svg>
+    <h1>OAF Connect — full walkthrough</h1>
+    <p>Every screen of the OneAfrica networking app, laid out in one view for management review. Tap “Open interactive version” to click through it live.</p>
+    <div class="cta"><a class="btn primary" href="#" onclick="exitGallery();return false">▶ Open interactive version</a></div>
+  </div>
+  <div class="wrap" id="galleryGrid"></div>
+</main>
 
 <!-- PILLARS -->
 <section class="block" id="pillars">
@@ -724,8 +761,63 @@ function send(){const i=document.getElementById('msg');if(!i.value.trim())return
   const d=document.createElement('div');d.className='bub me';d.textContent=i.value;d.innerHTML+='<small>now</small>';th.appendChild(d);i.value='';th.scrollTop=th.scrollHeight;
   setTimeout(()=>{const r=document.createElement('div');r.className='bub them';r.innerHTML='Perfect — confirming 13:15. See you there! 🙌<small>now</small>';th.appendChild(r);th.scrollTop=th.scrollHeight;},900);}
 
+/* ============ GALLERY / WALKTHROUGH ============ */
+const galleryGroups=[
+ {h:'1 · Start here — your events',sub:'The app opens on a hub of every OneAfrica event.',items:[
+   {v:'events',t:'Events hub',s:'Main page — all events: live, upcoming, past'}]},
+ {h:'2 · Inside an event',sub:'Tap an event to enter its full workspace.',items:[
+   {v:'home',t:'Event home',s:'Dashboard with quick access to everything'},
+   {v:'program',t:'Program',s:'Multi-track agenda; ☆ build a personal schedule'},
+   {v:'session',t:'Session detail',s:'Speakers, description, slides & live Q&A'},
+   {v:'info',t:'Event info',s:'Venue, floor plan, help desk, languages'}]},
+ {h:'3 · People & networking',sub:'The heart of the platform.',items:[
+   {v:'speakers',t:'Speakers',s:'Directory of speakers'},
+   {v:'speaker',t:'Speaker profile',s:'Bio, sessions, connect & message'},
+   {v:'people',t:'Attendees + AI',s:'AI matchmaking ranked by shared goals'},
+   {v:'attendee',t:'Attendee profile',s:'Match score, why you match, connect'},
+   {v:'meetings',t:'Meetings',s:'Book 1:1s from shared availability'},
+   {v:'chat',t:'Chat',s:'1:1, groups & organiser broadcasts'},
+   {v:'thread',t:'Conversation',s:'In-app 1:1 messaging'}]},
+ {h:'4 · Partners & monetization',sub:'Where sponsor value & revenue live.',items:[
+   {v:'sponsors',t:'Partners',s:'Tiered sponsors + live ROI dashboard'},
+   {v:'sponsor',t:'Booth detail',s:'Booth, reps, brochure & lead capture'}]},
+ {h:'5 · Community & you',sub:'Keeping the network alive all year.',items:[
+   {v:'community',t:'Community',s:'Year-round circles & feed ("Beyond the Forum")'},
+   {v:'notif',t:'Notifications',s:'Reminders, matches & organiser updates'},
+   {v:'profile',t:'Profile',s:'Digital business card & settings'}]},
+];
+let galleryBuilt=false;
+function buildGallery(){
+  if(galleryBuilt)return; galleryBuilt=true;
+  // populate every screen (incl. detail pages) before snapshotting
+  enterEvent(0);openSession(0,1);openSpeaker(0);openAttendee(0);openSponsor(0);
+  const screen=document.getElementById('screen');
+  const grid=document.getElementById('galleryGrid');
+  let n=0;
+  galleryGroups.forEach(g=>{
+    const sec=document.createElement('section');sec.className='gsec';
+    sec.innerHTML=`<h2>${g.h}</h2><div class="gsub">${g.sub}</div><div class="gboard"></div>`;
+    const board=sec.querySelector('.gboard');
+    g.items.forEach(it=>{
+      n++;
+      const clone=screen.cloneNode(true);clone.removeAttribute('id');
+      clone.className='screen '+(it.v==='events'?'mode-hub':'mode-event');
+      clone.querySelectorAll('.view').forEach(e=>e.classList.toggle('active',e.dataset.view===it.v));
+      const phone=document.createElement('div');phone.className='phone';
+      phone.innerHTML='<div class="notch"></div>';phone.appendChild(clone);
+      const fig=document.createElement('figure');fig.appendChild(phone);
+      const cap=document.createElement('figcaption');cap.innerHTML=`<b>${n}. ${it.t}</b><span>${it.s}</span>`;
+      fig.appendChild(cap);board.appendChild(fig);
+    });
+    grid.appendChild(sec);
+  });
+}
+function enterGallery(){buildGallery();document.body.classList.add('gallery');window.scrollTo(0,0);}
+function exitGallery(){document.body.classList.remove('gallery');backToEvents();document.getElementById('prototype').scrollIntoView({behavior:'smooth'});}
+
 /* init */
 renderEvents();renderHomeMatches();renderAgenda(0);renderSpeakers();renderPeople();renderSponsors();renderChats();
+if(new URLSearchParams(location.search).get('gallery')==='1')enterGallery();
 </script>
 </body>
 </html>
