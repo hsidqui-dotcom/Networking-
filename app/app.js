@@ -11,6 +11,7 @@ const L = {
     statT:'Mon activité', lang:'🌐 Langue', langS:'Français · EN · PT · AR', fund:'Levée de fonds',
     admin:'Espace organisateur (démo)', reset:'Réinitialiser la démo', resetS:"Restaurer les données d'exemple",
     tiProgram:'Programme', tiPeople:'Participants', tiSpeakers:'Intervenants', tiPartners:'Partenaires', tiNotif:'Notifications', tiInfo:'Infos',
+    prtT:'Partenaires', prtS:'Nos partenaires & sponsors.', bkPart:'‹ Accueil',
     connect:'＋ Se connecter', connected:'✓ Connecté', meet:'📅 RDV', live:'● LIVE', schedule:'Voir le programme',
     bookmarks:'sessions enregistrées', connections:'connexions', tConnect:'Demande envoyée à ', tBook:'Ajouté à mon agenda ⭐', tUnbook:'Retiré', tReset:'Démo réinitialisée ✓',
     delegates:'délégués', countries:'pays', speakers:'intervenants', empty:'Rien pour le moment.'
@@ -26,6 +27,7 @@ const L = {
     statT:'My activity', lang:'🌐 Language', langS:'English · FR · PT · AR', fund:'Fundraising',
     admin:'Organizer space (demo)', reset:'Reset the demo', resetS:'Restore sample data',
     tiProgram:'Program', tiPeople:'Attendees', tiSpeakers:'Speakers', tiPartners:'Partners', tiNotif:'Notifications', tiInfo:'Info',
+    prtT:'Partners', prtS:'Our partners & sponsors.', bkPart:'‹ Home',
     connect:'＋ Connect', connected:'✓ Connected', meet:'📅 Meet', live:'● LIVE', schedule:'See program',
     bookmarks:'saved sessions', connections:'connections', tConnect:'Request sent to ', tBook:'Added to My Agenda ⭐', tUnbook:'Removed', tReset:'Demo reset ✓',
     delegates:'delegates', countries:'countries', speakers:'speakers', empty:'Nothing yet.'
@@ -40,19 +42,31 @@ let curView = 'events', curDay = 0, curFilter = 'all';
 function show(v){
   curView = v;
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.dataset.v === v));
-  const tabFor = { home:'home', program:'program', people:'people', notif:'notif', profile:'profile', events:'home' };
+  const tabFor = { home:'home', program:'program', people:'people', notif:'notif', profile:'profile', events:'home', partners:'home' };
   document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.t === tabFor[v]));
   $('#scroll').scrollTop = 0;
   if (v === 'program') renderAgenda();
   if (v === 'people') renderPeople();
+  if (v === 'partners') renderPartners();
   if (v === 'notif') renderNotif();
+}
+function renderPartners(){
+  $('#prtT').textContent=t('prtT'); $('#prtS').textContent=t('prtS'); $('#bkPart').textContent=t('bkPart');
+  $('#prtList').innerHTML = OAF.sponsors().map(s=>`
+    <div class="card"><div class="row">
+      <div class="av" style="width:50px;height:50px;border-radius:13px;overflow:hidden;background:${s.logo?'#fff':s.color};color:${s.tc}">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div>
+      <div class="m"><b>${s.name}</b><small>${s.tier}</small></div>
+      <span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${s.tier}</span></div></div>`).join('');
 }
 
 function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('on'),2200);}
 
 /* ---- renders ---- */
+const DEFAULT_LOGO='<svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" rx="72" fill="#FFE400"/><text x="200" y="237" text-anchor="middle" fill="#111" font-family="\'Arial Black\',Arial,sans-serif" font-weight="900" font-size="188">one</text><text x="203" y="306" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="55" letter-spacing="11">AFRICA</text></svg>';
+function paintLogo(){ const d=OAF.appLogo(); const el=$('#abLogo'); if(el) el.innerHTML = d?`<img src="${d}" style="width:100%;height:100%;object-fit:cover">`:DEFAULT_LOGO; }
 function renderChrome(){
   document.documentElement.lang = lang;
+  paintLogo();
   $('#lFr').classList.toggle('on', lang==='fr'); $('#lEn').classList.toggle('on', lang==='en');
   document.querySelectorAll('[data-l]').forEach(e => e.textContent = t(e.dataset.l));
   $('#evWelcome').textContent=t('welcome'); $('#evWelcomeSub').textContent=t('welcomeSub');
@@ -70,7 +84,7 @@ function renderEvents(){
   const tops={0:'linear-gradient(135deg,#1c1c1c,#000)',1:'linear-gradient(135deg,#0f6e4f,#1B998B)',2:'linear-gradient(135deg,#7a3b12,#c2691e)'};
   $('#evList').innerHTML = list.map(e=>`
     <div class="evc" onclick="enterEvent(${e.id})">
-      <div class="top" style="background:${tops[e.id]||'#222'}"><span class="st ${e.status}">${stTxt[e.status]}</span><b>${e.name}</b></div>
+      <div class="top" style="background:${e.cover?`#222 url(${e.cover}) center/cover`:(tops[e.id]||'#222')}"><span class="st ${e.status}">${stTxt[e.status]}</span><b>${e.name}</b></div>
       <div class="bd"><div class="r1">📍 ${e.city} · 🗓️ ${e.dates[lang]}</div><div class="th">${e.theme[lang]}</div></div>
     </div>`).join('');
 }
@@ -80,7 +94,7 @@ function enterEvent(id){
   $('#hKicker').textContent='📍 '+e.cityShort.toUpperCase()+' · '+e.dates[lang].toUpperCase();
   $('#hTheme').textContent=e.theme[lang]; $('#hCity').textContent=e.city;
   $('#hTiles').innerHTML = [
-    ['🗓️','tiProgram','program'],['🎤','tiSpeakers','people'],['🤝','tiPeople','people'],['⭐','tiPartners','people'],['🔔','tiNotif','notif'],['ℹ️','tiInfo','home']
+    ['🗓️','tiProgram','program'],['🎤','tiSpeakers','people'],['🤝','tiPeople','people'],['⭐','tiPartners','partners'],['🔔','tiNotif','notif'],['ℹ️','tiInfo','home']
   ].map(([ic,k,v])=>`<div class="tile" onclick="show('${v}')"><div class="ic">${ic}</div><b>${t(k)}</b></div>`).join('');
   // live + matches
   const live = OAF.sessions(id,0).find(s=>s.track[lang].toLowerCase().includes('invest')||s.title[lang].includes('Keynote'))||OAF.sessions(id,0)[0];

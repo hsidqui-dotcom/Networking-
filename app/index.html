@@ -17,7 +17,7 @@
 <body>
 <div class="app">
   <div class="appbar">
-    <svg class="oa" id="abLogo" viewBox="0 0 400 400"><rect width="400" height="400" rx="72" fill="#FFE400"/><text x="200" y="237" text-anchor="middle" fill="#111" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="188">one</text><text x="203" y="306" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="55" letter-spacing="11">AFRICA</text></svg>
+    <div class="oa" id="abLogo" style="width:36px;height:36px;overflow:hidden"><svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" rx="72" fill="#FFE400"/><text x="200" y="237" text-anchor="middle" fill="#111" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="188">one</text><text x="203" y="306" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="55" letter-spacing="11">AFRICA</text></svg></div>
     <div class="ttl"><b id="abTitle">OAF Connect</b><small id="abSub">OneAfricaForums</small></div>
     <span class="langtog" onclick="toggleLang()"><b id="lFr">FR</b><b id="lEn">EN</b></span>
     <button class="ic" id="bell" onclick="show('notif')">🔔<span class="dot"></span></button>
@@ -63,6 +63,13 @@
     <section class="view" data-v="people">
       <h2 class="scr" id="plT">Participants</h2><div class="sub" id="plS">Classés par correspondance IA.</div>
       <div id="plList"></div>
+    </section>
+
+    <!-- PARTNERS -->
+    <section class="view" data-v="partners">
+      <button class="back" onclick="show('home')" id="bkPart">‹ Accueil</button>
+      <h2 class="scr" id="prtT">Partenaires</h2><div class="sub" id="prtS">Nos partenaires & sponsors.</div>
+      <div id="prtList"></div>
     </section>
 
     <!-- NOTIFICATIONS -->

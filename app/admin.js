@@ -11,7 +11,11 @@ const AL = {
     kAtt:'Participants', kSpk:'Intervenants', kSpo:'Partenaires', kSes:'Sessions', kConn:'Connexions', kBook:'Sessions enregistrées',
     tAdd:'Session ajoutée ✓', tDel:'Session supprimée', tNotif:'Notification diffusée 📣', tSpk:'Intervenant ajouté ✓', tReset:'Démo réinitialisée ✓', tEvent:'Événement actif mis à jour',
     needTitle:'Saisissez un titre.', needMsg:'Saisissez un message.', confirmDel:'Supprimer cette session ?', empty:'Aucun élément.',
-    engageConn:'connexions créées par les participants', engageBook:'sessions ajoutées aux agendas', wrongPass:'Code incorrect (démo : admin)' },
+    engageConn:'connexions créées par les participants', engageBook:'sessions ajoutées aux agendas', wrongPass:'Code incorrect (démo : admin)',
+    peImpS:'Importez une liste en masse (fichier CSV : nom, fonction, pays, intérêts).', peImpBtn:'📥 Importer un CSV', peTplBtn:'⬇ Modèle CSV', peSpoS:"Cliquez « Logo » pour téléverser le logo d'un partenaire.", sponsorLogoBtn:'Logo',
+    setBrandT:"Identité de l'app", setBrandS:"Téléversez votre logo — il s'applique partout (app + admin).", setLogoBtn:'🖼️ Choisir un logo', setLogoClr:'Logo par défaut',
+    setCoverT:"Bannière de l'événement", setCoverS:"Image de couverture affichée sur la carte de l'événement.", setCoverBtn:'🖼️ Choisir une image', setCoverClr:'Retirer',
+    tLogo:'Logo mis à jour ✓ — visible dans l’app', tLogoClr:'Logo par défaut rétabli', tCover:"Bannière de l'événement mise à jour ✓", tImport:'{n} participant(s) importé(s) ✓', csvEmpty:'Fichier vide ou illisible', tSponsorLogo:'Logo du partenaire mis à jour ✓' },
   en: { nDash:'Dashboard', nProgram:'Program', nNotif:'Notifications', nPeople:'People', nSettings:'Settings',
     lgT:'Organizer space', lgS:'For the OneAfricaForums team only.', lgBtn:'Sign in', openApp:'Open app ↗',
     dEngageT:'Live engagement', dEngageS:'Updated in real time from activity in the app.',
@@ -23,7 +27,11 @@ const AL = {
     kAtt:'Attendees', kSpk:'Speakers', kSpo:'Partners', kSes:'Sessions', kConn:'Connections', kBook:'Saved sessions',
     tAdd:'Session added ✓', tDel:'Session removed', tNotif:'Notification broadcast 📣', tSpk:'Speaker added ✓', tReset:'Demo reset ✓', tEvent:'Active event updated',
     needTitle:'Enter a title.', needMsg:'Enter a message.', confirmDel:'Delete this session?', empty:'No items.',
-    engageConn:'connections made by attendees', engageBook:'sessions added to agendas', wrongPass:'Wrong code (demo: admin)' }
+    engageConn:'connections made by attendees', engageBook:'sessions added to agendas', wrongPass:'Wrong code (demo: admin)',
+    peImpS:'Bulk-import a list (CSV file: name, role, country, interests).', peImpBtn:'📥 Import CSV', peTplBtn:'⬇ CSV template', peSpoS:'Click “Logo” to upload a partner logo.', sponsorLogoBtn:'Logo',
+    setBrandT:'App identity', setBrandS:'Upload your logo — it applies everywhere (app + admin).', setLogoBtn:'🖼️ Choose a logo', setLogoClr:'Default logo',
+    setCoverT:'Event banner', setCoverS:'Cover image shown on the event card.', setCoverBtn:'🖼️ Choose an image', setCoverClr:'Remove',
+    tLogo:'Logo updated ✓ — live in the app', tLogoClr:'Default logo restored', tCover:'Event banner updated ✓', tImport:'{n} attendee(s) imported ✓', csvEmpty:'Empty or unreadable file', tSponsorLogo:'Partner logo updated ✓' }
 };
 let lang = OAF.lang();
 const a = k => (AL[lang] && AL[lang][k]) || AL.en[k] || k;
@@ -44,7 +52,11 @@ function renderLabels(){
   document.documentElement.lang=lang;
   $('#lFr').classList.toggle('on',lang==='fr');$('#lEn').classList.toggle('on',lang==='en');
   document.querySelectorAll('[data-l]').forEach(e=>e.textContent=a(e.dataset.l));
-  [['#lgT','lgT'],['#lgS','lgS'],['#lgBtn','lgBtn'],['#openApp','openApp'],['#dEngageT','dEngageT'],['#dEngageS','dEngageS'],['#pAddT','pAddT'],['#pAddS','pAddS'],['#pAddBtn','pAddBtn'],['#pListT','pListT'],['#fTitle','fTitle'],['#fDay','fDay'],['#fTime','fTime'],['#fRoom','fRoom'],['#fTrack','fTrack'],['#fDur','fDur'],['#nSendT','nSendT'],['#nSendS','nSendS'],['#nSendBtn','nSendBtn'],['#nHistT','nHistT'],['#fIcon','fIcon'],['#fMsg','fMsg'],['#peSpkT','peSpkT'],['#peSpkBtn','peSpkBtn'],['#peAttT','peAttT'],['#peSpoT','peSpoT'],['#setEvT','setEvT'],['#setEvS','setEvS'],['#setRT','setRT'],['#setRS','setRS'],['#setRBtn','setRBtn'],['#setOut','setOut']].forEach(([sel,k])=>{const el=$(sel);if(el)el.textContent=a(k);});
+  [['#lgT','lgT'],['#lgS','lgS'],['#lgBtn','lgBtn'],['#openApp','openApp'],['#dEngageT','dEngageT'],['#dEngageS','dEngageS'],['#pAddT','pAddT'],['#pAddS','pAddS'],['#pAddBtn','pAddBtn'],['#pListT','pListT'],['#fTitle','fTitle'],['#fDay','fDay'],['#fTime','fTime'],['#fRoom','fRoom'],['#fTrack','fTrack'],['#fDur','fDur'],['#nSendT','nSendT'],['#nSendS','nSendS'],['#nSendBtn','nSendBtn'],['#nHistT','nHistT'],['#fIcon','fIcon'],['#fMsg','fMsg'],['#peSpkT','peSpkT'],['#peSpkBtn','peSpkBtn'],['#peAttT','peAttT'],['#peSpoT','peSpoT'],['#setEvT','setEvT'],['#setEvS','setEvS'],['#setRT','setRT'],['#setRS','setRS'],['#setRBtn','setRBtn'],['#setOut','setOut'],
+   ['#peImpS','peImpS'],['#peTplBtn','peTplBtn'],['#peSpoS','peSpoS'],['#setBrandT','setBrandT'],['#setBrandS','setBrandS'],['#setLogoClr','setLogoClr'],['#setCoverT','setCoverT'],['#setCoverS','setCoverS'],['#setCoverClr','setCoverClr']
+  ].forEach(([sel,k])=>{const el=$(sel);if(el)el.textContent=a(k);});
+  // buttons that contain a hidden <input>: only translate the leading text node
+  [['#peImpBtn','peImpBtn'],['#setLogoBtn','setLogoBtn'],['#setCoverBtn','setCoverBtn']].forEach(([sel,k])=>{const el=$(sel);if(el&&el.childNodes[0])el.childNodes[0].nodeValue=a(k);});
   $('#adEvent').textContent = OAF.currentEvent().name;
 }
 function renderKpis(){
@@ -72,12 +84,68 @@ function renderNotifAdmin(){
 function renderPeople(){
   $('#spkList').innerHTML=OAF.speakers().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${s.color}">${ini(s.name)}</div><div class="m"><b>${s.name}</b><small>${s.role[lang]} · ${s.country}</small></div></div>`).join('');
   $('#attList').innerHTML=OAF.attendees().map(p=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><span class="tag match">${p.score}</span></div>`).join('');
-  $('#spoList').innerHTML=OAF.sponsors().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.color};color:${s.tc}">${ini(s.name)}</div><div class="m"><b>${s.name}</b></div><span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${s.tier}</span></div>`).join('');
+  $('#spoList').innerHTML=OAF.sponsors().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.logo?'#fff':s.color};color:${s.tc};overflow:hidden">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div><div class="m"><b>${s.name}</b></div><label class="btn" style="padding:6px 10px;font-size:12px;margin-right:6px">${a('sponsorLogoBtn')}<input type="file" accept="image/*" hidden onchange="adSponsorLogo(event,${s.id})"></label><span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${s.tier}</span></div>`).join('');
 }
-function renderSettings(){ $('#setEvent').innerHTML=OAF.events().map(e=>`<option value="${e.id}" ${e.id===OAF.currentEvent().id?'selected':''}>${e.name}</option>`).join(''); }
+const DEFAULT_LOGO='<svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" rx="72" fill="#FFE400"/><text x="200" y="237" text-anchor="middle" fill="#111" font-family="\'Arial Black\',Arial,sans-serif" font-weight="900" font-size="188">one</text><text x="203" y="306" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="55" letter-spacing="11">AFRICA</text></svg>';
+const logoMarkup=d=>d?`<img src="${d}" style="width:100%;height:100%;object-fit:cover">`:DEFAULT_LOGO;
+function paintBrand(){const el=$('#adLogo');if(el)el.innerHTML=logoMarkup(OAF.appLogo());}
+function updateCoverPreview(){const sel=$('#coverEvent');if(!sel)return;const e=OAF.events().find(x=>x.id===+sel.value);const cv=e&&e.cover;$('#coverPreview').innerHTML=cv?`<img src="${cv}" style="width:100%;height:100%;object-fit:cover">`:'';}
+function renderSettings(){
+  $('#setEvent').innerHTML=OAF.events().map(e=>`<option value="${e.id}" ${e.id===OAF.currentEvent().id?'selected':''}>${e.name}</option>`).join('');
+  $('#coverEvent').innerHTML=OAF.events().map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  paintBrand();
+  $('#brandPreview').innerHTML=logoMarkup(OAF.appLogo());
+  updateCoverPreview();
+}
 
 function renderPage(){ if(page==='dash')renderKpis(); else if(page==='program')renderProgram(); else if(page==='notif')renderNotifAdmin(); else if(page==='people')renderPeople(); else if(page==='settings')renderSettings(); }
-function renderAll(){ renderLabels(); renderKpis(); renderProgram(); renderNotifAdmin(); renderPeople(); renderSettings(); }
+function renderAll(){ renderLabels(); paintBrand(); renderKpis(); renderProgram(); renderNotifAdmin(); renderPeople(); renderSettings(); }
+
+/* ---- image upload (downscaled to a data URL, kept small for storage) ---- */
+function processImg(file, cb, max){
+  max = max || 256;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const sc = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.width * sc)); c.height = Math.max(1, Math.round(img.height * sc));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        cb(c.toDataURL('image/png'));
+      } catch (e) { cb(reader.result); }
+    };
+    img.onerror = () => cb(reader.result);
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function adSetLogo(e){ const f=e.target.files[0]; if(!f)return; processImg(f,d=>{OAF.setAppLogo(d);renderSettings();adToast(a('tLogo'));},192); e.target.value=''; }
+function adClearLogo(){ OAF.setAppLogo(null); renderSettings(); adToast(a('tLogoClr')); }
+function adSetCover(e){ const f=e.target.files[0]; if(!f)return; const id=+$('#coverEvent').value; processImg(f,d=>{OAF.setEventCover(id,d);renderSettings();adToast(a('tCover'));},560); e.target.value=''; }
+function adClearCover(){ OAF.setEventCover(+$('#coverEvent').value,null); renderSettings(); adToast(a('tCover')); }
+function adSponsorLogo(e,id){ const f=e.target.files[0]; if(!f)return; processImg(f,d=>{OAF.setSponsorLogo(id,d);renderPeople();adToast(a('tSponsorLogo'));},160); e.target.value=''; }
+
+/* ---- CSV import ---- */
+function splitCsvLine(line){ const r=[]; let cur='',q=false; for(let i=0;i<line.length;i++){const ch=line[i]; if(ch==='"'){ if(q&&line[i+1]==='"'){cur+='"';i++;} else q=!q; } else if(ch===','&&!q){r.push(cur);cur='';} else cur+=ch;} r.push(cur); return r; }
+function parseCsv(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length)return [];
+  let start=0; if(/name|nom/i.test(lines[0]) && /role|fonction|pays|country/i.test(lines[0])) start=1;
+  const out=[];
+  for(let i=start;i<lines.length;i++){ const c=splitCsvLine(lines[i]); if(!c[0]||!c[0].trim())continue;
+    out.push({ name:c[0].trim(), role:(c[1]||'').trim(), country:(c[2]||'').trim(), interests:(c[3]||'').trim() }); }
+  return out;
+}
+function adImportCsv(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>{ const rows=parseCsv(r.result); if(!rows.length){adToast(a('csvEmpty'));return;} const n=OAF.importAttendees(rows); renderPeople(); renderKpis(); adToast(a('tImport').replace('{n}',n)); };
+  r.readAsText(f); e.target.value=''; }
+function adCsvTemplate(){
+  const csv='name,role,country,interests\nAmadou Diallo,CEO · SolarMali,🇲🇱,"Énergie, Climat"\nGrace Mwangi,Founder · AgriKenya,🇰🇪,"Agritech, Investissement"\nJoseph Banda,Investor · Lusaka Capital,🇿🇲,"Fintech, Seed"\n';
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const link=document.createElement('a'); link.href=url; link.download='participants_modele.csv'; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+}
 
 /* actions */
 function adAddSession(){
@@ -95,7 +163,9 @@ function adReset(){ OAF.reset(); lang=OAF.lang(); renderAll(); adToast(a('tReset
 function adToggleLang(){ lang=lang==='fr'?'en':'fr'; OAF.setLang(lang); renderAll(); }
 
 document.getElementById('adnav').addEventListener('click', e=>{const b=e.target.closest('button[data-p]');if(b)nav(b.dataset.p);});
+const _ce=document.getElementById('coverEvent'); if(_ce) _ce.addEventListener('change', updateCoverPreview);
 
 /* init */
 renderLabels();
+paintBrand();
 if(sessionStorage.getItem('oaf_admin')==='1') showConsole();

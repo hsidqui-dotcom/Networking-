@@ -21,6 +21,14 @@ de données locale partagée. Bilingue **FR / EN**.
 4. Côté participant : ★ enregistre des sessions, « Se connecter » ajoute des contacts →
    ces chiffres remontent **en direct** dans le tableau de bord admin.
 
+## Personnalisation depuis l'admin (sans code)
+- **Logo de l'app** : Réglages → *Identité de l'app* → téléverser un logo (PNG/SVG). Il s'applique partout (app + admin).
+- **Bannière d'événement** : Réglages → *Bannière de l'événement* → choisir l'édition + l'image.
+- **Logos partenaires** : Participants → *Partenaires* → bouton **Logo** sur chaque partenaire.
+- **Import participants** : Participants → **Importer un CSV** (bouton *Modèle CSV* pour le format). Les profils apparaissent aussitôt dans l'app et alimentent le matchmaking.
+
+> Les images sont automatiquement réduites et stockées localement (data URL). En production, elles iront sur un espace de stockage cloud.
+
 ## Déploiement
 - **Web / Android / iPhone** : ouvrir l'URL → « Ajouter à l'écran d'accueil » (PWA installable, hors-ligne).
 - **App Store (Apple) & Google Play** : emballer cette PWA avec **Capacitor** (coque native)

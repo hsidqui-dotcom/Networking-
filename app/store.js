@@ -9,6 +9,7 @@
     return {
       lang: 'fr',
       currentEvent: 0,
+      branding: { logo: null },
       events: [
         { id: 0, name: 'OneAfrica Forum 2026', city: 'Kigali, Rwanda', cityShort: 'Kigali', status: 'live',
           dates: { fr: '12–14 juin 2026', en: '12–14 Jun 2026' }, theme: { fr: 'Business, Investissement & Leadership', en: 'Business, Investment & Leadership' } },
@@ -51,6 +52,7 @@
   }
 
   let state = load();
+  if (!state.branding) state.branding = { logo: null };
   function load() {
     try { const s = JSON.parse(global.localStorage.getItem(KEY)); return s && s.events ? s : seed(); }
     catch (e) { return seed(); }
@@ -88,6 +90,26 @@
     addSpeaker(s) { s.id = nextId(state.speakers); state.speakers.push(s); persist(); },
     addAttendee(a) { a.id = nextId(state.attendees); a.score = a.score || 75; state.attendees.push(a); persist(); },
     addSponsor(s) { s.id = nextId(state.sponsors); state.sponsors.push(s); persist(); },
+
+    // branding & media (images stored as data URLs)
+    appLogo() { return state.branding && state.branding.logo; },
+    setAppLogo(dataUrl) { state.branding.logo = dataUrl || null; persist(); },
+    setSponsorLogo(id, dataUrl) { const s = state.sponsors.find(x => x.id === id); if (s) { s.logo = dataUrl || null; persist(); } },
+    setEventCover(id, dataUrl) { const e = state.events.find(x => x.id === id); if (e) { e.cover = dataUrl || null; persist(); } },
+    importAttendees(rows) {
+      const palette = ['#5b8def', '#1B998B', '#b5559a', '#9a6b00', '#E2622C', '#13476b'];
+      rows.forEach(r => {
+        state.attendees.push({
+          id: nextId(state.attendees), name: r.name,
+          role: { fr: r.role || '—', en: r.role || '—' },
+          country: r.country || '🌍', color: palette[state.attendees.length % palette.length],
+          score: r.score || (60 + Math.floor(Math.random() * 35)),
+          why: { fr: r.interests || 'Profil importé', en: r.interests || 'Imported profile' }
+        });
+      });
+      persist();
+      return rows.length;
+    },
 
     toggleBookmark(id) { const b = state.me.bookmarks; const i = b.indexOf(id); if (i >= 0) b.splice(i, 1); else b.push(id); persist(); return b.includes(id); },
     isBookmarked(id) { return state.me.bookmarks.includes(id); },
