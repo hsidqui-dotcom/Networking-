@@ -3,27 +3,18 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>OAF Connect — OneAfricaForums Networking App (Interactive Mockup)</title>
-<meta name="description" content="Interactive mockup of OAF Connect, the African-first event networking app for OneAfricaForums." />
+<title>OAF Connect — OneAfrica Networking App (Interactive Mockup)</title>
+<meta name="description" content="Interactive mockup of OAF Connect, the African-first event networking app for OneAfrica." />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
 <meta name="theme-color" content="#FFD400" />
 <style>
   :root{
-    --yellow:#FFD400;        /* one AFRICA yellow */
-    --yellow-d:#E8C000;
-    --terracotta:#111111;    /* brand black — primary actions */
-    --terracotta-d:#000000;
-    --teal:#111111;
-    --gold:#FFD400;          /* brand yellow accents */
-    --ink:#111111;
-    --ink-2:#2b2b2b;
-    --muted:#6f6f6f;
-    --line:#ededed;
-    --bg:#fafafa;            /* clean light */
-    --card:#ffffff;
-    --green:#1E8C5A;         /* success / match */
-    --radius:18px;
-    --shadow:0 18px 50px rgba(0,0,0,.14);
+    --yellow:#FFD400; --yellow-d:#E8C000;
+    --terracotta:#111111; --terracotta-d:#000000; /* primary action = brand black */
+    --gold:#FFD400; --teal:#111111;
+    --ink:#111111; --ink-2:#2b2b2b; --muted:#6f6f6f;
+    --line:#ededed; --bg:#fafafa; --card:#ffffff; --green:#1E8C5A;
+    --radius:18px; --shadow:0 18px 50px rgba(0,0,0,.14);
     --font:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -31,222 +22,197 @@
   a{color:inherit}
   .wrap{max-width:1180px;margin:0 auto;padding:0 22px}
 
-  /* ===== Top brand bar ===== */
+  /* ===== Site header ===== */
   header.site{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
   .site .wrap{display:flex;align-items:center;gap:14px;height:64px}
   .logo{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:.2px}
-  .logo .mark{width:36px;height:36px;border-radius:10px;background:var(--yellow);
-     display:grid;place-items:center;color:#111;font-weight:900;font-size:20px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+  .logo .oa{width:40px;height:40px}
   .logo small{display:block;font-weight:600;color:var(--muted);font-size:11px;letter-spacing:.4px}
   .site nav{margin-left:auto;display:flex;gap:22px;font-size:14px;font-weight:600;color:var(--ink-2)}
-  .site nav a{text-decoration:none;opacity:.8}
-  .site nav a:hover{opacity:1;color:var(--terracotta)}
+  .site nav a{text-decoration:none;opacity:.8}.site nav a:hover{opacity:1;color:var(--yellow-d)}
   @media(max-width:760px){.site nav{display:none}}
+  .oa{border-radius:9px;display:block;flex-shrink:0}
 
   /* ===== Hero ===== */
   .hero{padding:52px 0 30px}
   .hero .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
   @media(max-width:920px){.hero .wrap{grid-template-columns:1fr;gap:34px}}
-  .badge{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);
-     padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--terracotta-d)}
+  .badge{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--ink)}
   .hero h1{font-size:46px;line-height:1.05;margin:18px 0 14px;letter-spacing:-.5px}
   .hero h1 span{background:var(--yellow);color:#111;padding:0 10px;border-radius:8px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
   .hero p.lead{font-size:18px;color:var(--ink-2);max-width:560px;line-height:1.55}
   .cta{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
   .btn{border:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:15px;padding:13px 22px;border-radius:12px;text-decoration:none;display:inline-flex;align-items:center;gap:9px}
-  .btn.primary{background:var(--terracotta);color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.22)}
-  .btn.primary:hover{background:var(--terracotta-d)}
+  .btn.primary{background:var(--ink);color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.22)}.btn.primary:hover{background:#000}
   .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
   .stats{display:flex;gap:30px;margin-top:32px;flex-wrap:wrap}
-  .stats div{display:flex;flex-direction:column}
-  .stats b{font-size:24px;color:var(--terracotta-d)}
-  .stats small{color:var(--muted);font-weight:600;font-size:12.5px}
+  .stats div{display:flex;flex-direction:column}.stats b{font-size:24px}.stats small{color:var(--muted);font-weight:600;font-size:12.5px}
 
-  /* ===== Phone frame ===== */
+  /* ===== Phone ===== */
   .phone-stage{display:flex;justify-content:center;position:relative}
-  .phone-stage::before{content:"";position:absolute;inset:-30px -10px;border-radius:60px;
-     background:radial-gradient(60% 60% at 50% 40%,rgba(255,212,0,.40),transparent 70%),
-                radial-gradient(50% 50% at 70% 80%,rgba(17,17,17,.10),transparent 70%);z-index:0}
-  .phone{position:relative;z-index:1;width:340px;height:710px;background:#0c0f12;border-radius:46px;
-     padding:13px;box-shadow:var(--shadow);border:1px solid #23282d}
+  .phone-stage::before{content:"";position:absolute;inset:-30px -10px;border-radius:60px;background:radial-gradient(60% 60% at 50% 35%,rgba(255,212,0,.45),transparent 70%),radial-gradient(50% 50% at 70% 85%,rgba(17,17,17,.10),transparent 70%);z-index:0}
+  .phone{position:relative;z-index:1;width:344px;height:720px;background:#0c0f12;border-radius:46px;padding:13px;box-shadow:var(--shadow);border:1px solid #23282d}
   .phone .notch{position:absolute;top:20px;left:50%;transform:translateX(-50%);width:120px;height:24px;background:#0c0f12;border-radius:0 0 16px 16px;z-index:30}
   .screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:34px;overflow:hidden;display:flex;flex-direction:column}
+  .statusbar{display:flex;justify-content:space-between;align-items:center;padding:12px 22px 4px;font-size:12px;font-weight:700}
 
-  /* status + app top bar */
-  .statusbar{display:flex;justify-content:space-between;align-items:center;padding:12px 22px 4px;font-size:12px;font-weight:700;color:var(--ink)}
-  .appbar{padding:6px 16px 12px;display:flex;align-items:center;gap:10px}
-  .event-switch{flex:1;display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 11px;cursor:pointer}
-  .event-switch .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(30,140,90,.18)}
-  .event-switch b{font-size:13px;line-height:1.1}
-  .event-switch small{display:block;color:var(--muted);font-size:10.5px;font-weight:600}
-  .event-switch .chev{margin-left:auto;color:var(--muted)}
-  .avatar{width:36px;height:36px;border-radius:50%;background:var(--yellow);color:#111;display:grid;place-items:center;font-weight:800;font-size:13px;cursor:pointer;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+  /* hub bar (events main page) */
+  .hub-bar{display:flex;align-items:center;gap:10px;padding:8px 16px 12px}
+  .hub-bar .oa{width:38px;height:38px}
+  .hub-bar b{font-size:16px;line-height:1}.hub-bar small{display:block;color:var(--muted);font-size:10.5px;font-weight:600}
+  .hub-bar .bell{margin-left:auto;width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid var(--line);display:grid;place-items:center;cursor:pointer;font-size:15px;position:relative}
+  .hub-bar .bell::after{content:"";position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 2px #fff}
 
-  /* scroll area */
-  .views{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
-  .views::-webkit-scrollbar{display:none}
-  .view{display:none;padding:6px 16px 26px;animation:fade .25s ease}
-  .view.active{display:block}
+  /* event app bar */
+  .event-bar{display:flex;align-items:center;gap:9px;padding:8px 14px 12px}
+  .event-bar .ev-back{width:34px;height:34px;border-radius:10px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;cursor:pointer;font-weight:800;font-size:15px}
+  .event-bar .oa{width:30px;height:30px;border-radius:8px}
+  .event-bar .ev-name{flex:1;min-width:0}
+  .event-bar .ev-name b{font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+  .event-bar .ev-name small{color:var(--muted);font-size:10px;font-weight:600}
+  .event-bar .ico{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;cursor:pointer;border:1px solid var(--line);background:#fff;font-size:14px}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--yellow);color:#111;display:grid;place-items:center;font-weight:800;font-size:12px;cursor:pointer;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+
+  /* chrome show/hide by mode */
+  .screen .event-bar,.screen .tabbar{display:none}
+  .screen.mode-event .hub-bar{display:none}
+  .screen.mode-event .event-bar{display:flex}
+  .screen.mode-event .tabbar{display:flex}
+
+  .views{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}.views::-webkit-scrollbar{display:none}
+  .view{display:none;padding:6px 16px 26px;animation:fade .22s ease}.view.active{display:block}
   @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-
-  h2.scr{font-size:21px;margin:8px 2px 14px;letter-spacing:-.3px}
-  .sub{color:var(--muted);font-size:12.5px;margin:-8px 2px 14px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
-  .card+.card{margin-top:11px}
-
-  /* home tiles */
-  .hero-event{border-radius:20px;padding:18px;color:#fff;position:relative;overflow:hidden;
-     background:linear-gradient(135deg,#1c1c1c,#000 60%,#1c1c1c);box-shadow:0 14px 30px rgba(0,0,0,.28)}
-  .hero-event h3,.hero-event small{position:relative;z-index:1}
-  .hero-event small{color:var(--yellow)!important;opacity:1!important}
-  .hero-event .k{position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;
-     background:radial-gradient(circle,rgba(255,212,0,.65),transparent 70%)}
-  .hero-event small{opacity:.85;font-weight:700;font-size:11px;letter-spacing:.5px}
-  .hero-event h3{font-size:19px;margin:5px 0 3px;line-height:1.15}
-  .hero-event p{font-size:12.5px;opacity:.9}
-  .pill-row{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
-  .pill{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:5px 10px;border-radius:999px;font-size:11px;font-weight:700}
-  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
-  .tile{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;cursor:pointer;transition:.15s}
-  .tile:hover{transform:translateY(-2px);border-color:var(--terracotta);box-shadow:0 8px 18px rgba(0,0,0,.06)}
-  .tile .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;margin-bottom:9px}
-  .tile b{font-size:13.5px;display:block}
-  .tile small{color:var(--muted);font-size:11px}
-
+  h2.scr{font-size:21px;margin:8px 2px 6px;letter-spacing:-.3px}
+  .sub{color:var(--muted);font-size:12.5px;margin:0 2px 14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px}.card+.card{margin-top:11px}
+  .back{cursor:pointer;font-weight:800;color:var(--ink);font-size:13px;margin:2px 2px 12px;display:inline-flex;gap:5px;align-items:center}
   .section-h{display:flex;align-items:center;justify-content:space-between;margin:20px 2px 10px}
-  .section-h b{font-size:14.5px}
-  .section-h a{font-size:12px;color:var(--terracotta-d);font-weight:700;text-decoration:none;cursor:pointer}
+  .section-h b{font-size:14.5px}.section-h a{font-size:12px;color:var(--yellow-d);font-weight:800;text-decoration:none;cursor:pointer}
 
-  /* list rows */
+  /* ===== Events hub ===== */
+  .hub-hero{border-radius:20px;padding:18px;background:linear-gradient(135deg,#1c1c1c,#000 60%,#1c1c1c);color:#fff;position:relative;overflow:hidden;margin-bottom:6px}
+  .hub-hero .k{position:absolute;right:-30px;top:-30px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(255,212,0,.6),transparent 70%)}
+  .hub-hero h3{font-size:18px;position:relative;z-index:1}
+  .hub-hero p{font-size:12.5px;opacity:.85;position:relative;z-index:1;margin-top:4px}
+  .seg{display:flex;gap:6px;margin:14px 0}
+  .seg button{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 0;font-weight:700;font-size:11.5px;cursor:pointer;font-family:inherit}
+  .seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .ev-card{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff;margin-bottom:12px;cursor:pointer;transition:.15s}
+  .ev-card:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.08);border-color:var(--yellow)}
+  .ev-card .top{height:74px;position:relative;display:flex;align-items:flex-end;padding:10px 12px;color:#fff}
+  .ev-card .top .stat{position:absolute;top:10px;right:10px;font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:999px}
+  .stat.live{background:var(--yellow);color:#111}.stat.up{background:#fff;color:#111}.stat.past{background:rgba(255,255,255,.25);color:#fff}
+  .ev-card .top b{font-size:14.5px;position:relative;z-index:1;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+  .ev-card .bd{padding:11px 13px}
+  .ev-card .bd .row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);font-weight:600}
+  .ev-card .bd .theme{font-size:12px;color:var(--ink-2);margin-top:6px}
+  .ev-meta{display:flex;gap:14px;margin-top:9px;font-size:11px;color:var(--muted)}
+  .ev-meta b{color:var(--ink);font-size:12.5px}
+
+  /* ===== tiles / lists ===== */
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
+  .tile{background:#fff;border:1px solid var(--line);border-radius:15px;padding:13px;cursor:pointer;transition:.15s}
+  .tile:hover{transform:translateY(-2px);border-color:var(--yellow)}
+  .tile .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;margin-bottom:8px;background:#FFF4BF}
+  .tile b{font-size:13px;display:block}.tile small{color:var(--muted);font-size:10.5px}
   .row{display:flex;gap:11px;align-items:center}
   .ava{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px}
   .ava.sq{border-radius:12px}
-  .row .meta{flex:1;min-width:0}
-  .row .meta b{font-size:14px;display:block}
-  .row .meta small{color:var(--muted);font-size:11.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tag{display:inline-block;font-size:10px;font-weight:800;padding:3px 8px;border-radius:7px;background:#f0ece5;color:var(--ink-2);letter-spacing:.3px}
+  .meta{flex:1;min-width:0}.meta b{font-size:14px;display:block}.meta small{color:var(--muted);font-size:11.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tag{display:inline-block;font-size:10px;font-weight:800;padding:3px 8px;border-radius:7px;background:#f0f0f0;color:var(--ink-2);letter-spacing:.3px}
   .tag.match{background:rgba(30,140,90,.12);color:var(--green)}
-  .tag.gold{background:rgba(255,212,0,.30);color:#7a5d00}
+  .tag.gold{background:rgba(255,212,0,.3);color:#7a5d00}
   .tag.live{background:var(--yellow);color:#111}
+  .tag.p{background:#111;color:var(--yellow)}
   .mini-btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit}
-  .mini-btn.solid{background:var(--terracotta);border-color:var(--terracotta);color:#fff}
-  .mini-btn.solid:hover{background:var(--terracotta-d)}
-
-  /* match score ring */
-  .score{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;color:var(--green);
-     background:conic-gradient(var(--green) var(--p,90%),#e9efe9 0);position:relative}
-  .score::after{content:"";position:absolute;inset:4px;background:#fff;border-radius:50%}
-  .score span{position:relative;z-index:1}
+  .mini-btn.solid{background:var(--ink);border-color:var(--ink);color:#fff}.mini-btn.solid:hover{background:#000}
+  .clk{cursor:pointer}
+  .score{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;color:var(--green);background:conic-gradient(var(--green) var(--p,90%),#e9efe9 0);position:relative;flex-shrink:0}
+  .score::after{content:"";position:absolute;inset:4px;background:#fff;border-radius:50%}.score span{position:relative;z-index:1}
 
   /* agenda */
   .day-tabs{display:flex;gap:7px;margin:2px 0 14px}
   .day-tabs button{flex:1;border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px 0;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit}
   .day-tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .ses{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
-  .ses .time{width:54px;flex-shrink:0;font-weight:800;font-size:12px;color:var(--terracotta-d)}
-  .ses .time small{display:block;color:var(--muted);font-weight:600;font-size:10px}
-  .ses .body b{font-size:13.5px;display:block;line-height:1.25}
-  .ses .body small{color:var(--muted);font-size:11.5px}
-  .ses .star{margin-left:auto;cursor:pointer;font-size:18px;color:#cfc8bd;flex-shrink:0}
-  .ses .star.on{color:var(--gold)}
-  .track{display:inline-block;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:6px;margin-top:5px}
+  .ses{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer}
+  .ses .time{width:54px;flex-shrink:0;font-weight:800;font-size:12px}.ses .time small{display:block;color:var(--muted);font-weight:600;font-size:10px}
+  .ses .body b{font-size:13.5px;display:block;line-height:1.25}.ses .body small{color:var(--muted);font-size:11.5px}
+  .ses .star{margin-left:auto;cursor:pointer;font-size:18px;color:#cfc8bd;flex-shrink:0}.ses .star.on{color:var(--yellow-d)}
+  .trk{display:inline-block;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:6px;margin-top:5px}
 
   /* chat */
-  .chat-thread{display:flex;flex-direction:column;gap:9px;padding:6px 2px 80px}
+  .chat-thread{display:flex;flex-direction:column;gap:9px;padding:6px 2px 90px}
   .bub{max-width:78%;padding:9px 13px;border-radius:15px;font-size:13px;line-height:1.35}
   .bub.them{background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px;align-self:flex-start}
-  .bub.me{background:var(--terracotta);color:#fff;border-bottom-right-radius:5px;align-self:flex-end}
+  .bub.me{background:var(--ink);color:#fff;border-bottom-right-radius:5px;align-self:flex-end}
   .bub small{display:block;font-size:9.5px;opacity:.6;margin-top:3px}
   .chat-input{position:absolute;bottom:64px;left:0;right:0;padding:10px 14px;display:flex;gap:8px;background:linear-gradient(transparent,var(--bg) 30%)}
   .chat-input input{flex:1;border:1px solid var(--line);border-radius:999px;padding:11px 15px;font-family:inherit;font-size:13px;background:#fff}
-  .chat-input button{border:none;background:var(--terracotta);color:#fff;width:42px;border-radius:50%;cursor:pointer;font-size:16px}
-  .back{cursor:pointer;font-weight:800;color:var(--terracotta-d);font-size:13px;margin:2px 2px 10px;display:inline-flex;gap:5px;align-items:center}
+  .chat-input button{border:none;background:var(--ink);color:#fff;width:42px;border-radius:50%;cursor:pointer;font-size:16px}
 
-  /* community feed */
-  .post .head{display:flex;align-items:center;gap:10px;margin-bottom:9px}
-  .post .head b{font-size:13px}
-  .post .head small{color:var(--muted);font-size:11px}
+  /* community */
+  .post .head{display:flex;align-items:center;gap:10px;margin-bottom:9px}.post .head b{font-size:13px}.post .head small{color:var(--muted);font-size:11px}
   .post p{font-size:13px;line-height:1.5;color:var(--ink-2)}
-  .post .acts{display:flex;gap:18px;margin-top:11px;color:var(--muted);font-size:12px;font-weight:700}
-  .post .acts span{cursor:pointer}
+  .post .acts{display:flex;gap:18px;margin-top:11px;color:var(--muted);font-size:12px;font-weight:700}.post .acts span{cursor:pointer}
 
   /* meetings */
   .slot{display:flex;align-items:center;gap:11px;padding:12px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;background:#fff}
-  .slot .when{text-align:center;width:50px;flex-shrink:0}
-  .slot .when b{display:block;font-size:16px;color:var(--terracotta-d)}
-  .slot .when small{font-size:10px;color:var(--muted);font-weight:700}
+  .slot .when{text-align:center;width:50px;flex-shrink:0}.slot .when b{display:block;font-size:16px}.slot .when small{font-size:10px;color:var(--muted);font-weight:700}
   .availbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
   .availbar button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 11px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit}
   .availbar button.taken{opacity:.4;text-decoration:line-through;cursor:not-allowed}
   .availbar button.sel{background:var(--green);color:#fff;border-color:var(--green)}
 
   /* sponsors */
-  .spon{display:flex;align-items:center;gap:12px;padding:13px;border:1px solid var(--line);border-radius:15px;background:#fff;margin-bottom:10px}
+  .spon{display:flex;align-items:center;gap:12px;padding:13px;border:1px solid var(--line);border-radius:15px;background:#fff;margin-bottom:10px;cursor:pointer}
+  .spon:hover{border-color:var(--yellow)}
   .spon .lg{width:50px;height:50px;border-radius:13px;display:grid;place-items:center;font-weight:900;color:#fff;font-size:15px;flex-shrink:0}
   .roi{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin-top:11px}
-  .roi div{background:#faf7f2;border:1px solid var(--line);border-radius:12px;padding:10px 4px}
-  .roi b{display:block;font-size:18px;color:var(--terracotta-d)}
-  .roi small{font-size:9.5px;color:var(--muted);font-weight:700}
+  .roi div{background:#faf7e8;border:1px solid var(--line);border-radius:12px;padding:10px 4px}.roi b{display:block;font-size:18px}.roi small{font-size:9.5px;color:var(--muted);font-weight:700}
 
-  /* profile */
-  .pf-head{text-align:center;padding:10px 0 4px}
-  .pf-head .big{width:78px;height:78px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:26px;background:linear-gradient(135deg,var(--terracotta),var(--gold))}
-  .pf-head h3{font-size:19px}
-  .pf-head p{color:var(--muted);font-size:12.5px}
+  /* detail header */
+  .dhead{display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 0 4px}
+  .dhead .big{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:28px;margin-bottom:10px}
+  .dhead h3{font-size:19px}.dhead p{color:var(--muted);font-size:12.5px;margin-top:2px}
   .chips{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin:12px 0}
   .chips span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:11.5px;font-weight:700}
-  .looking{background:linear-gradient(135deg,rgba(244,183,64,.18),rgba(226,98,44,.12));border:1px solid rgba(226,98,44,.25)!important}
+  .looking{background:linear-gradient(135deg,rgba(255,212,0,.25),rgba(255,212,0,.08));border:1px solid rgba(255,212,0,.5)!important}
+  .btn-row{display:flex;gap:8px;margin:8px 0}.btn-row>*{flex:1}
+  .kv{font-size:12.5px;color:var(--ink-2);line-height:1.6}.kv b{color:var(--ink)}
 
-  /* bottom nav */
-  .tabbar{display:flex;background:#fff;border-top:1px solid var(--line);padding:8px 6px 12px}
+  /* notifications */
+  .notif{display:flex;gap:11px;padding:12px 2px;border-bottom:1px solid var(--line)}
+  .notif .ni{width:36px;height:36px;border-radius:10px;background:#FFF4BF;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+  .notif .nb b{font-size:12.5px}.notif .nb small{color:var(--muted);font-size:11px;display:block}
+
+  /* tabbar */
+  .tabbar{background:#fff;border-top:1px solid var(--line);padding:8px 6px 12px}
   .tabbar button{flex:1;border:none;background:none;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:10px;font-weight:700}
-  .tabbar button .gi{font-size:19px;line-height:1}
-  .tabbar button.on{color:var(--terracotta)}
+  .tabbar button .gi{font-size:19px;line-height:1}.tabbar button.on{color:var(--ink)}
+  .tabbar button.on .gi{filter:drop-shadow(0 3px 0 var(--yellow))}
 
-  /* toast */
-  .toast{position:absolute;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
-     padding:11px 18px;border-radius:12px;font-size:12.5px;font-weight:600;opacity:0;transition:.3s;pointer-events:none;z-index:60;white-space:nowrap;box-shadow:var(--shadow)}
+  .toast{position:absolute;bottom:84px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-size:12.5px;font-weight:600;opacity:0;transition:.3s;pointer-events:none;z-index:60;white-space:nowrap;box-shadow:var(--shadow)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  /* event switcher sheet */
-  .sheet{position:absolute;inset:0;background:rgba(10,12,14,.45);z-index:55;display:none;align-items:flex-end}
-  .sheet.show{display:flex}
-  .sheet-inner{background:#fff;width:100%;border-radius:22px 22px 0 0;padding:18px 16px 22px;animation:up .25s ease}
-  @keyframes up{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}
-  .sheet-inner h4{font-size:15px;margin-bottom:4px}
-  .sheet-inner .sub{margin:0 0 12px}
-  .ev-opt{display:flex;align-items:center;gap:11px;padding:12px;border:1px solid var(--line);border-radius:14px;margin-bottom:9px;cursor:pointer}
-  .ev-opt:hover{border-color:var(--terracotta)}
-  .ev-opt .yr{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px;flex-shrink:0}
-
-  /* ===== marketing sections below phone ===== */
+  /* marketing blocks */
   section.block{padding:56px 0;border-top:1px solid var(--line)}
   .block h2{font-size:30px;letter-spacing:-.4px;margin-bottom:8px}
   .block .lead{color:var(--ink-2);max-width:620px;font-size:16px;line-height:1.55;margin-bottom:30px}
   .pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-  @media(max-width:920px){.pillars{grid-template-columns:1fr 1fr}}
-  @media(max-width:560px){.pillars{grid-template-columns:1fr}}
+  @media(max-width:920px){.pillars{grid-template-columns:1fr 1fr}}@media(max-width:560px){.pillars{grid-template-columns:1fr}}
   .pillar{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}
   .pillar .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;margin-bottom:12px;background:#FFF4BF}
-  .pillar h3{font-size:16px;margin-bottom:6px}
-  .pillar p{font-size:13.5px;color:var(--muted);line-height:1.5}
-
+  .pillar h3{font-size:16px;margin-bottom:6px}.pillar p{font-size:13.5px;color:var(--muted);line-height:1.5}
+  .map-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+  @media(max-width:680px){.map-grid{grid-template-columns:1fr 1fr}}
+  .map-grid div{background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px 13px;font-size:12.5px;font-weight:600}
+  .map-grid b{display:block;font-size:11px;color:var(--yellow-d);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
   table.cmp{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:13.5px}
   table.cmp th,table.cmp td{padding:13px 14px;text-align:left;border-bottom:1px solid var(--line)}
-  table.cmp th{background:#faf6f0;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-2)}
-  table.cmp td.y{color:var(--green);font-weight:800}
-  table.cmp td.p{color:#111;font-weight:800;background:rgba(255,212,0,.22)}
-  table.cmp tr td:first-child{font-weight:700}
-  .cmp-wrap{overflow-x:auto}
-  .road{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
-  @media(max-width:920px){.road{grid-template-columns:1fr 1fr}}
-  @media(max-width:560px){.road{grid-template-columns:1fr}}
-  .step{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;position:relative}
-  .step b.n{display:inline-block;background:var(--terracotta);color:#fff;border-radius:8px;padding:3px 9px;font-size:11px;margin-bottom:9px}
-  .step h4{font-size:14px;margin-bottom:5px}
-  .step p{font-size:12.5px;color:var(--muted);line-height:1.45}
-  footer{padding:40px 0;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center}
-  footer b{color:var(--ink)}
+  table.cmp th{background:#fffbe6;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px}
+  table.cmp td.y{color:var(--green);font-weight:800}table.cmp td.p{color:#111;font-weight:800;background:rgba(255,212,0,.22)}
+  table.cmp tr td:first-child{font-weight:700}.cmp-wrap{overflow-x:auto}
+  footer{padding:40px 0;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center}footer b{color:var(--ink)}
   .note{background:#fff;border:1px dashed var(--line);border-radius:12px;padding:13px 15px;font-size:12.5px;color:var(--muted);margin-top:24px}
 </style>
 </head>
@@ -255,37 +221,34 @@
 <header class="site">
   <div class="wrap">
     <div class="logo">
-      <div class="mark">o</div>
+      <svg class="oa" viewBox="0 0 400 400" aria-label="OneAfrica"><rect width="400" height="400" rx="64" fill="#FFD400"/><text x="200" y="232" text-anchor="middle" fill="#111" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="176">one</text><text x="202" y="302" text-anchor="middle" fill="#111" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="58" letter-spacing="10">AFRICA</text></svg>
       <div>OAF&nbsp;Connect<small>by OneAfrica</small></div>
     </div>
     <nav>
-      <a href="#prototype">Prototype</a>
-      <a href="#pillars">Features</a>
-      <a href="#compare">Compare</a>
-      <a href="#roadmap">Roadmap</a>
+      <a href="#prototype">Prototype</a><a href="#pillars">Features</a>
+      <a href="#screens">Pages</a><a href="#compare">Compare</a>
       <a href="docs/market-research.md">Research</a>
     </nav>
   </div>
 </header>
 
-<!-- HERO -->
 <div class="hero">
   <div class="wrap">
     <div>
-      <span class="badge">● Interactive mockup · v0.1 · click around →</span>
-      <h1>One app for <span>every African forum.</span> Alive all year.</h1>
-      <p class="lead">OAF Connect brings the agenda, attendees, speakers, partners, AI
-        matchmaking, meeting booking and a community chat into one beautiful,
-        African-first app — and keeps your network alive long after the event ends.</p>
+      <span class="badge">● Interactive mockup · v0.2 · starts on your Events page →</span>
+      <h1>All your African events. <span>One app, alive all year.</span></h1>
+      <p class="lead">OAF Connect opens on a home page listing <b>every OneAfrica event</b> — live,
+        upcoming and past. Tap one to enter its full workspace: agenda, speakers, attendees, AI
+        matchmaking, meetings, partners and chat. Your profile and network follow you everywhere.</p>
       <div class="cta">
         <a class="btn primary" href="#prototype">▶ Try the live mockup</a>
-        <a class="btn ghost" href="docs/product-spec.md">Read the product spec</a>
+        <a class="btn ghost" href="docs/product-spec.md">Product spec</a>
       </div>
       <div class="stats">
-        <div><b>8</b><small>core pillars</small></div>
+        <div><b>5</b><small>events in hub</small></div>
+        <div><b>20+</b><small>app screens</small></div>
         <div><b>1</b><small>profile, all events</small></div>
         <div><b>365</b><small>day community</small></div>
-        <div><b>PWA</b><small>offline-first</small></div>
       </div>
     </div>
 
@@ -293,268 +256,206 @@
     <div class="phone-stage" id="prototype">
       <div class="phone">
         <div class="notch"></div>
-        <div class="screen">
+        <div class="screen mode-hub" id="screen">
           <div class="statusbar"><span>9:41</span><span>📶 🔋 100%</span></div>
 
-          <!-- APP BAR -->
-          <div class="appbar">
-            <div class="event-switch" onclick="openSheet()">
-              <span class="dot"></span>
-              <div><b id="evName">OneAfrica Forum 2026</b><small id="evMeta">Kigali · Live now</small></div>
-              <span class="chev">▾</span>
-            </div>
+          <!-- HUB BAR (events main page) -->
+          <div class="hub-bar">
+            <svg class="oa" viewBox="0 0 400 400" aria-label="OneAfrica"><rect width="400" height="400" rx="64" fill="#FFD400"/><text x="200" y="232" text-anchor="middle" fill="#111" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="176">one</text><text x="202" y="302" text-anchor="middle" fill="#111" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="58" letter-spacing="10">AFRICA</text></svg>
+            <div><b>Hi, Amina 👋</b><small>Your OneAfrica events</small></div>
+            <div class="bell" onclick="enterEvent(0);go('notif')">🔔</div>
+          </div>
+
+          <!-- EVENT BAR (inside an event) -->
+          <div class="event-bar">
+            <div class="ev-back" onclick="backToEvents()" title="All events">⌂</div>
+            <svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" rx="64" fill="#FFD400"/><text x="200" y="232" text-anchor="middle" fill="#111" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="176">one</text><text x="202" y="302" text-anchor="middle" fill="#111" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="58" letter-spacing="10">AFRICA</text></svg>
+            <div class="ev-name"><b id="barName">OneAfrica Forum 2026</b><small id="barCity">Kigali · Live</small></div>
+            <div class="ico" onclick="go('notif')">🔔</div>
             <div class="avatar" onclick="go('profile')">AK</div>
           </div>
 
-          <!-- VIEWS -->
           <div class="views" id="views">
 
-            <!-- HOME -->
-            <div class="view active" data-view="home">
-              <div class="hero-event">
-                <div class="k"></div>
-                <small>📍 KIGALI CONVENTION CENTRE · 12–14 JUN</small>
-                <h3>Pan-African Business, Investment &amp; Leadership Summit</h3>
-                <p>Theme: Building bridges, building Africa.</p>
-                <div class="pill-row">
-                  <span class="pill">2,400 delegates</span>
-                  <span class="pill">54 countries</span>
-                  <span class="pill">90 speakers</span>
-                </div>
+            <!-- ============ EVENTS HUB (MAIN PAGE) ============ -->
+            <div class="view active" data-view="events">
+              <div class="hub-hero"><div class="k"></div>
+                <h3>Welcome to OneAfrica 🌍</h3>
+                <p>One home for every forum, summit & gathering across the continent.</p>
               </div>
-
-              <div class="tiles">
-                <div class="tile" onclick="go('program')"><div class="ic" style="background:#fdeede">🗓️</div><b>Program</b><small>3 days · 6 tracks</small></div>
-                <div class="tile" onclick="go('people')"><div class="ic" style="background:#e4f4ef">🤝</div><b>People &amp; AI Match</b><small>12 great matches</small></div>
-                <div class="tile" onclick="go('meetings')"><div class="ic" style="background:#fef3d6">📅</div><b>Meetings</b><small>Book 1:1s</small></div>
-                <div class="tile" onclick="go('chat')"><div class="ic" style="background:#fde7de">💬</div><b>Chat</b><small>3 unread</small></div>
-                <div class="tile" onclick="go('community')"><div class="ic" style="background:#e9eef7">🌍</div><b>Community</b><small>Beyond the Forum</small></div>
-                <div class="tile" onclick="go('sponsors')"><div class="ic" style="background:#f3ecfb">⭐</div><b>Partners</b><small>18 sponsors</small></div>
+              <div class="seg">
+                <button class="on" onclick="evFilter(this,'all')">All</button>
+                <button onclick="evFilter(this,'live')">Live</button>
+                <button onclick="evFilter(this,'upcoming')">Upcoming</button>
+                <button onclick="evFilter(this,'past')">Past</button>
               </div>
-
-              <div class="section-h"><b>🔔 Happening now</b><a onclick="go('program')">Agenda →</a></div>
-              <div class="card">
-                <div class="row">
-                  <div class="ava sq" style="background:var(--terracotta)">🎤</div>
-                  <div class="meta"><b>Keynote: Financing the AfCFTA decade</b><small>Main Stage · ends 10:30</small></div>
-                  <span class="tag live">● LIVE</span>
-                </div>
-              </div>
-
-              <div class="section-h"><b>✨ People you should meet</b><a onclick="go('people')">See all →</a></div>
-              <div class="card">
-                <div class="row">
-                  <div class="ava" style="background:#5b8def">FN</div>
-                  <div class="meta"><b>Fatou Ndiaye</b><small>Partner · Sahel Ventures · 🇸🇳</small></div>
-                  <div class="score" style="--p:94%"><span>94</span></div>
-                </div>
-                <div style="margin-top:9px;font-size:11.5px;color:var(--muted)">🎯 You both want to <b>raise / deploy capital in agritech</b>.</div>
-                <div style="display:flex;gap:8px;margin-top:11px">
-                  <button class="mini-btn solid" style="flex:1" onclick="connect(this,'Fatou')">＋ Connect</button>
-                  <button class="mini-btn" onclick="go('meetings')">📅 Meet</button>
-                </div>
-              </div>
+              <div id="eventList"></div>
+              <div class="note" style="margin-top:6px">Tap any event to enter its full app workspace.</div>
             </div>
 
-            <!-- PROGRAM -->
-            <div class="view" data-view="program">
-              <h2 class="scr">Program</h2>
-              <div class="sub">Tap ☆ to build your personal agenda — synced to your calendar.</div>
-              <div class="day-tabs">
-                <button class="on" onclick="day(this,0)">Thu 12</button>
-                <button onclick="day(this,1)">Fri 13</button>
-                <button onclick="day(this,2)">Sat 14</button>
+            <!-- ============ EVENT HOME / DASHBOARD ============ -->
+            <div class="view" data-view="home">
+              <div class="hub-hero"><div class="k"></div>
+                <small style="color:var(--yellow);font-weight:800;font-size:10.5px;letter-spacing:.5px" id="homeKicker">📍 KIGALI · 12–14 JUN</small>
+                <h3 style="margin-top:5px" id="homeTheme">Business, Investment & Leadership</h3>
+                <p id="homeStats">2,400 delegates · 54 countries · 90 speakers</p>
               </div>
+              <div class="tiles">
+                <div class="tile" onclick="go('program')"><div class="ic">🗓️</div><b>Program</b><small>3 days · 6 tracks</small></div>
+                <div class="tile" onclick="go('speakers')"><div class="ic">🎤</div><b>Speakers</b><small>90 leaders</small></div>
+                <div class="tile" onclick="go('people')"><div class="ic">🤝</div><b>Attendees + AI</b><small>12 matches</small></div>
+                <div class="tile" onclick="go('sponsors')"><div class="ic">⭐</div><b>Partners</b><small>18 sponsors</small></div>
+                <div class="tile" onclick="go('meetings')"><div class="ic">📅</div><b>Meetings</b><small>Book 1:1s</small></div>
+                <div class="tile" onclick="go('chat')"><div class="ic">💬</div><b>Chat</b><small>3 unread</small></div>
+                <div class="tile" onclick="go('community')"><div class="ic">🌍</div><b>Community</b><small>Beyond the Forum</small></div>
+                <div class="tile" onclick="go('info')"><div class="ic">ℹ️</div><b>Event info</b><small>Venue · map · help</small></div>
+              </div>
+              <div class="section-h"><b>🔴 Happening now</b><a onclick="go('program')">Agenda →</a></div>
+              <div class="card clk" onclick="openSession(0,1)">
+                <div class="row"><div class="ava sq" style="background:var(--ink)">🎤</div>
+                  <div class="meta"><b>Keynote: Financing the AfCFTA decade</b><small>Main Stage · ends 10:30</small></div>
+                  <span class="tag live">● LIVE</span></div>
+              </div>
+              <div class="section-h"><b>✨ People you should meet</b><a onclick="go('people')">See all →</a></div>
+              <div id="homeMatches"></div>
+            </div>
+
+            <!-- ============ PROGRAM ============ -->
+            <div class="view" data-view="program">
+              <h2 class="scr">Program</h2><div class="sub">Tap a session for detail · ☆ adds it to your agenda.</div>
+              <div class="day-tabs"><button class="on" onclick="day(this,0)">Thu 12</button><button onclick="day(this,1)">Fri 13</button><button onclick="day(this,2)">Sat 14</button></div>
               <div id="agenda"></div>
             </div>
 
-            <!-- PEOPLE -->
+            <!-- SESSION DETAIL -->
+            <div class="view" data-view="session">
+              <span class="back" onclick="go('program')">‹ Program</span>
+              <div id="sessionBody"></div>
+            </div>
+
+            <!-- ============ SPEAKERS ============ -->
+            <div class="view" data-view="speakers">
+              <h2 class="scr">Speakers</h2><div class="sub">90 leaders shaping the continent.</div>
+              <div id="speakerList"></div>
+            </div>
+            <div class="view" data-view="speaker">
+              <span class="back" onclick="go('speakers')">‹ Speakers</span>
+              <div id="speakerBody"></div>
+            </div>
+
+            <!-- ============ ATTENDEES / PEOPLE ============ -->
             <div class="view" data-view="people">
-              <h2 class="scr">People</h2>
-              <div class="sub">AI matchmaking ranks delegates by shared goals &amp; interests.</div>
+              <h2 class="scr">Attendees</h2><div class="sub">AI matchmaking ranks people by shared goals & interests.</div>
               <div style="display:flex;gap:7px;margin-bottom:13px;flex-wrap:wrap">
-                <span class="tag match">✦ Best matches</span>
-                <span class="tag">Investors</span>
-                <span class="tag">Founders</span>
-                <span class="tag">🇰🇪 🇳🇬 🇿🇦</span>
-              </div>
-              <div id="people"></div>
+                <span class="tag" style="background:var(--ink);color:#fff">✦ Best matches</span>
+                <span class="tag">Investors</span><span class="tag">Founders</span><span class="tag">🇰🇪 🇳🇬 🇿🇦</span></div>
+              <div id="peopleList"></div>
+            </div>
+            <div class="view" data-view="attendee">
+              <span class="back" onclick="go('people')">‹ Attendees</span>
+              <div id="attendeeBody"></div>
             </div>
 
-            <!-- MEETINGS -->
-            <div class="view" data-view="meetings">
-              <h2 class="scr">Meetings</h2>
-              <div class="sub">Book 1:1s from shared availability — auto conflict-checked.</div>
-              <div class="card">
-                <div class="row" style="margin-bottom:4px">
-                  <div class="ava" style="background:#5b8def">FN</div>
-                  <div class="meta"><b>Meet Fatou Ndiaye</b><small>Sahel Ventures · 30 min</small></div>
-                </div>
-                <div style="font-size:11.5px;color:var(--muted);margin:8px 0 4px">Fri 13 Jun — pick a slot:</div>
-                <div class="availbar">
-                  <button onclick="pick(this)">10:30</button>
-                  <button class="taken">11:00</button>
-                  <button onclick="pick(this)">13:15</button>
-                  <button onclick="pick(this)">15:45</button>
-                  <button class="taken">16:30</button>
-                </div>
-                <button class="mini-btn solid" style="width:100%;margin-top:12px" onclick="toast('Meeting request sent + added to calendar 📅')">Send request</button>
-              </div>
-
-              <div class="section-h"><b>Your schedule · Fri 13</b></div>
-              <div class="slot">
-                <div class="when"><b>09:00</b><small>30m</small></div>
-                <div class="meta"><b>Coffee with Kwame Mensah</b><small>Accra FinLabs · Table 14 ☕</small></div>
-                <span class="tag match">Confirmed</span>
-              </div>
-              <div class="slot">
-                <div class="when"><b>13:15</b><small>30m</small></div>
-                <div class="meta"><b>Speed networking — Agritech</b><small>Auto-matched · Room B 🤝</small></div>
-                <span class="tag gold">8 people</span>
-              </div>
-            </div>
-
-            <!-- CHAT LIST -->
-            <div class="view" data-view="chat">
-              <h2 class="scr">Chat</h2>
-              <div class="sub">1:1, group &amp; organiser broadcasts — kept after the event.</div>
-              <div id="chatlist"></div>
-            </div>
-
-            <!-- CHAT THREAD -->
-            <div class="view" data-view="thread">
-              <span class="back" onclick="go('chat')">‹ Back to chats</span>
-              <div class="row" style="margin-bottom:10px">
-                <div class="ava" style="background:#5b8def">FN</div>
-                <div class="meta"><b>Fatou Ndiaye</b><small style="color:var(--green)">● Online · Sahel Ventures</small></div>
-              </div>
-              <div class="chat-thread" id="thread">
-                <div class="bub them">Hi Amina! Loved your point on agritech offtake risk 🙌<small>10:42</small></div>
-                <div class="bub me">Thank you Fatou! We should talk — we're raising for exactly that.<small>10:44</small></div>
-                <div class="bub them">Yes. I have a slot Friday 13:15, shall I confirm?<small>10:45</small></div>
-              </div>
-              <div class="chat-input">
-                <input id="msg" placeholder="Message Fatou…" onkeydown="if(event.key==='Enter')send()"/>
-                <button onclick="send()">➤</button>
-              </div>
-            </div>
-
-            <!-- COMMUNITY -->
-            <div class="view" data-view="community">
-              <h2 class="scr">Community</h2>
-              <div class="sub">“Beyond the Forum” — circles &amp; conversations that live all year.</div>
-              <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:10px">
-                <span class="tag gold">🌱 Agritech</span>
-                <span class="tag">💸 Investors Circle</span>
-                <span class="tag">👩🏾‍💼 Women in Business</span>
-                <span class="tag">🌍 Diaspora</span>
-              </div>
-              <div class="card post">
-                <div class="head"><div class="ava" style="width:38px;height:38px;font-size:12px;background:#1B998B">KM</div>
-                  <div><b>Kwame Mensah</b><br><small>Investors Circle · 2h ago</small></div></div>
-                <p>Following the Kigali summit — who's exploring cross-border payment rails for SMEs? Putting together a working group 👇</p>
-                <div class="acts"><span onclick="likeP(this)">🤍 24</span><span>💬 11</span><span>↗ Share</span></div>
-              </div>
-              <div class="card post">
-                <div class="head"><div class="ava" style="width:38px;height:38px;font-size:12px;background:var(--terracotta)">OA</div>
-                  <div><b>OneAfricaForums</b> <span class="tag" style="font-size:9px">ORGANISER</span><br><small>Announcement · 5h ago</small></div></div>
-                <p>📣 Replays from Day 1 keynotes are live. Next stop: <b>Lagos Forum, Nov 2026</b> — early-bird passes open to members.</p>
-                <div class="acts"><span onclick="likeP(this)">🤍 132</span><span>💬 30</span><span>↗ Share</span></div>
-              </div>
-            </div>
-
-            <!-- SPONSORS -->
+            <!-- ============ PARTNERS ============ -->
             <div class="view" data-view="sponsors">
-              <h2 class="scr">Partners</h2>
-              <div class="sub">Branded booths, lead capture &amp; measurable ROI for sponsors.</div>
-              <div class="spon">
-                <div class="lg" style="background:linear-gradient(135deg,#F4B740,#E2622C)">AB</div>
-                <div class="meta"><b>AfriBank Group</b><small>Headline partner · Booth A1</small></div>
-                <span class="tag p">PLATINUM</span>
-              </div>
-              <div class="spon">
-                <div class="lg" style="background:#1B998B">SV</div>
-                <div class="meta"><b>Sahel Ventures</b><small>Capital partner · Booth B3</small></div>
-                <span class="tag gold">GOLD</span>
-              </div>
-              <div class="spon">
-                <div class="lg" style="background:#5b8def">TC</div>
-                <div class="meta"><b>TerraConnect Telecom</b><small>Connectivity partner</small></div>
-                <span class="tag">SILVER</span>
-              </div>
-
+              <h2 class="scr">Partners</h2><div class="sub">Branded booths, lead capture & measurable ROI.</div>
+              <div id="sponsorList"></div>
               <div class="card" style="margin-top:6px">
                 <div class="row" style="margin-bottom:6px"><div class="meta"><b>📊 Sponsor ROI — AfriBank</b><small>Live dashboard (sponsor view)</small></div></div>
-                <div class="roi">
-                  <div><b>1.2k</b><small>BOOTH VIEWS</small></div>
-                  <div><b>318</b><small>LEADS (QR)</small></div>
-                  <div><b>47</b><small>MEETINGS</small></div>
-                </div>
+                <div class="roi"><div><b>1.2k</b><small>BOOTH VIEWS</small></div><div><b>318</b><small>LEADS (QR)</small></div><div><b>47</b><small>MEETINGS</small></div></div>
                 <button class="mini-btn solid" style="width:100%;margin-top:11px" onclick="toast('Leads exported to HubSpot ✓')">⬇ Export leads to CRM</button>
               </div>
             </div>
+            <div class="view" data-view="sponsor">
+              <span class="back" onclick="go('sponsors')">‹ Partners</span>
+              <div id="sponsorBody"></div>
+            </div>
 
-            <!-- PROFILE -->
+            <!-- ============ MEETINGS ============ -->
+            <div class="view" data-view="meetings">
+              <h2 class="scr">Meetings</h2><div class="sub">Book 1:1s from shared availability — auto conflict-checked.</div>
+              <div class="card">
+                <div class="row" style="margin-bottom:4px"><div class="ava" style="background:#5b8def">FN</div>
+                  <div class="meta"><b>Meet Fatou Ndiaye</b><small>Sahel Ventures · 30 min</small></div></div>
+                <div style="font-size:11.5px;color:var(--muted);margin:8px 0 4px">Fri 13 Jun — pick a slot:</div>
+                <div class="availbar"><button onclick="pick(this)">10:30</button><button class="taken">11:00</button><button onclick="pick(this)">13:15</button><button onclick="pick(this)">15:45</button><button class="taken">16:30</button></div>
+                <button class="mini-btn solid" style="width:100%;margin-top:12px" onclick="toast('Meeting request sent + added to calendar 📅')">Send request</button>
+              </div>
+              <div class="section-h"><b>Your schedule · Fri 13</b></div>
+              <div class="slot"><div class="when"><b>09:00</b><small>30m</small></div><div class="meta"><b>Coffee with Kwame Mensah</b><small>Accra FinLabs · Table 14 ☕</small></div><span class="tag match">Confirmed</span></div>
+              <div class="slot"><div class="when"><b>13:15</b><small>30m</small></div><div class="meta"><b>Speed networking — Agritech</b><small>Auto-matched · Room B 🤝</small></div><span class="tag gold">8 people</span></div>
+            </div>
+
+            <!-- ============ CHAT ============ -->
+            <div class="view" data-view="chat">
+              <h2 class="scr">Chat</h2><div class="sub">1:1, groups & organiser broadcasts — kept after the event.</div>
+              <div id="chatlist"></div>
+            </div>
+            <div class="view" data-view="thread">
+              <span class="back" onclick="go('chat')">‹ Chats</span>
+              <div class="row" style="margin-bottom:10px"><div class="ava" style="background:#5b8def">FN</div><div class="meta"><b>Fatou Ndiaye</b><small style="color:var(--green)">● Online · Sahel Ventures</small></div></div>
+              <div class="chat-thread" id="thread">
+                <div class="bub them">Hi Amina! Loved your point on agritech offtake risk 🙌<small>10:42</small></div>
+                <div class="bub me">Thank you Fatou! We're raising for exactly that.<small>10:44</small></div>
+                <div class="bub them">I have a slot Friday 13:15, shall I confirm?<small>10:45</small></div>
+              </div>
+              <div class="chat-input"><input id="msg" placeholder="Message Fatou…" onkeydown="if(event.key==='Enter')send()"/><button onclick="send()">➤</button></div>
+            </div>
+
+            <!-- ============ COMMUNITY ============ -->
+            <div class="view" data-view="community">
+              <h2 class="scr">Community</h2><div class="sub">“Beyond the Forum” — circles that live all year, across every event.</div>
+              <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:10px">
+                <span class="tag gold">🌱 Agritech</span><span class="tag">💸 Investors</span><span class="tag">👩🏾‍💼 Women in Business</span><span class="tag">🌍 Diaspora</span></div>
+              <div class="card post"><div class="head"><div class="ava" style="width:38px;height:38px;font-size:12px;background:#1B998B">KM</div><div><b>Kwame Mensah</b><br><small>Investors Circle · 2h ago</small></div></div>
+                <p>Following the Kigali summit — who's exploring cross-border payment rails for SMEs? Building a working group 👇</p>
+                <div class="acts"><span onclick="likeP(this)">🤍 24</span><span>💬 11</span><span>↗ Share</span></div></div>
+              <div class="card post"><div class="head"><div class="ava" style="width:38px;height:38px;font-size:12px;background:var(--ink)">OA</div><div><b>OneAfrica</b> <span class="tag" style="font-size:9px">ORGANISER</span><br><small>Announcement · 5h ago</small></div></div>
+                <p>📣 Day 1 replays are live. Next stop: <b>Lagos Forum, Nov 2026</b> — early-bird open to members.</p>
+                <div class="acts"><span onclick="likeP(this)">🤍 132</span><span>💬 30</span><span>↗ Share</span></div></div>
+            </div>
+
+            <!-- ============ NOTIFICATIONS ============ -->
+            <div class="view" data-view="notif">
+              <h2 class="scr">Notifications</h2><div class="sub">Reminders, matches, messages & organiser updates.</div>
+              <div class="notif"><div class="ni">🤝</div><div class="nb"><b>Fatou Ndiaye accepted your connection</b><small>2 min ago · say hello →</small></div></div>
+              <div class="notif"><div class="ni">📅</div><div class="nb"><b>Meeting confirmed · 13:15, Room B</b><small>10 min ago</small></div></div>
+              <div class="notif"><div class="ni">🔴</div><div class="nb"><b>Starting now: Keynote on Main Stage</b><small>via low-data push · 25 min ago</small></div></div>
+              <div class="notif"><div class="ni">✨</div><div class="nb"><b>3 new high-quality matches for you</b><small>1 h ago</small></div></div>
+              <div class="notif"><div class="ni">📣</div><div class="nb"><b>OneAfrica: Lagos Forum early-bird is open</b><small>Yesterday</small></div></div>
+            </div>
+
+            <!-- ============ EVENT INFO ============ -->
+            <div class="view" data-view="info">
+              <h2 class="scr">Event info</h2><div class="sub">Everything you need on the ground.</div>
+              <div class="card"><div class="row"><div class="ava sq" style="background:var(--ink)">📍</div><div class="meta"><b>Kigali Convention Centre</b><small>KG 2 Roundabout, Kigali, Rwanda</small></div><button class="mini-btn" onclick="toast('Opening map 🗺️')">Map</button></div></div>
+              <div class="card"><b style="font-size:13px">🗺️ Floor plan & rooms</b><p class="kv" style="margin-top:5px">Main Stage (L1) · Rooms A–C (L2) · Networking Lounge (L1) · Partner Expo (Ground).</p></div>
+              <div class="card"><b style="font-size:13px">🚗 Getting there</b><p class="kv" style="margin-top:5px">15 min from Kigali Int'l Airport · shuttle every 30 min · parking on-site.</p></div>
+              <div class="card"><b style="font-size:13px">🆘 Help desk & WhatsApp</b><p class="kv" style="margin-top:5px">Ground floor, 07:30–18:00 · WhatsApp/SMS support for low-data users.</p></div>
+              <div class="card"><b style="font-size:13px">🌐 Language</b><p class="kv" style="margin-top:5px">Live interpretation: EN · FR · PT · AR.</p></div>
+            </div>
+
+            <!-- ============ PROFILE ============ -->
             <div class="view" data-view="profile">
-              <div class="pf-head">
-                <div class="big">AK</div>
-                <h3>Amina Keïta</h3>
-                <p>Founder &amp; CEO · GreenHarvest Agritech · 🇲🇱 Mali</p>
-              </div>
-              <div class="card looking">
-                <b style="font-size:12.5px">🎯 I'm looking for…</b>
-                <p style="font-size:12.5px;color:var(--ink-2);margin-top:5px">Seed investors in agritech · distribution partners in West Africa · a CTO.</p>
-              </div>
-              <div class="chips">
-                <span>Agritech</span><span>Climate</span><span>Fundraising</span><span>Supply chain</span><span>EN / FR</span>
-              </div>
-              <div class="card">
-                <div class="row"><div class="meta"><b>Digital business card</b><small>Share your profile via QR</small></div>
-                  <button class="mini-btn" onclick="toast('QR card ready to scan 📷')">Show QR</button></div>
-              </div>
-              <div class="card">
-                <div class="row"><div class="meta"><b>My events</b><small>Profile &amp; contacts carry across all OAF events</small></div>
-                  <button class="mini-btn" onclick="openSheet()">Switch</button></div>
-              </div>
-              <div class="card">
-                <div class="row"><div class="meta"><b>🌐 Language &amp; low-data mode</b><small>EN · FR · PT · AR · offline ready</small></div>
-                  <button class="mini-btn" onclick="toast('Low-data mode on 📶')">On</button></div>
-              </div>
+              <div class="dhead"><div class="big" style="background:var(--yellow);color:#111">AK</div><h3>Amina Keïta</h3><p>Founder & CEO · GreenHarvest Agritech · 🇲🇱 Mali</p></div>
+              <div class="card looking"><b style="font-size:12.5px">🎯 I'm looking for…</b><p style="font-size:12.5px;color:var(--ink-2);margin-top:5px">Seed investors in agritech · distribution partners in West Africa · a CTO.</p></div>
+              <div class="chips"><span>Agritech</span><span>Climate</span><span>Fundraising</span><span>Supply chain</span><span>EN / FR</span></div>
+              <div class="card"><div class="row"><div class="meta"><b>Digital business card</b><small>Share your profile via QR</small></div><button class="mini-btn" onclick="toast('QR card ready to scan 📷')">Show QR</button></div></div>
+              <div class="card"><div class="row"><div class="meta"><b>My events</b><small>Profile & contacts carry across all OneAfrica events</small></div><button class="mini-btn" onclick="backToEvents()">View</button></div></div>
+              <div class="card"><div class="row"><div class="meta"><b>🌐 Language & low-data mode</b><small>EN · FR · PT · AR · offline ready</small></div><button class="mini-btn" onclick="toast('Low-data mode on 📶')">On</button></div></div>
             </div>
 
           </div><!-- /views -->
 
-          <!-- BOTTOM NAV -->
-          <div class="tabbar">
-            <button class="on" data-tab="home" onclick="go('home')"><span class="gi">🏠</span>Home</button>
+          <div class="tabbar" style="display:none">
+            <button data-tab="home" onclick="go('home')"><span class="gi">🏠</span>Home</button>
             <button data-tab="program" onclick="go('program')"><span class="gi">🗓️</span>Program</button>
             <button data-tab="people" onclick="go('people')"><span class="gi">🤝</span>People</button>
             <button data-tab="meetings" onclick="go('meetings')"><span class="gi">📅</span>Meet</button>
             <button data-tab="chat" onclick="go('chat')"><span class="gi">💬</span>Chat</button>
           </div>
 
-          <!-- toast + event sheet -->
           <div class="toast" id="toast"></div>
-          <div class="sheet" id="sheet" onclick="if(event.target.id==='sheet')closeSheet()">
-            <div class="sheet-inner">
-              <h4>Your events</h4>
-              <p class="sub">One profile &amp; network across everything OneAfricaForums.</p>
-              <div class="ev-opt" onclick="setEvent('OneAfrica Forum 2026','Kigali · Live now','#1E8C5A')">
-                <div class="yr" style="background:#1E8C5A">LIVE</div>
-                <div class="meta"><b>OneAfrica Forum 2026 — Kigali</b><small>Business, Investment &amp; Leadership · happening now</small></div>
-              </div>
-              <div class="ev-opt" onclick="setEvent('Lagos Forum 2026','Lagos · Nov 2026','#E2622C')">
-                <div class="yr" style="background:#E2622C">NOV</div>
-                <div class="meta"><b>Lagos Forum 2026</b><small>Upcoming · early-bird open to members</small></div>
-              </div>
-              <div class="ev-opt" onclick="setEvent('Nairobi Forum 2025','Nairobi · archived','#6b7480')">
-                <div class="yr" style="background:#6b7480">2025</div>
-                <div class="meta"><b>Nairobi Forum 2025</b><small>Past · replays, contacts &amp; chats still live</small></div>
-              </div>
-              <button class="mini-btn" style="width:100%;margin-top:6px" onclick="closeSheet()">Close</button>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
@@ -565,21 +466,41 @@
 <section class="block" id="pillars">
   <div class="wrap">
     <h2>The eight pillars</h2>
-    <p class="lead">Everything the best platforms (Whova, Swapcard, Brella, Grip) do well —
-      reimagined African-first and wrapped in one brand.</p>
+    <p class="lead">Everything the best platforms (Whova, Swapcard, Brella, Grip) do well — reimagined African-first, in OneAfrica's brand.</p>
     <div class="pillars">
-      <div class="pillar"><div class="ic">🌍</div><h3>Multi-event hub</h3><p>Every OAF event in one app, one profile, one growing network. Your contacts never reset.</p></div>
-      <div class="pillar"><div class="ic">🗓️</div><h3>Smart program</h3><p>Multi-track agenda, personal schedule, reminders, calendar sync, live Q&amp;A &amp; polls.</p></div>
-      <div class="pillar"><div class="ic">🤝</div><h3>AI matchmaking</h3><p>Intent-based matches with a score &amp; reason; improves with behaviour. Quality, not spam.</p></div>
+      <div class="pillar"><div class="ic">🌍</div><h3>Multi-event hub</h3><p>Land on a page with every OneAfrica event. One profile, one growing network across them all.</p></div>
+      <div class="pillar"><div class="ic">🗓️</div><h3>Smart program</h3><p>Multi-track agenda, session details, personal schedule, reminders & calendar sync.</p></div>
+      <div class="pillar"><div class="ic">🤝</div><h3>AI matchmaking</h3><p>Intent-based matches with a score & reason; improves with behaviour. Quality, not spam.</p></div>
       <div class="pillar"><div class="ic">📅</div><h3>Meeting booking</h3><p>Book 1:1s from shared availability, auto speed-networking, real-time conflict handling.</p></div>
-      <div class="pillar"><div class="ic">💬</div><h3>Chat &amp; community</h3><p>1:1, groups, organiser broadcasts and topic circles — preserved after the event.</p></div>
-      <div class="pillar"><div class="ic">⭐</div><h3>Sponsor engine</h3><p>Tiered booths, QR lead capture, sponsored circles, CRM export &amp; live ROI dashboard.</p></div>
-      <div class="pillar"><div class="ic">🏆</div><h3>Gamification</h3><p>Points, badges, challenges &amp; leaderboards — sponsor-brandable to drive real interactions.</p></div>
-      <div class="pillar"><div class="ic">📶</div><h3>African-first &amp; offline</h3><p>PWA, low-data mode, WhatsApp/SMS fallback, multilingual EN/FR/PT/AR.</p></div>
+      <div class="pillar"><div class="ic">💬</div><h3>Chat & community</h3><p>1:1, groups, organiser broadcasts and topic circles — preserved after the event.</p></div>
+      <div class="pillar"><div class="ic">⭐</div><h3>Sponsor engine</h3><p>Tiered booths, QR lead capture, sponsored circles, CRM export & live ROI dashboard.</p></div>
+      <div class="pillar"><div class="ic">🎤</div><h3>Speakers & content</h3><p>Speaker profiles, bios, sessions, slides & replays — discoverable long after.</p></div>
+      <div class="pillar"><div class="ic">📶</div><h3>African-first & offline</h3><p>PWA, low-data mode, WhatsApp/SMS fallback, multilingual EN/FR/PT/AR.</p></div>
     </div>
-    <div class="note">⚠️ <b>Mockup notice:</b> screens, names, companies and numbers above are
-      illustrative sample content for a fictional <i>OneAfrica Forum 2026 — Kigali</i> edition,
-      created to demonstrate the concept. No real persons are represented.</div>
+    <div class="note">⚠️ <b>Mockup notice:</b> names, companies and numbers are illustrative sample content for fictional OneAfrica editions, to demonstrate the concept. No real persons are represented.</div>
+  </div>
+</section>
+
+<!-- SCREEN MAP -->
+<section class="block" id="screens">
+  <div class="wrap">
+    <h2>Every screen in the app</h2>
+    <p class="lead">The prototype now covers the full journey — from the events hub down to individual detail pages.</p>
+    <div class="map-grid">
+      <div><b>Main page</b>Events hub (all events: live / upcoming / past)</div>
+      <div><b>Event</b>Home / dashboard</div>
+      <div><b>Program</b>Agenda + session detail</div>
+      <div><b>Speakers</b>Directory + speaker detail</div>
+      <div><b>Attendees</b>Directory + attendee profile</div>
+      <div><b>Networking</b>AI matches + connect</div>
+      <div><b>Meetings</b>Booking + your schedule</div>
+      <div><b>Partners</b>Sponsors + booth detail + ROI</div>
+      <div><b>Chat</b>List + 1:1 thread</div>
+      <div><b>Community</b>Year-round circles & feed</div>
+      <div><b>Notifications</b>Reminders, matches, updates</div>
+      <div><b>Event info</b>Venue, map, help, language</div>
+      <div><b>Profile</b>Digital card · my events · settings</div>
+    </div>
   </div>
 </section>
 
@@ -587,154 +508,224 @@
 <section class="block" id="compare">
   <div class="wrap">
     <h2>How we compare</h2>
-    <p class="lead">We match the table-stakes and win on community continuity + African context.
-      (See full analysis in <a href="docs/market-research.md" style="color:var(--terracotta-d);font-weight:700">market-research.md</a>.)</p>
-    <div class="cmp-wrap">
-    <table class="cmp">
+    <p class="lead">We match the table-stakes and win on community continuity + African context. Full analysis in <a href="docs/market-research.md" style="color:var(--yellow-d);font-weight:700">market-research.md</a>.</p>
+    <div class="cmp-wrap"><table class="cmp">
       <tr><th>Capability</th><th>Whova</th><th>Swapcard</th><th>Brella</th><th>Grip</th><th>OAF Connect</th></tr>
-      <tr><td>Agenda &amp; personal schedule</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
-      <tr><td>AI matchmaking</td><td>basic</td><td class="y">✓</td><td class="y">✓</td><td class="y">★ best</td><td class="y">✓ intent-based</td></tr>
+      <tr><td>Agenda & personal schedule</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+      <tr><td>AI matchmaking</td><td>basic</td><td class="y">✓</td><td class="y">✓</td><td class="y">★ best</td><td class="y">✓ intent</td></tr>
       <tr><td>Meeting scheduler</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
       <tr><td>Sponsor / lead capture</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
       <tr><td>Fully <b>your</b> brand</td><td>—</td><td>partial</td><td>partial</td><td>partial</td><td class="y">✓ white-label</td></tr>
       <tr><td>One profile across all events</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="p">★ core</td></tr>
       <tr><td>Always-on 365 community</td><td>fades</td><td>add-on</td><td>thin</td><td>—</td><td class="p">★ core</td></tr>
-      <tr><td>Offline / low-data &amp; multilingual</td><td>partial</td><td>partial</td><td>partial</td><td>partial</td><td class="p">★ African-first</td></tr>
-    </table>
-    </div>
-  </div>
-</section>
-
-<!-- ROADMAP -->
-<section class="block" id="roadmap">
-  <div class="wrap">
-    <h2>Delivery roadmap</h2>
-    <p class="lead">From this clickable mockup to a world-class platform, phase by phase.</p>
-    <div class="road">
-      <div class="step"><b class="n">Phase 0</b><h4>Mockup ✔</h4><p>This prototype + research. Align stakeholders, demo to sponsors.</p></div>
-      <div class="step"><b class="n">Phase 1</b><h4>MVP</h4><p>Auth, event hub, agenda, directories, 1:1 chat, push. Live at one forum.</p></div>
-      <div class="step"><b class="n">Phase 2</b><h4>Networking</h4><p>AI matchmaking, meeting scheduler, QR exchange, community board.</p></div>
-      <div class="step"><b class="n">Phase 3</b><h4>Monetize</h4><p>Sponsor booths, tiers, lead capture, ROI dashboard, gamification.</p></div>
-      <div class="step"><b class="n">Phase 4</b><h4>Always-on</h4><p>Year-round circles, jobs/deals board, multilingual, native apps.</p></div>
-    </div>
+      <tr><td>Offline / low-data & multilingual</td><td>partial</td><td>partial</td><td>partial</td><td>partial</td><td class="p">★ African-first</td></tr>
+    </table></div>
   </div>
 </section>
 
 <footer>
-  <b>OAF Connect</b> — concept mockup for <b>OneAfricaForums</b> · Built as a discovery prototype.<br>
-  See <a href="docs/market-research.md" style="color:var(--terracotta-d)">market research</a> ·
-  <a href="docs/product-spec.md" style="color:var(--terracotta-d)">product spec</a>. Sample data is illustrative.
+  <b>OAF Connect</b> — concept mockup for <b>OneAfrica</b> · discovery prototype.<br>
+  See <a href="docs/market-research.md" style="color:var(--yellow-d)">market research</a> · <a href="docs/product-spec.md" style="color:var(--yellow-d)">product spec</a>. Sample data is illustrative.
 </footer>
 
 <script>
-/* ---------- sample data ---------- */
-const agendaDays = [
- [ // Thu 12
-  {t:'09:00',d:'30m',title:'Opening & welcome',meta:'Main Stage · OAF Chair',track:'Plenary',c:'#1E8C5A',star:true},
-  {t:'09:30',d:'60m',title:'Keynote: Financing the AfCFTA decade',meta:'Main Stage · live now',track:'Investment',c:'#E2622C',star:true},
-  {t:'11:00',d:'45m',title:'Agritech offtake & climate resilience',meta:'Room B · 4 panellists',track:'Agritech',c:'#1B998B',star:false},
-  {t:'13:30',d:'45m',title:'Scaling fintech across borders',meta:'Room A · TerraConnect',track:'Fintech',c:'#5b8def',star:false},
-  {t:'15:00',d:'90m',title:'Speed networking — Investors x Founders',meta:'Networking Lounge',track:'Networking',c:'#9a6b00',star:true},
- ],
- [ // Fri 13
-  {t:'09:00',d:'45m',title:'Women leading African enterprise',meta:'Main Stage',track:'Leadership',c:'#b5559a',star:false},
-  {t:'10:30',d:'45m',title:'Energy transition & green capital',meta:'Room A',track:'Energy',c:'#1E8C5A',star:true},
-  {t:'13:15',d:'30m',title:'Agritech speed-meetings (auto-matched)',meta:'Room B · you + 7',track:'Networking',c:'#9a6b00',star:true},
-  {t:'15:45',d:'45m',title:'Diaspora investment masterclass',meta:'Room C',track:'Investment',c:'#E2622C',star:false},
- ],
- [ // Sat 14
-  {t:'10:00',d:'60m',title:'Founders pitch showcase',meta:'Main Stage · 12 startups',track:'Startups',c:'#5b8def',star:true},
-  {t:'12:00',d:'45m',title:'Policy & the next trade corridor',meta:'Room A',track:'Policy',c:'#1B998B',star:false},
-  {t:'14:00',d:'45m',title:'Closing & Lagos Forum reveal',meta:'Main Stage',track:'Plenary',c:'#1E8C5A',star:false},
- ],
+/* ================= DATA ================= */
+const events=[
+ {id:0,name:'OneAfrica Forum 2026',city:'Kigali, Rwanda',dates:'12–14 Jun 2026',status:'live',theme:'Business, Investment & Leadership',dels:'2,400',countries:'54',speakers:'90',kicker:'📍 KIGALI · 12–14 JUN',top:'linear-gradient(135deg,#1c1c1c,#000)'},
+ {id:1,name:'Lagos Forum 2026',city:'Lagos, Nigeria',dates:'18–20 Nov 2026',status:'upcoming',theme:'Trade, Tech & the Creative Economy',dels:'1,800',countries:'40',speakers:'70',kicker:'📍 LAGOS · 18–20 NOV',top:'linear-gradient(135deg,#0f6e4f,#1B998B)'},
+ {id:2,name:'Cape Town Summit 2026',city:'Cape Town, S. Africa',dates:'24–25 Sep 2026',status:'upcoming',theme:'Energy & Climate Finance',dels:'1,100',countries:'32',speakers:'48',kicker:'📍 CAPE TOWN · 24–25 SEP',top:'linear-gradient(135deg,#13476b,#2f7bb0)'},
+ {id:3,name:'Nairobi Forum 2025',city:'Nairobi, Kenya',dates:'Oct 2025',status:'past',theme:'The Digital Economy',dels:'2,050',countries:'48',speakers:'82',kicker:'📍 NAIROBI · OCT 2025',top:'linear-gradient(135deg,#7a3b12,#c2691e)'},
+ {id:4,name:'Accra Forum 2024',city:'Accra, Ghana',dates:'Nov 2024',status:'past',theme:'Youth & Entrepreneurship',dels:'1,600',countries:'36',speakers:'60',kicker:'📍 ACCRA · NOV 2024',top:'linear-gradient(135deg,#5a4a8a,#8a6fb5)'},
 ];
-
-const peopleData = [
- {n:'Fatou Ndiaye',r:'Partner · Sahel Ventures · 🇸🇳',c:'#5b8def',s:94,why:'Both focused on agritech capital'},
- {n:'Kwame Mensah',r:'CEO · Accra FinLabs · 🇬🇭',c:'#1B998B',s:90,why:'Cross-border payments + your supply chain'},
- {n:'Dr. Lindiwe Dube',r:'Head of Impact · AfriBank · 🇿🇦',c:'#E2622C',s:87,why:'Funds climate & food-security ventures'},
- {n:'Tunde Bakare',r:'Founder · HarvestLink · 🇳🇬',c:'#9a6b00',s:83,why:'Distribution partner in West Africa'},
- {n:'Aïcha Bensaïd',r:'Investor · Atlas Capital · 🇲🇦',c:'#b5559a',s:80,why:'Seed cheques in your sector'},
+const speakers=[
+ {n:'Dr. Amara Okonkwo',r:'Chief Economist · African Development Bank',c:'#E2622C',ctry:'🇳🇬 Nigeria',bio:'Leading economist on continental trade and the AfCFTA. 20+ years across multilateral finance.',tags:['Trade','AfCFTA','Macro'],ses:['Keynote: Financing the AfCFTA decade']},
+ {n:'Thabo Nkosi',r:'CEO · Continental Energy',c:'#13476b',ctry:'🇿🇦 South Africa',bio:'Building Africa\'s largest renewable energy IPP. Champion of just energy transition.',tags:['Energy','Climate','Infrastructure'],ses:['Energy transition & green capital']},
+ {n:'Fatou Ndiaye',r:'Partner · Sahel Ventures',c:'#5b8def',ctry:'🇸🇳 Senegal',bio:'Early-stage investor backing agritech and fintech founders across Francophone Africa.',tags:['VC','Agritech','Fintech'],ses:['Diaspora investment masterclass']},
+ {n:'Zainab Al-Rashid',r:'Fmr. Minister of Trade',c:'#9a6b00',ctry:'🇪🇬 Egypt',bio:'Architect of cross-border trade reform; advisor on regional integration.',tags:['Policy','Trade','Public sector'],ses:['Policy & the next trade corridor']},
+ {n:'Kwame Mensah',r:'Founder · Accra FinLabs',c:'#1B998B',ctry:'🇬🇭 Ghana',bio:'Serial founder building payment rails for African SMEs.',tags:['Fintech','Payments','SMEs'],ses:['Scaling fintech across borders']},
+ {n:'Dr. Lindiwe Dube',r:'Head of Impact · AfriBank',c:'#b5559a',ctry:'🇿🇦 South Africa',bio:'Directs AfriBank\'s climate & food-security investment portfolio.',tags:['Impact','Climate','Banking'],ses:['Agritech offtake & climate resilience']},
 ];
-
-const chatData = [
- {n:'Fatou Ndiaye',c:'#5b8def',last:'Yes. I have a slot Friday 13:15…',time:'10:45',unread:1,open:true},
+const people=[
+ {n:'Fatou Ndiaye',r:'Partner · Sahel Ventures',c:'#5b8def',ctry:'🇸🇳 Senegal',s:94,why:'You both want to raise / deploy capital in agritech.',look:'Agritech & fintech founders (pre-Series A)',tags:['VC','Agritech','Fintech']},
+ {n:'Kwame Mensah',r:'CEO · Accra FinLabs',c:'#1B998B',ctry:'🇬🇭 Ghana',s:90,why:'Cross-border payments fit your supply chain.',look:'Distribution & banking partners',tags:['Fintech','Payments']},
+ {n:'Dr. Lindiwe Dube',r:'Head of Impact · AfriBank',c:'#b5559a',ctry:'🇿🇦 South Africa',s:87,why:'Funds climate & food-security ventures.',look:'Investable climate ventures',tags:['Impact','Climate']},
+ {n:'Tunde Bakare',r:'Founder · HarvestLink',c:'#9a6b00',ctry:'🇳🇬 Nigeria',s:83,why:'Potential distribution partner in West Africa.',look:'Agri off-take & logistics partners',tags:['Agritech','Logistics']},
+ {n:'Aïcha Bensaïd',r:'Investor · Atlas Capital',c:'#E2622C',ctry:'🇲🇦 Morocco',s:80,why:'Writes seed cheques in your sector.',look:'Seed-stage African startups',tags:['VC','Seed']},
+];
+const sponsors=[
+ {n:'AfriBank Group',tier:'PLATINUM',role:'Headline partner · Booth A1',c:'linear-gradient(135deg,#FFD400,#E8C000)',tc:'#111',desc:'Pan-African banking group backing trade, SMEs and climate finance across 24 markets.',booth:'A1 · Ground floor expo',reps:['Dr. Lindiwe Dube','2 more reps']},
+ {n:'Sahel Ventures',tier:'GOLD',role:'Capital partner · Booth B3',c:'#1B998B',tc:'#fff',desc:'Early-stage VC investing in Francophone African founders.',booth:'B3 · Ground floor expo',reps:['Fatou Ndiaye']},
+ {n:'TerraConnect Telecom',tier:'SILVER',role:'Connectivity partner',c:'#5b8def',tc:'#fff',desc:'Powering the event Wi-Fi and low-data experience for delegates.',booth:'C2 · Ground floor expo',reps:['Sales team']},
+];
+const agendaDays=[
+ [{t:'09:00',d:'30m',title:'Opening & welcome',meta:'Main Stage',trk:'Plenary',c:'#1E8C5A',star:true,desc:'OneAfrica Chair opens the 2026 forum and sets the agenda for three days of dealmaking.',sp:[]},
+  {t:'09:30',d:'60m',title:'Keynote: Financing the AfCFTA decade',meta:'Main Stage · LIVE',trk:'Investment',c:'#111',star:true,desc:'How public and private capital can unlock the African Continental Free Trade Area over the next ten years.',sp:[0]},
+  {t:'11:00',d:'45m',title:'Agritech offtake & climate resilience',meta:'Room B',trk:'Agritech',c:'#1B998B',star:false,desc:'Building resilient food systems and bankable agritech models.',sp:[5]},
+  {t:'13:30',d:'45m',title:'Scaling fintech across borders',meta:'Room A',trk:'Fintech',c:'#5b8def',star:false,desc:'Payment rails, regulation and the path to pan-African scale.',sp:[4]},
+  {t:'15:00',d:'90m',title:'Speed networking — Investors x Founders',meta:'Networking Lounge',trk:'Networking',c:'#9a6b00',star:true,desc:'Structured, AI-matched 1:1 rounds between investors and founders.',sp:[]}],
+ [{t:'09:00',d:'45m',title:'Women leading African enterprise',meta:'Main Stage',trk:'Leadership',c:'#b5559a',star:false,desc:'Trailblazing women on scaling businesses across the continent.',sp:[]},
+  {t:'10:30',d:'45m',title:'Energy transition & green capital',meta:'Room A',trk:'Energy',c:'#1E8C5A',star:true,desc:'Financing Africa\'s just energy transition.',sp:[1]},
+  {t:'13:15',d:'30m',title:'Agritech speed-meetings (auto-matched)',meta:'Room B',trk:'Networking',c:'#9a6b00',star:true,desc:'You + 7 matched delegates in rapid 1:1 meetings.',sp:[]},
+  {t:'15:45',d:'45m',title:'Diaspora investment masterclass',meta:'Room C',trk:'Investment',c:'#111',star:false,desc:'Channelling diaspora capital into African ventures.',sp:[2]}],
+ [{t:'10:00',d:'60m',title:'Founders pitch showcase',meta:'Main Stage · 12 startups',trk:'Startups',c:'#5b8def',star:true,desc:'Twelve vetted startups pitch to a panel of pan-African investors.',sp:[]},
+  {t:'12:00',d:'45m',title:'Policy & the next trade corridor',meta:'Room A',trk:'Policy',c:'#1B998B',star:false,desc:'What it takes to open the continent\'s next major trade corridor.',sp:[3]},
+  {t:'14:00',d:'45m',title:'Closing & Lagos Forum reveal',meta:'Main Stage',trk:'Plenary',c:'#1E8C5A',star:false,desc:'Wrap-up, awards and the reveal of the next OneAfrica destination.',sp:[]}],
+];
+const chats=[
+ {n:'Fatou Ndiaye',c:'#5b8def',last:'I have a slot Friday 13:15…',time:'10:45',unread:1},
  {n:'Agritech Circle (32)',c:'#1E8C5A',last:'Tunde: sharing the offtake template 📎',time:'10:21',unread:2,grp:true},
- {n:'OneAfricaForums',c:'#E2622C',last:'📣 Day 1 replays are now live',time:'09:02',org:true},
+ {n:'OneAfrica',c:'#111',last:'📣 Day 1 replays are now live',time:'09:02',org:true},
  {n:'Kwame Mensah',c:'#1B998B',last:'Coffee at 9 tomorrow? ☕',time:'Yest',unread:0},
 ];
+const initials=n=>n.replace(/Dr\.\s|Fmr\.\s/,'').split(' ').map(x=>x[0]).slice(0,2).join('');
 
-/* ---------- render ---------- */
+/* ================= RENDER ================= */
+function renderEvents(f='all'){
+  const order={live:0,upcoming:1,past:2};
+  const list=events.filter(e=>f==='all'||e.status===f).sort((a,b)=>order[a.status]-order[b.status]);
+  const label={live:'● LIVE NOW',upcoming:'UPCOMING',past:'PAST · ARCHIVE'};
+  const cls={live:'live',upcoming:'up',past:'past'};
+  document.getElementById('eventList').innerHTML=list.map(e=>`
+    <div class="ev-card" onclick="enterEvent(${e.id})">
+      <div class="top" style="background:${e.top}">
+        <span class="stat ${cls[e.status]}">${label[e.status]}</span><b>${e.name}</b></div>
+      <div class="bd">
+        <div class="row">📍 ${e.city} &nbsp;·&nbsp; 🗓️ ${e.dates}</div>
+        <div class="theme">${e.theme}</div>
+        <div class="ev-meta"><span><b>${e.dels}</b> delegates</span><span><b>${e.countries}</b> countries</span><span><b>${e.speakers}</b> speakers</span></div>
+      </div>
+    </div>`).join('');
+}
+function renderHomeMatches(){
+  document.getElementById('homeMatches').innerHTML=people.slice(0,1).map((p,i)=>`
+    <div class="card"><div class="row clk" onclick="openAttendee(0)">
+        <div class="ava" style="background:${p.c}">${initials(p.n)}</div>
+        <div class="meta"><b>${p.n}</b><small>${p.r} · ${p.ctry}</small></div>
+        <div class="score" style="--p:${p.s}%"><span>${p.s}</span></div></div>
+      <div style="margin-top:9px;font-size:11.5px;color:var(--muted)">🎯 ${p.why}</div>
+      <div style="display:flex;gap:8px;margin-top:11px">
+        <button class="mini-btn solid" style="flex:1" onclick="connect(this,'${p.n.split(' ')[0]}')">＋ Connect</button>
+        <button class="mini-btn" onclick="go('meetings')">📅 Meet</button></div></div>`).join('');
+}
 function renderAgenda(i){
-  document.getElementById('agenda').innerHTML = agendaDays[i].map((s,idx)=>`
-    <div class="ses">
+  document.getElementById('agenda').innerHTML=agendaDays[i].map((s,idx)=>`
+    <div class="ses" onclick="if(event.target.classList.contains('star'))return;openSession(${i},${idx})">
       <div class="time">${s.t}<small>${s.d}</small></div>
-      <div class="body"><b>${s.title}</b><small>${s.meta}</small><br>
-        <span class="track" style="background:${s.c}22;color:${s.c}">${s.track}</span></div>
+      <div class="body"><b>${s.title}</b><small>${s.meta}</small><br><span class="trk" style="background:${s.c}1f;color:${s.c}">${s.trk}</span></div>
       <div class="star ${s.star?'on':''}" onclick="this.classList.toggle('on');toast(this.classList.contains('on')?'Added to My Agenda ⭐':'Removed')">${s.star?'★':'☆'}</div>
     </div>`).join('');
 }
+function renderSpeakers(){
+  document.getElementById('speakerList').innerHTML=speakers.map((s,i)=>`
+    <div class="card clk" onclick="openSpeaker(${i})"><div class="row">
+      <div class="ava" style="background:${s.c}">${initials(s.n)}</div>
+      <div class="meta"><b>${s.n}</b><small>${s.r}</small></div><span style="font-size:16px">›</span></div></div>`).join('');
+}
 function renderPeople(){
-  document.getElementById('people').innerHTML = peopleData.map(p=>`
-    <div class="card">
-      <div class="row">
-        <div class="ava" style="background:${p.c}">${p.n.split(' ').map(x=>x[0]).slice(0,2).join('')}</div>
-        <div class="meta"><b>${p.n}</b><small>${p.r}</small></div>
-        <div class="score" style="--p:${p.s}%"><span>${p.s}</span></div>
-      </div>
+  document.getElementById('peopleList').innerHTML=people.map((p,i)=>`
+    <div class="card"><div class="row clk" onclick="openAttendee(${i})">
+      <div class="ava" style="background:${p.c}">${initials(p.n)}</div>
+      <div class="meta"><b>${p.n}</b><small>${p.r} · ${p.ctry}</small></div>
+      <div class="score" style="--p:${p.s}%"><span>${p.s}</span></div></div>
       <div style="margin-top:8px;font-size:11px;color:var(--muted)">🎯 ${p.why}</div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <button class="mini-btn solid" style="flex:1" onclick="connect(this,'${p.n.split(' ')[0]}')">＋ Connect</button>
         <button class="mini-btn" onclick="go('thread')">💬</button>
-        <button class="mini-btn" onclick="go('meetings')">📅</button>
-      </div>
-    </div>`).join('');
+        <button class="mini-btn" onclick="go('meetings')">📅</button></div></div>`).join('');
+}
+function renderSponsors(){
+  document.getElementById('sponsorList').innerHTML=sponsors.map((s,i)=>`
+    <div class="spon" onclick="openSponsor(${i})"><div class="lg" style="background:${s.c};color:${s.tc}">${initials(s.n)}</div>
+      <div class="meta"><b>${s.n}</b><small>${s.role}</small></div>
+      <span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${s.tier}</span></div>`).join('');
 }
 function renderChats(){
-  document.getElementById('chatlist').innerHTML = chatData.map(c=>`
-    <div class="card" style="cursor:pointer" onclick="go('thread')">
-      <div class="row">
-        <div class="ava" style="background:${c.c}">${c.grp?'👥':c.org?'OA':c.n.split(' ').map(x=>x[0]).slice(0,2).join('')}</div>
-        <div class="meta"><b>${c.n}${c.org?' <span class=\\'tag\\' style=\\'font-size:9px\\'>ORG</span>':''}</b><small>${c.last}</small></div>
-        <div style="text-align:right"><small style="color:var(--muted);font-size:10px">${c.time}</small>${c.unread?`<br><span class="tag live" style="font-size:9px">${c.unread}</span>`:''}</div>
-      </div>
-    </div>`).join('');
+  document.getElementById('chatlist').innerHTML=chats.map(c=>`
+    <div class="card clk" onclick="go('thread')"><div class="row">
+      <div class="ava" style="background:${c.c}">${c.grp?'👥':c.org?'OA':initials(c.n)}</div>
+      <div class="meta"><b>${c.n}</b><small>${c.last}</small></div>
+      <div style="text-align:right"><small style="color:var(--muted);font-size:10px">${c.time}</small>${c.unread?`<br><span class="tag live" style="font-size:9px">${c.unread}</span>`:''}</div></div></div>`).join('');
 }
 
-/* ---------- navigation ---------- */
+/* ============ DETAIL PAGES ============ */
+function openSession(d,i){const s=agendaDays[d][i];
+  document.getElementById('sessionBody').innerHTML=`
+    <span class="trk" style="background:${s.c}1f;color:${s.c};font-size:11px;padding:4px 9px">${s.trk}</span>
+    <h2 class="scr" style="margin-top:10px">${s.title}</h2>
+    <p class="kv">🕘 <b>${s.t}</b> (${s.d}) · ${s.meta}</p>
+    <div class="card" style="margin-top:12px"><p class="kv">${s.desc}</p></div>
+    ${s.sp.length?`<div class="section-h"><b>Speakers</b></div>`+s.sp.map(si=>`<div class="card clk" onclick="openSpeaker(${si})"><div class="row"><div class="ava" style="background:${speakers[si].c}">${initials(speakers[si].n)}</div><div class="meta"><b>${speakers[si].n}</b><small>${speakers[si].r}</small></div><span style="font-size:16px">›</span></div></div>`).join(''):''}
+    <div class="btn-row" style="margin-top:14px"><button class="mini-btn solid" onclick="toast('Added to My Agenda ⭐')">☆ Add to agenda</button><button class="mini-btn" onclick="toast('Live Q&A opening 🎙️')">Live Q&A</button></div>
+    <button class="mini-btn" style="width:100%;margin-top:8px" onclick="toast('Slides downloaded 📑')">📑 Slides & materials</button>`;
+  go('session');
+}
+function openSpeaker(i){const s=speakers[i];
+  document.getElementById('speakerBody').innerHTML=`
+    <div class="dhead"><div class="big" style="background:${s.c}">${initials(s.n)}</div><h3>${s.n}</h3><p>${s.r}</p><p>${s.ctry}</p></div>
+    <div class="chips">${s.tags.map(t=>`<span>${t}</span>`).join('')}</div>
+    <div class="card"><p class="kv">${s.bio}</p></div>
+    <div class="section-h"><b>Sessions</b></div>
+    ${s.ses.map(t=>`<div class="card"><div class="row"><div class="ava sq" style="background:${s.c}">🎤</div><div class="meta"><b>${t}</b><small>Tap Program for time & room</small></div></div></div>`).join('')}
+    <div class="btn-row" style="margin-top:14px"><button class="mini-btn solid" onclick="connect(this,'${s.n.split(' ')[0]}')">＋ Connect</button><button class="mini-btn" onclick="go('thread')">💬 Message</button></div>`;
+  go('speaker');
+}
+function openAttendee(i){const p=people[i];
+  document.getElementById('attendeeBody').innerHTML=`
+    <div class="dhead"><div class="big" style="background:${p.c}">${initials(p.n)}</div><h3>${p.n}</h3><p>${p.r}</p><p>${p.ctry}</p>
+      <div class="score" style="--p:${p.s}%;width:54px;height:54px;font-size:14px;margin-top:10px"><span>${p.s}</span></div>
+      <small style="color:var(--green);font-weight:700;margin-top:4px">match score</small></div>
+    <div class="card"><b style="font-size:12px">🎯 Why you match</b><p class="kv" style="margin-top:4px">${p.why}</p></div>
+    <div class="card looking"><b style="font-size:12px">They're looking for…</b><p class="kv" style="margin-top:4px">${p.look}</p></div>
+    <div class="chips">${p.tags.map(t=>`<span>${t}</span>`).join('')}</div>
+    <div class="btn-row"><button class="mini-btn solid" onclick="connect(this,'${p.n.split(' ')[0]}')">＋ Connect</button><button class="mini-btn" onclick="go('thread')">💬</button><button class="mini-btn" onclick="go('meetings')">📅 Meet</button></div>
+    <button class="mini-btn" style="width:100%;margin-top:8px" onclick="toast('Contact saved 📇')">📇 Exchange business card (QR)</button>`;
+  go('attendee');
+}
+function openSponsor(i){const s=sponsors[i];
+  document.getElementById('sponsorBody').innerHTML=`
+    <div class="dhead"><div class="big" style="border-radius:18px;background:${s.c};color:${s.tc}">${initials(s.n)}</div><h3>${s.n}</h3><p><span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${s.tier}</span></p></div>
+    <div class="card"><p class="kv">${s.desc}</p></div>
+    <div class="card"><div class="row"><div class="meta"><b>🏛️ Booth</b><small>${s.booth}</small></div><button class="mini-btn" onclick="toast('Booth located on map 🗺️')">Locate</button></div></div>
+    <div class="section-h"><b>Representatives</b></div>
+    ${s.reps.map(r=>`<div class="card"><div class="row"><div class="ava" style="background:#111">${initials(r)}</div><div class="meta"><b>${r}</b><small>Tap to connect</small></div></div></div>`).join('')}
+    <div class="btn-row" style="margin-top:14px"><button class="mini-btn solid" onclick="toast('Info requested — they\\'ll be in touch ✉️')">Request info</button><button class="mini-btn" onclick="toast('Brochure downloaded 📄')">📄 Brochure</button></div>`;
+  go('sponsor');
+}
+
+/* ============ NAVIGATION ============ */
+const tabMap={home:'home',program:'program',session:'program',speakers:'people',speaker:'people',people:'people',attendee:'people',sponsors:'home',sponsor:'home',meetings:'meetings',chat:'chat',thread:'chat',community:'home',notif:'home',info:'home',profile:'home'};
 function go(v){
   document.querySelectorAll('.view').forEach(e=>e.classList.toggle('active',e.dataset.view===v));
-  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===v));
-  // keep a tab highlighted for sub-screens
-  const map={thread:'chat',community:'home',sponsors:'home',profile:'home'};
-  if(map[v]) document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===map[v]));
+  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tabMap[v]));
   document.getElementById('views').scrollTop=0;
 }
+function enterEvent(id){
+  const e=events.find(x=>x.id===id);
+  document.getElementById('screen').className='screen mode-event';
+  document.getElementById('barName').textContent=e.name;
+  document.getElementById('barCity').textContent=e.city.split(',')[0]+' · '+(e.status==='live'?'Live':e.status==='upcoming'?'Upcoming':'Archive');
+  document.getElementById('homeKicker').textContent=e.kicker;
+  document.getElementById('homeTheme').textContent=e.theme;
+  document.getElementById('homeStats').textContent=`${e.dels} delegates · ${e.countries} countries · ${e.speakers} speakers`;
+  go('home');
+}
+function backToEvents(){document.getElementById('screen').className='screen mode-hub';go('events');}
 let curDay=0;
 function day(btn,i){document.querySelectorAll('.day-tabs button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');curDay=i;renderAgenda(i);}
+function evFilter(btn,f){document.querySelectorAll('.seg button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderEvents(f);}
 
-/* ---------- interactions ---------- */
+/* ============ INTERACTIONS ============ */
 let tt;
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200);}
 function connect(btn,name){btn.textContent='✓ Requested';btn.style.opacity=.7;btn.disabled=true;toast('Connection request sent to '+name+' 🤝');}
 function pick(btn){document.querySelectorAll('.availbar button').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');}
-function likeP(el){const n=parseInt(el.textContent.replace(/\D/g,''))+1;el.textContent='❤️ '+n;el.style.color='var(--terracotta-d)';}
+function likeP(el){const n=parseInt(el.textContent.replace(/\D/g,''))+1;el.textContent='❤️ '+n;el.style.color='var(--ink)';}
 function send(){const i=document.getElementById('msg');if(!i.value.trim())return;const th=document.getElementById('thread');
-  const d=document.createElement('div');d.className='bub me';d.innerHTML=i.value+'<small>now</small>';th.appendChild(d);i.value='';th.scrollTop=th.scrollHeight;
+  const d=document.createElement('div');d.className='bub me';d.textContent=i.value;d.innerHTML+='<small>now</small>';th.appendChild(d);i.value='';th.scrollTop=th.scrollHeight;
   setTimeout(()=>{const r=document.createElement('div');r.className='bub them';r.innerHTML='Perfect — confirming 13:15. See you there! 🙌<small>now</small>';th.appendChild(r);th.scrollTop=th.scrollHeight;},900);}
 
-/* event switcher */
-function openSheet(){document.getElementById('sheet').classList.add('show');}
-function closeSheet(){document.getElementById('sheet').classList.remove('show');}
-function setEvent(name,meta,color){
-  document.getElementById('evName').textContent=name;
-  document.getElementById('evMeta').textContent=meta;
-  document.querySelector('.event-switch .dot').style.background=color;
-  closeSheet();go('home');toast('Switched to '+name+' — your network came with you ✨');
-}
-
 /* init */
-renderAgenda(0);renderPeople();renderChats();
+renderEvents();renderHomeMatches();renderAgenda(0);renderSpeakers();renderPeople();renderSponsors();renderChats();
 </script>
 </body>
 </html>
