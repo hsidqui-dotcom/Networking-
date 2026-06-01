@@ -173,7 +173,7 @@ create policy "conn_rw" on connections for all
 create policy "msg_read" on messages for select using (sender = auth.uid() or recipient = auth.uid());
 create policy "msg_send" on messages for insert with check (sender = auth.uid());
 create policy "meet_rw" on meetings for all
-  using (organizer = auth.uid() or guest = auth.uid()) with check (organizer = auth.uid());
+  using (organizer = auth.uid() or guest = auth.uid()) with check (organizer = auth.uid() or guest = auth.uid());
 create policy "bm_rw" on bookmarks for all using (profile_id = auth.uid()) with check (profile_id = auth.uid());
 
 -- Temps réel (ajout idempotent à la publication)

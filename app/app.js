@@ -3,6 +3,7 @@ const L = {
   fr: {
     'tab.home':'Accueil','tab.program':'Programme','tab.people':'Personnes','tab.notif':'Notifs','tab.chat':'Chat','tab.profile':'Profil',
     chT:'Messagerie', chS:'Vos conversations.', bkChat:'‹ Messagerie', chEmpty:"Aucune conversation. Écrivez à quelqu'un depuis l'onglet Participants (bouton 💬).", msg:'Message', newMsg:'💬 Nouveau message',
+    meT:'Rendez-vous', meS:'Proposez et gérez vos rendez-vous 1:1.', tiMeet:'Rendez-vous', meReqT:'📥 Demandes de RDV reçues', meListT:'Mes rendez-vous', meProposeT:'Proposer un RDV à', meSlot:'Choisissez un créneau :', accept:'Accepter', decline:'Refuser', meEmpty:'Aucun rendez-vous pour l’instant.', stPending:'En attente', stConfirmed:'Confirmé', stDeclined:'Refusé', tMeetSent:'Demande de RDV envoyée 📅', tMeetOk:'Rendez-vous confirmé ✓', tMeetNo:'Rendez-vous refusé',
     welcome:'Bienvenue chez OneAfricaForums 🌍', welcomeSub:'Une seule maison pour chaque forum du continent.',
     segAll:'Tous', segLive:'En cours', segUp:'À venir', segPast:'Passés',
     bkEvents:'‹ Tous les événements', now:'🔴 En direct', meetT:'✨ À rencontrer',
@@ -21,6 +22,7 @@ const L = {
   en: {
     'tab.home':'Home','tab.program':'Program','tab.people':'People','tab.notif':'Alerts','tab.chat':'Chat','tab.profile':'Profile',
     chT:'Messages', chS:'Your conversations.', bkChat:'‹ Messages', chEmpty:'No conversations yet. Message someone from the Attendees tab (💬 button).', msg:'Message', newMsg:'💬 New message',
+    meT:'Meetings', meS:'Propose and manage your 1:1 meetings.', tiMeet:'Meetings', meReqT:'📥 Incoming meeting requests', meListT:'My meetings', meProposeT:'Propose a meeting to', meSlot:'Pick a slot:', accept:'Accept', decline:'Decline', meEmpty:'No meetings yet.', stPending:'Pending', stConfirmed:'Confirmed', stDeclined:'Declined', tMeetSent:'Meeting request sent 📅', tMeetOk:'Meeting confirmed ✓', tMeetNo:'Meeting declined',
     welcome:'Welcome to OneAfricaForums 🌍', welcomeSub:'One home for every forum across the continent.',
     segAll:'All', segLive:'Live', segUp:'Upcoming', segPast:'Past',
     bkEvents:'‹ All events', now:'🔴 Happening now', meetT:'✨ To meet',
@@ -46,7 +48,7 @@ let curView = 'events', curDay = 0, curFilter = 'all', incomingReqs = [], chatWi
 function show(v){
   curView = v;
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.dataset.v === v));
-  const tabFor = { home:'home', program:'program', people:'people', notif:'chat', chat:'chat', thread:'chat', profile:'profile', events:'home', partners:'home' };
+  const tabFor = { home:'home', program:'program', people:'people', notif:'chat', chat:'chat', thread:'chat', profile:'profile', events:'home', partners:'home', meetings:'home' };
   document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.t === tabFor[v]));
   if (v !== 'thread') $('#scroll').scrollTop = 0;
   if (v === 'program') renderAgenda();
@@ -54,6 +56,7 @@ function show(v){
   if (v === 'partners') renderPartners();
   if (v === 'notif') renderNotif();
   if (v === 'chat') renderConversations();
+  if (v === 'meetings') loadMeetings();
 }
 function renderPartners(){
   $('#prtT').textContent=t('prtT'); $('#prtS').textContent=t('prtS'); $('#bkPart').textContent=t('bkPart');
@@ -125,7 +128,7 @@ function enterEvent(id){
   $('#hKicker').textContent='📍 '+e.cityShort.toUpperCase()+' · '+e.dates[lang].toUpperCase();
   $('#hTheme').textContent=e.theme[lang]; $('#hCity').textContent=e.city;
   $('#hTiles').innerHTML = [
-    ['🗓️','tiProgram','program'],['🎤','tiSpeakers','people'],['🤝','tiPeople','people'],['⭐','tiPartners','partners'],['🔔','tiNotif','notif'],['ℹ️','tiInfo','home']
+    ['🗓️','tiProgram','program'],['🎤','tiSpeakers','people'],['🤝','tiPeople','people'],['📅','tiMeet','meetings'],['⭐','tiPartners','partners'],['ℹ️','tiInfo','home']
   ].map(([ic,k,v])=>`<div class="tile" onclick="show('${v}')"><div class="ic">${ic}</div><b>${t(k)}</b></div>`).join('');
   // live + matches
   const live = OAF.sessions(e.id,0).find(s=>s.track[lang].toLowerCase().includes('invest')||s.title[lang].includes('Keynote'))||OAF.sessions(e.id,0)[0];
@@ -166,7 +169,7 @@ function renderPeople(){
   $('#plList').innerHTML = OAF.attendees().map(p=>`
     <div class="card"><div class="row"><div class="av" style="background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">🎯 ${p.why[lang]}</div>
-    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button><button class="btn" onclick="openThread('${p.id}')" style="padding:11px 16px">💬</button></div></div>`).join('');
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button><button class="btn" onclick="openThread('${p.id}')" style="padding:11px 14px">💬</button><button class="btn" onclick="openPropose('${p.id}')" style="padding:11px 14px">📅</button></div></div>`).join('');
 }
 function doConnect(id,btn){OAF.addConnection(id);btn.textContent=t('connected');btn.disabled=true;btn.style.opacity=.7;const a=OAF.attendees().find(x=>String(x.id)===String(id));toast(t('tConnect')+(a?a.name.split(' ')[0]:''));renderChrome();
   if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){const sb=OAFAuth.client(),me=OAFAuth.user();if(me) sb.from('connections').upsert({requester:me.id,addressee:id,status:'pending'}).then(()=>{},()=>{});}}
@@ -317,6 +320,49 @@ function subscribeChat(){
     }).subscribe();
     chatSubscribed=true;
   }catch(e){ console.warn('realtime chat', e); }
+}
+
+/* ============ RENDEZ-VOUS (RDV) ============ */
+let localMeetings=[], proposeTarget=null;
+function slots(){ const d=OAF.days(); const times=['11:00','13:15','10:00']; return d.slice(0,3).map((x,i)=>`${x[lang]} · ${times[i]}`); }
+function openPropose(id){ proposeTarget=String(id); show('meetings'); }
+function renderPropose(){
+  const box=$('#meetPropose'); if(!box) return;
+  if(!proposeTarget){ box.innerHTML=''; return; }
+  box.innerHTML=`<div class="card"><b style="font-size:13px">${t('meProposeT')} ${nameOf(proposeTarget)}</b>
+    <div style="font-size:12px;color:var(--muted);margin:6px 0 8px">${t('meSlot')}</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">${slots().map(s=>`<button class="btn" onclick="pickSlot('${s.replace(/'/g,'')}')">${s}</button>`).join('')}</div></div>`;
+}
+function pickSlot(label){
+  const gid=proposeTarget; if(!gid) return;
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ const sb=OAFAuth.client(),me=OAFAuth.user();
+    sb.from('meetings').insert({event_id:OAF.currentEvent().id,organizer:me.id,guest:gid,location:label,status:'pending'}).then(({error})=>{ if(error){toast(error.message);return;} proposeTarget=null; loadMeetings(); toast(t('tMeetSent')); }); }
+  else { localMeetings.push({id:'m'+Date.now(),org:'me',guest:String(gid),label,status:'pending'}); proposeTarget=null; loadMeetings(); toast(t('tMeetSent')); }
+}
+function loadMeetings(){
+  $('#meT').textContent=t('meT'); $('#meS').textContent=t('meS');
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ const sb=OAFAuth.client(),me=OAFAuth.user();
+    sb.from('meetings').select('*').or(`organizer.eq.${me.id},guest.eq.${me.id}`).order('created_at',{ascending:false}).then(({data,error})=>{
+      if(error){ $('#meetList').innerHTML=`<div class="empty">${error.message}</div>`; renderPropose(); return; }
+      myMeetings=(data||[]).map(m=>({id:m.id, incoming:String(m.guest)===String(me.id), counterId:String(m.organizer)===String(me.id)?m.guest:m.organizer, label:m.location||'', status:m.status}));
+      renderMeetings();
+    }); }
+  else { myMeetings=localMeetings.map(m=>({id:m.id,incoming:false,counterId:m.guest,label:m.label,status:m.status})); renderMeetings(); }
+}
+let myMeetings=[];
+function statusTag(s){ const m={pending:['stPending','gold'],confirmed:['stConfirmed','match'],declined:['stDeclined','']}; const x=m[s]||m.pending; return `<span class="tag ${x[1]}">${t(x[0])}</span>`; }
+function renderMeetings(){
+  $('#meListT').textContent=t('meListT');
+  renderPropose();
+  const inc=myMeetings.filter(m=>m.incoming && m.status==='pending');
+  const wrap=$('#meetReqWrap');
+  wrap.innerHTML = inc.length ? `<div class="sec"><b>${t('meReqT')}</b></div>`+inc.map(m=>`<div class="card"><div class="row"><div class="av" style="background:#111">${ini(nameOf(m.counterId))}</div><div class="m"><b>${nameOf(m.counterId)}</b><small>${m.label}</small></div></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="meetAct('${m.id}','confirmed')">${t('accept')}</button><button class="btn" onclick="meetAct('${m.id}','declined')">${t('decline')}</button></div></div>`).join('') : '';
+  const rest=myMeetings.filter(m=>!(m.incoming && m.status==='pending'));
+  $('#meetList').innerHTML = rest.length ? rest.map(m=>`<div class="card"><div class="row"><div class="av" style="background:#1B998B">${ini(nameOf(m.counterId))}</div><div class="m"><b>${nameOf(m.counterId)}</b><small>${m.label}</small></div>${statusTag(m.status)}</div></div>`).join('') : `<div class="empty" style="color:var(--muted);font-size:13px;padding:14px">${t('meEmpty')}</div>`;
+}
+function meetAct(id,status){
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ OAFAuth.client().from('meetings').update({status}).eq('id',id).then(({error})=>{ if(error){toast(error.message);return;} loadMeetings(); toast(status==='confirmed'?t('tMeetOk'):t('tMeetNo')); }); }
+  else { const m=localMeetings.find(x=>x.id===id); if(m)m.status=status; loadMeetings(); toast(status==='confirmed'?t('tMeetOk'):t('tMeetNo')); }
 }
 
 renderAll();
