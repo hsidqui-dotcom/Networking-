@@ -62,6 +62,7 @@
     <!-- PEOPLE -->
     <section class="view" data-v="people">
       <h2 class="scr" id="plT">Participants</h2><div class="sub" id="plS">Classés par correspondance IA.</div>
+      <div id="reqList"></div>
       <div id="plList"></div>
     </section>
 
@@ -81,12 +82,21 @@
     <!-- PROFILE -->
     <section class="view" data-v="profile">
       <div style="text-align:center;padding:6px 0">
-        <div class="avatar" style="width:80px;height:80px;background:var(--yellow);color:#111;font-size:26px;margin:0 auto 10px">AK</div>
+        <div class="avatar" id="pfAvatar" style="width:80px;height:80px;background:var(--yellow);color:#111;font-size:26px;margin:0 auto 10px">AK</div>
         <h3 id="pfName" style="font-size:19px">Amina Keïta</h3><p id="pfRole" style="color:var(--muted);font-size:12.5px"></p>
         <div style="margin-top:8px"><span class="modepill" id="authBadge">démo</span> <button class="btn" id="signOutBtn" style="display:none;padding:5px 10px;font-size:11px" onclick="authSignOut()">Déconnexion</button></div>
       </div>
       <div class="card"><div class="row"><div class="m"><b id="pfStatT">Mon activité</b><small id="pfStatS"></small></div></div></div>
-      <div class="chips"><span>Agritech</span><span>Climat</span><span id="pfFund">Levée de fonds</span><span>EN / FR</span></div>
+      <div class="card">
+        <b style="font-size:13px" id="pfEditT">Mon profil</b>
+        <div class="field" style="margin-top:10px"><label id="pfLName">Nom</label><input id="pfInName" /></div>
+        <div class="field"><label id="pfLRole">Fonction · Société</label><input id="pfInRole" /></div>
+        <div class="field"><label id="pfLCountry">Pays</label><input id="pfInCountry" placeholder="🇲🇱 Mali" /></div>
+        <div class="field"><label id="pfLLook">Je recherche…</label><input id="pfInLook" /></div>
+        <div class="field"><label id="pfLInterests">Centres d'intérêt (séparés par des virgules)</label><input id="pfInInterests" /></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 12px"><input type="checkbox" id="pfInVisible" /> <span id="pfLVisible">Visible dans l'annuaire (networking)</span></label>
+        <button class="btn solid" style="width:100%" onclick="saveProfile()" id="pfSaveBtn">Enregistrer mon profil</button>
+      </div>
       <div class="card"><div class="row"><div class="m"><b id="pfLang">🌐 Langue</b><small id="pfLangS">Français · EN · PT · AR</small></div><button class="btn" onclick="toggleLang()" id="pfLangBtn">EN</button></div></div>
       <div class="banner">🛠️ <div style="flex:1"><span id="pfAdmin">Espace organisateur (démo)</span></div><a href="admin.html">Admin →</a></div>
       <div class="card"><div class="row"><div class="m"><b id="pfReset">Réinitialiser la démo</b><small id="pfResetS">Restaurer les données d'exemple</small></div><button class="btn danger" onclick="resetDemo()" id="pfResetBtn">Reset</button></div></div>

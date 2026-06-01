@@ -47,7 +47,7 @@
         { id: 2, icon: '📅', ts: Date.now() - 600000, title: { fr: 'RDV confirmé · 13:15, Salle B', en: 'Meeting confirmed · 13:15, Room B' } }
       ],
       days: [ { fr: 'Jeu 12', en: 'Thu 12' }, { fr: 'Ven 13', en: 'Fri 13' }, { fr: 'Sam 14', en: 'Sat 14' } ],
-      me: { name: 'Amina Keïta', role: { fr: 'Fondatrice & CEO · GreenHarvest Agritech', en: 'Founder & CEO · GreenHarvest Agritech' }, country: '🇲🇱', bookmarks: [], connections: [] }
+      me: { name: 'Amina Keïta', role: { fr: 'Fondatrice & CEO · GreenHarvest Agritech', en: 'Founder & CEO · GreenHarvest Agritech' }, country: '🇲🇱', look: { fr: 'Investisseurs seed en agritech', en: 'Seed investors in agritech' }, interests: ['Agritech','Climat'], visible: true, bookmarks: [], connections: [] }
     };
   }
 
@@ -80,6 +80,7 @@
     sessions: (ev, day) => state.sessions.filter(s => s.ev === (ev ?? state.currentEvent) && (day == null || s.day === day)).sort((a, b) => a.time.localeCompare(b.time)),
     notifications: () => [...state.notifications].sort((a, b) => b.ts - a.ts),
     me: () => state.me,
+    updateMe(patch) { state.me = Object.assign(state.me, patch); persist(); },
 
     addSession(s) { s.id = nextId(state.sessions); s.ev = s.ev ?? state.currentEvent; state.sessions.push(s); persist(); return s.id; },
     updateSession(id, patch) { const s = state.sessions.find(x => x.id === id); if (s) Object.assign(s, patch); persist(); },

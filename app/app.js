@@ -12,6 +12,7 @@ const L = {
     admin:'Espace organisateur (démo)', reset:'Réinitialiser la démo', resetS:"Restaurer les données d'exemple",
     tiProgram:'Programme', tiPeople:'Participants', tiSpeakers:'Intervenants', tiPartners:'Partenaires', tiNotif:'Notifications', tiInfo:'Infos',
     prtT:'Partenaires', prtS:'Nos partenaires & sponsors.', bkPart:'‹ Accueil',
+    pfEditT:'Mon profil', pfLName:'Nom', pfLRole:'Fonction · Société', pfLCountry:'Pays', pfLLook:'Je recherche…', pfLInterests:"Centres d'intérêt (séparés par des virgules)", pfLVisible:"Visible dans l'annuaire (networking)", pfSaveBtn:'Enregistrer mon profil', tSaved:'Profil enregistré ✓', reqTitle:'🤝 Demandes de connexion', accept:'Accepter', tAccepted:'Connexion acceptée ✓',
     connect:'＋ Se connecter', connected:'✓ Connecté', meet:'📅 RDV', live:'● LIVE', schedule:'Voir le programme',
     bookmarks:'sessions enregistrées', connections:'connexions', tConnect:'Demande envoyée à ', tBook:'Ajouté à mon agenda ⭐', tUnbook:'Retiré', tReset:'Démo réinitialisée ✓',
     delegates:'délégués', countries:'pays', speakers:'intervenants', empty:'Rien pour le moment.'
@@ -28,6 +29,7 @@ const L = {
     admin:'Organizer space (demo)', reset:'Reset the demo', resetS:'Restore sample data',
     tiProgram:'Program', tiPeople:'Attendees', tiSpeakers:'Speakers', tiPartners:'Partners', tiNotif:'Notifications', tiInfo:'Info',
     prtT:'Partners', prtS:'Our partners & sponsors.', bkPart:'‹ Home',
+    pfEditT:'My profile', pfLName:'Name', pfLRole:'Role · Company', pfLCountry:'Country', pfLLook:'I\'m looking for…', pfLInterests:'Interests (comma-separated)', pfLVisible:'Visible in the directory (networking)', pfSaveBtn:'Save my profile', tSaved:'Profile saved ✓', reqTitle:'🤝 Connection requests', accept:'Accept', tAccepted:'Connection accepted ✓',
     connect:'＋ Connect', connected:'✓ Connected', meet:'📅 Meet', live:'● LIVE', schedule:'See program',
     bookmarks:'saved sessions', connections:'connections', tConnect:'Request sent to ', tBook:'Added to My Agenda ⭐', tUnbook:'Removed', tReset:'Demo reset ✓',
     delegates:'delegates', countries:'countries', speakers:'speakers', empty:'Nothing yet.'
@@ -37,7 +39,7 @@ let lang = OAF.lang();
 const t = k => (L[lang] && L[lang][k]) || L.en[k] || k;
 const ini = n => n.replace(/Dr\.\s|Fmr\.\s/,'').split(' ').map(x=>x[0]).slice(0,2).join('');
 const $ = s => document.querySelector(s);
-let curView = 'events', curDay = 0, curFilter = 'all';
+let curView = 'events', curDay = 0, curFilter = 'all', incomingReqs = [];
 
 function show(v){
   curView = v;
@@ -70,12 +72,38 @@ function renderChrome(){
   $('#lFr').classList.toggle('on', lang==='fr'); $('#lEn').classList.toggle('on', lang==='en');
   document.querySelectorAll('[data-l]').forEach(e => e.textContent = t(e.dataset.l));
   $('#evWelcome').textContent=t('welcome'); $('#evWelcomeSub').textContent=t('welcomeSub');
-  [['#bkEvents','bkEvents'],['#hNow','now'],['#hMeetT','meetT'],['#pgT','pgT'],['#pgS','pgS'],['#plT','plT'],['#plS','plS'],['#ntT','ntT'],['#ntS','ntS'],['#pfStatT','statT'],['#pfLang','lang'],['#pfLangS','langS'],['#pfFund','fund'],['#pfAdmin','admin'],['#pfReset','reset'],['#pfResetS','resetS']].forEach(([sel,k])=>{const el=$(sel);if(el)el.textContent=t(k);});
+  [['#bkEvents','bkEvents'],['#hNow','now'],['#hMeetT','meetT'],['#pgT','pgT'],['#pgS','pgS'],['#plT','plT'],['#plS','plS'],['#ntT','ntT'],['#ntS','ntS'],['#pfStatT','statT'],['#pfLang','lang'],['#pfLangS','langS'],['#pfFund','fund'],['#pfAdmin','admin'],['#pfReset','reset'],['#pfResetS','resetS'],['#pfEditT','pfEditT'],['#pfLName','pfLName'],['#pfLRole','pfLRole'],['#pfLCountry','pfLCountry'],['#pfLLook','pfLLook'],['#pfLInterests','pfLInterests'],['#pfLVisible','pfLVisible'],['#pfSaveBtn','pfSaveBtn']].forEach(([sel,k])=>{const el=$(sel);if(el)el.textContent=t(k);});
   const seg=$('#evSeg').children; seg[0].textContent=t('segAll');seg[1].textContent=t('segLive');seg[2].textContent=t('segUp');seg[3].textContent=t('segPast');
   $('#pfLangBtn').textContent = lang==='fr'?'EN':'FR';
-  $('#pfRole').textContent = OAF.me().role[lang] + ' · ' + OAF.me().country;
+  const me=OAF.me();
+  if($('#pfName')) $('#pfName').textContent = me.name||'';
+  if($('#pfAvatar')) $('#pfAvatar').textContent = ini(me.name||'· ·');
+  $('#pfRole').textContent = (me.role&&me.role[lang]||'') + ' · ' + (me.country||'');
+  fillProfileInputs();
   const st = OAF.stats();
   $('#pfStatS').textContent = `${st.bookmarks} ${t('bookmarks')} · ${st.connections} ${t('connections')}`;
+}
+function fillProfileInputs(){
+  const me=OAF.me();
+  const set=(id,v)=>{const el=$(id);if(el&&document.activeElement!==el)el.value=v;};
+  set('#pfInName', me.name||'');
+  set('#pfInRole', (me.role&&me.role[lang])||'');
+  set('#pfInCountry', me.country||'');
+  set('#pfInLook', (me.look&&me.look[lang])||'');
+  set('#pfInInterests', (me.interests||[]).join(', '));
+  const vis=$('#pfInVisible'); if(vis) vis.checked = me.visible!==false;
+}
+function saveProfile(){
+  const name=$('#pfInName').value.trim()||'—';
+  const role=$('#pfInRole').value.trim();
+  const country=$('#pfInCountry').value.trim()||'🌍';
+  const look=$('#pfInLook').value.trim();
+  const interests=$('#pfInInterests').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const visible=$('#pfInVisible').checked;
+  OAF.updateMe({name, role:{fr:role,en:role}, country, look:{fr:look,en:look}, interests, visible});
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){const sb=OAFAuth.client(),u=OAFAuth.user();
+    if(u) sb.from('profiles').update({name, role:{fr:role,en:role}, country, looking_for:{fr:look,en:look}, interests, is_visible:visible}).eq('id',u.id).then(({error})=>{ if(error) toast(error.message); });}
+  renderChrome(); toast(t('tSaved'));
 }
 function renderEvents(){
   const order={live:0,upcoming:1,past:2};
@@ -119,7 +147,19 @@ function renderAgenda(){
 }
 function bm(id,btn){const on=OAF.toggleBookmark(id);btn.classList.toggle('on',on);btn.textContent=on?'★':'☆';toast(on?t('tBook'):t('tUnbook'));renderChrome();
   if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){const sb=OAFAuth.client(),me=OAFAuth.user();if(me){ if(on) sb.from('bookmarks').upsert({profile_id:me.id,session_id:id}).then(()=>{},()=>{}); else sb.from('bookmarks').delete().eq('profile_id',me.id).eq('session_id',id).then(()=>{},()=>{}); }}}
+function renderRequests(){
+  const box=$('#reqList'); if(!box) return;
+  if(!incomingReqs.length){ box.innerHTML=''; return; }
+  box.innerHTML = `<div class="sec"><b>${t('reqTitle')}</b></div>` + incomingReqs.map(r=>`
+    <div class="card"><div class="row"><div class="av" style="background:#111">${ini(r.name||'?')}</div><div class="m"><b>${r.name||'—'}</b><small>${r.role||''}</small></div>
+    <button class="btn solid" style="padding:8px 12px" onclick="acceptReq('${r.id}')">${t('accept')}</button></div></div>`).join('');
+}
+function acceptReq(id){
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ OAFAuth.client().from('connections').update({status:'accepted'}).eq('id',id).then(({error})=>{ if(error){toast(error.message);return;} incomingReqs=incomingReqs.filter(r=>String(r.id)!==String(id)); renderRequests(); toast(t('tAccepted')); }); }
+  else { incomingReqs=incomingReqs.filter(r=>String(r.id)!==String(id)); renderRequests(); toast(t('tAccepted')); }
+}
 function renderPeople(){
+  renderRequests();
   $('#plList').innerHTML = OAF.attendees().map(p=>`
     <div class="card"><div class="row"><div class="av" style="background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">🎯 ${p.why[lang]}</div>
@@ -185,14 +225,20 @@ async function hydrate(){
     const sponsors=(po.data||[]).map((s,i)=>({id:s.id,name:s.name,tier:s.tier||'SILVER',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null}));
     const attendees=(prof.data||[]).filter(p=>p.id!==me.id).map((p,i)=>({id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],score:80,why:p.looking_for||{fr:'',en:''},look:p.looking_for||{fr:'',en:''},tags:p.interests||[]}));
     const notifications=(no.data||[]).map(n=>({id:n.id,icon:n.icon||'🔔',ts:new Date(n.created_at).getTime(),title:n.title||{fr:'',en:''}}));
-    const myProf=(prof.data||[]).find(p=>p.id===me.id) || {};
+    const profById={}; (prof.data||[]).forEach(p=>profById[p.id]=p);
+    const myProf=profById[me.id] || {};
+    // demandes de connexion reçues (en attente)
+    try{
+      const inc=await sb.from('connections').select('id,requester,status').eq('addressee',me.id).eq('status','pending');
+      incomingReqs=(inc.data||[]).map(c=>({id:c.id,name:(profById[c.requester]||{}).name||'—',role:(((profById[c.requester]||{}).role)||{})[lang]||''}));
+    }catch(e){ incomingReqs=[]; }
     OAF.loadServer({
       events: events.length?events:undefined,
       sessions, speakers, sponsors, attendees, notifications,
       bookmarks:(bk.data||[]).map(b=>String(b.session_id)),
       connections:(cn.data||[]).map(c=>String(c.addressee)),
       currentEvent: events.length?events[0].id:undefined,
-      me: { name: myProf.name||me.email, role: myProf.role||{fr:'Participant',en:'Attendee'}, country: myProf.country||'🌍' }
+      me: { name: myProf.name||me.email, role: myProf.role||{fr:'Participant',en:'Attendee'}, country: myProf.country||'🌍', look: myProf.looking_for||{fr:'',en:''}, interests: myProf.interests||[], visible: myProf.is_visible!==false }
     });
     renderAll();
   }catch(e){ console.warn('Hydratation Supabase échouée — données démo conservées', e); }
