@@ -70,7 +70,7 @@
     get: () => state,
     lang: () => state.lang,
     setLang(l) { state.lang = l; persist(); },
-    currentEvent() { return state.events.find(e => e.id === state.currentEvent) || state.events[0]; },
+    currentEvent() { return state.events.find(e => String(e.id) === String(state.currentEvent)) || state.events[0]; },
     setCurrentEvent(id) { state.currentEvent = id; persist(); },
     events: () => state.events,
     speakers: () => state.speakers,
@@ -111,10 +111,10 @@
       return rows.length;
     },
 
-    toggleBookmark(id) { const b = state.me.bookmarks; const i = b.indexOf(id); if (i >= 0) b.splice(i, 1); else b.push(id); persist(); return b.includes(id); },
-    isBookmarked(id) { return state.me.bookmarks.includes(id); },
-    addConnection(id) { if (!state.me.connections.includes(id)) state.me.connections.push(id); persist(); },
-    isConnected(id) { return state.me.connections.includes(id); },
+    toggleBookmark(id) { id = String(id); const b = state.me.bookmarks; const i = b.indexOf(id); if (i >= 0) b.splice(i, 1); else b.push(id); persist(); return b.indexOf(id) >= 0; },
+    isBookmarked(id) { return state.me.bookmarks.indexOf(String(id)) >= 0; },
+    addConnection(id) { id = String(id); if (state.me.connections.indexOf(id) < 0) state.me.connections.push(id); persist(); },
+    isConnected(id) { return state.me.connections.indexOf(String(id)) >= 0; },
 
     stats() {
       return {
@@ -127,7 +127,22 @@
         notifications: state.notifications.length
       };
     },
-    reset() { state = seed(); persist(); }
+    reset() { state = seed(); persist(); },
+
+    // Charge les données du serveur (mode réel) dans le miroir en mémoire.
+    loadServer(p) {
+      if (p.events)        state.events = p.events;
+      if (p.sessions)      state.sessions = p.sessions;
+      if (p.attendees)     state.attendees = p.attendees;
+      if (p.speakers)      state.speakers = p.speakers;
+      if (p.sponsors)      state.sponsors = p.sponsors;
+      if (p.notifications) state.notifications = p.notifications;
+      if (p.days)          state.days = p.days;
+      if (p.bookmarks)     state.me.bookmarks = p.bookmarks;
+      if (p.connections)   state.me.connections = p.connections;
+      if (p.currentEvent != null) state.currentEvent = p.currentEvent;
+      if (p.me)            state.me = Object.assign(state.me, p.me);
+    }
   };
 
   global.OAF = API;

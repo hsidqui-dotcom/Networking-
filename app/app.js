@@ -83,8 +83,8 @@ function renderEvents(){
   const stTxt={live:lang==='fr'?'● EN COURS':'● LIVE',upcoming:lang==='fr'?'À VENIR':'UPCOMING',past:lang==='fr'?'PASSÉ':'PAST'};
   const tops={0:'linear-gradient(135deg,#1c1c1c,#000)',1:'linear-gradient(135deg,#0f6e4f,#1B998B)',2:'linear-gradient(135deg,#7a3b12,#c2691e)'};
   $('#evList').innerHTML = list.map(e=>`
-    <div class="evc" onclick="enterEvent(${e.id})">
-      <div class="top" style="background:${e.cover?`#222 url(${e.cover}) center/cover`:(tops[e.id]||'#222')}"><span class="st ${e.status}">${stTxt[e.status]}</span><b>${e.name}</b></div>
+    <div class="evc" onclick="enterEvent('${e.id}')">
+      <div class="top" style="background:${e.cover?`#222 url(${e.cover}) center/cover`:(e.top||tops[e.id]||'#222')}"><span class="st ${e.status}">${stTxt[e.status]}</span><b>${e.name}</b></div>
       <div class="bd"><div class="r1">📍 ${e.city} · 🗓️ ${e.dates[lang]}</div><div class="th">${e.theme[lang]}</div></div>
     </div>`).join('');
 }
@@ -97,10 +97,10 @@ function enterEvent(id){
     ['🗓️','tiProgram','program'],['🎤','tiSpeakers','people'],['🤝','tiPeople','people'],['⭐','tiPartners','partners'],['🔔','tiNotif','notif'],['ℹ️','tiInfo','home']
   ].map(([ic,k,v])=>`<div class="tile" onclick="show('${v}')"><div class="ic">${ic}</div><b>${t(k)}</b></div>`).join('');
   // live + matches
-  const live = OAF.sessions(id,0).find(s=>s.track[lang].toLowerCase().includes('invest')||s.title[lang].includes('Keynote'))||OAF.sessions(id,0)[0];
+  const live = OAF.sessions(e.id,0).find(s=>s.track[lang].toLowerCase().includes('invest')||s.title[lang].includes('Keynote'))||OAF.sessions(e.id,0)[0];
   $('#hLive').innerHTML = live?`<div class="card"><div class="row"><div class="av" style="background:#111;border-radius:12px">🎤</div><div class="m"><b>${live.title[lang]}</b><small>${live.room[lang]} · ${live.time}</small></div><span class="tag live">${t('live')}</span></div></div>`:'';
   const p = OAF.attendees()[0];
-  $('#hMatch').innerHTML = `<div class="card"><div class="row"><div class="av" style="background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div><div style="font-size:11.5px;color:var(--muted);margin-top:9px">🎯 ${p.why[lang]}</div><button class="btn solid" style="width:100%;margin-top:11px" onclick="doConnect(${p.id},this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button></div>`;
+  $('#hMatch').innerHTML = p ? `<div class="card"><div class="row"><div class="av" style="background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div><div style="font-size:11.5px;color:var(--muted);margin-top:9px">🎯 ${(p.why&&p.why[lang])||''}</div><button class="btn solid" style="width:100%;margin-top:11px" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button></div>` : `<div class="card" style="color:var(--muted);font-size:13px">${lang==='fr'?'Les participants apparaîtront ici dès les premières inscriptions.':'Attendees will appear here as people sign up.'}</div>`;
   show('home');
 }
 function renderDayTabs(){
@@ -114,17 +114,19 @@ function renderAgenda(){
     <div class="ses">
       <div class="t">${s.time}<small>${s.dur}</small></div>
       <div class="b"><b>${s.title[lang]}</b><small>${s.room[lang]}</small><br><span class="trk" style="background:${s.color}1f;color:${s.color}">${s.track[lang]}</span></div>
-      <button class="star ${OAF.isBookmarked(s.id)?'on':''}" onclick="bm(${s.id},this)">${OAF.isBookmarked(s.id)?'★':'☆'}</button>
+      <button class="star ${OAF.isBookmarked(s.id)?'on':''}" onclick="bm('${s.id}',this)">${OAF.isBookmarked(s.id)?'★':'☆'}</button>
     </div>`).join('') : `<div class="empty">${t('empty')}</div>`;
 }
-function bm(id,btn){const on=OAF.toggleBookmark(id);btn.classList.toggle('on',on);btn.textContent=on?'★':'☆';toast(on?t('tBook'):t('tUnbook'));renderChrome();}
+function bm(id,btn){const on=OAF.toggleBookmark(id);btn.classList.toggle('on',on);btn.textContent=on?'★':'☆';toast(on?t('tBook'):t('tUnbook'));renderChrome();
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){const sb=OAFAuth.client(),me=OAFAuth.user();if(me){ if(on) sb.from('bookmarks').upsert({profile_id:me.id,session_id:id}).then(()=>{},()=>{}); else sb.from('bookmarks').delete().eq('profile_id',me.id).eq('session_id',id).then(()=>{},()=>{}); }}}
 function renderPeople(){
   $('#plList').innerHTML = OAF.attendees().map(p=>`
     <div class="card"><div class="row"><div class="av" style="background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">🎯 ${p.why[lang]}</div>
-    <button class="btn solid" style="width:100%;margin-top:10px" onclick="doConnect(${p.id},this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button></div>`).join('');
+    <button class="btn solid" style="width:100%;margin-top:10px" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button></div>`).join('');
 }
-function doConnect(id,btn){OAF.addConnection(id);btn.textContent=t('connected');btn.disabled=true;btn.style.opacity=.7;const a=OAF.attendees().find(x=>x.id===id);toast(t('tConnect')+(a?a.name.split(' ')[0]:''));renderChrome();}
+function doConnect(id,btn){OAF.addConnection(id);btn.textContent=t('connected');btn.disabled=true;btn.style.opacity=.7;const a=OAF.attendees().find(x=>String(x.id)===String(id));toast(t('tConnect')+(a?a.name.split(' ')[0]:''));renderChrome();
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){const sb=OAFAuth.client(),me=OAFAuth.user();if(me) sb.from('connections').upsert({requester:me.id,addressee:id,status:'pending'}).then(()=>{},()=>{});}}
 function renderNotif(){
   const list = OAF.notifications();
   $('#ntList').innerHTML = list.length ? list.map(n=>`<div class="notif"><div class="ni">${n.icon||'🔔'}</div><div><b>${n.title[lang]||n.title.en||n.title}</b><small>${timeAgo(n.ts)}</small></div></div>`).join('') : `<div class="empty">${t('empty')}</div>`;
@@ -154,8 +156,46 @@ async function bootstrapAuth(){
   if(!OAFAuth || !OAFAuth.live()){ setAuthBadge(); return; }
   await OAFAuth.ready();
   const gate=$('#authGate');
-  const refresh=()=>{ gate.classList.toggle('on', !OAFAuth.user()); setAuthBadge(); };
+  const refresh=async ()=>{ const u=OAFAuth.user(); gate.classList.toggle('on', !u); setAuthBadge(); if(u) await hydrate(); };
   OAFAuth.onChange(refresh); refresh();
+}
+
+/* Charge le contenu réel depuis la base (mode réel). Repli silencieux sur la démo si échec. */
+async function hydrate(){
+  const sb=OAFAuth.client(), me=OAFAuth.user(); if(!sb||!me) return;
+  try{
+    const palette=['#5b8def','#1B998B','#b5559a','#9a6b00','#E2622C','#13476b'];
+    const tops=['linear-gradient(135deg,#1c1c1c,#000)','linear-gradient(135deg,#0f6e4f,#1B998B)','linear-gradient(135deg,#13476b,#2f7bb0)','linear-gradient(135deg,#7a3b12,#c2691e)','linear-gradient(135deg,#5a4a8a,#8a6fb5)'];
+    const [ev,se,sp,po,no,bk,cn,prof] = await Promise.all([
+      sb.from('events').select('*'),
+      sb.from('sessions').select('*'),
+      sb.from('speakers').select('*'),
+      sb.from('sponsors').select('*'),
+      sb.from('notifications').select('*').order('created_at',{ascending:false}),
+      sb.from('bookmarks').select('session_id').eq('profile_id',me.id),
+      sb.from('connections').select('addressee').eq('requester',me.id),
+      sb.from('profiles').select('*').eq('is_visible',true)
+    ]);
+    if(ev.error) throw ev.error;
+    const order={live:0,upcoming:1,past:2};
+    const events=(ev.data||[]).map((e,i)=>({id:e.id,name:e.name,city:e.city||'',cityShort:e.city_short||(e.city||'').split(',')[0],status:e.status||'upcoming',dates:e.dates||{fr:'',en:''},theme:e.theme||{fr:'',en:''},cover:e.cover_url||null,top:tops[i%tops.length]}))
+      .sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
+    const sessions=(se.data||[]).map(s=>({id:s.id,ev:s.event_id,day:s.day||0,time:s.time||'',dur:s.dur||'',title:s.title||{fr:'',en:''},room:s.room||{fr:'',en:''},track:s.track||{fr:'',en:''},desc:s.description||{fr:'',en:''},color:s.color||'#5b8def',star:false,sp:[]}));
+    const speakers=(sp.data||[]).map((s,i)=>({id:s.id,name:s.name,role:s.role||{fr:'',en:''},country:s.country||'🌍',color:s.color||palette[i%palette.length],bio:s.bio||{fr:'',en:''},tags:s.tags||[],ses:{fr:[],en:[]}}));
+    const sponsors=(po.data||[]).map((s,i)=>({id:s.id,name:s.name,tier:s.tier||'SILVER',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null}));
+    const attendees=(prof.data||[]).filter(p=>p.id!==me.id).map((p,i)=>({id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],score:80,why:p.looking_for||{fr:'',en:''},look:p.looking_for||{fr:'',en:''},tags:p.interests||[]}));
+    const notifications=(no.data||[]).map(n=>({id:n.id,icon:n.icon||'🔔',ts:new Date(n.created_at).getTime(),title:n.title||{fr:'',en:''}}));
+    const myProf=(prof.data||[]).find(p=>p.id===me.id) || {};
+    OAF.loadServer({
+      events: events.length?events:undefined,
+      sessions, speakers, sponsors, attendees, notifications,
+      bookmarks:(bk.data||[]).map(b=>String(b.session_id)),
+      connections:(cn.data||[]).map(c=>String(c.addressee)),
+      currentEvent: events.length?events[0].id:undefined,
+      me: { name: myProf.name||me.email, role: myProf.role||{fr:'Participant',en:'Attendee'}, country: myProf.country||'🌍' }
+    });
+    renderAll();
+  }catch(e){ console.warn('Hydratation Supabase échouée — données démo conservées', e); }
 }
 function authSend(){
   const email=$('#authEmail').value.trim(); if(!email)return;
