@@ -147,20 +147,86 @@ function adCsvTemplate(){
   const link=document.createElement('a'); link.href=url; link.download='participants_modele.csv'; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
 }
 
+/* helpers live */
+function L(){ return window.OAF_LIVE && window.OAFAuth && OAFAuth.client(); }
+function evId(){ return OAF.currentEvent() ? OAF.currentEvent().id : null; }
+async function reloadAndRender(){ if(L()){ await adminHydrate(); } renderProgram(); renderNotifAdmin(); renderPeople(); renderKpis(); renderSettings(); }
+
 /* actions */
 function adAddSession(){
   const title=$('#sTitle').value.trim(); if(!title){adToast(a('needTitle'));return;}
   const txt=v=>({fr:v,en:v});
-  OAF.addSession({ day:+$('#sDay').value, time:$('#sTime').value||'12:00', dur:$('#sDur').value||'45m', color:'#5b8def',
-    title:txt(title), room:txt($('#sRoom').value||'—'), track:txt($('#sTrack').value||'—'), desc:txt('') });
-  $('#sTitle').value=''; renderProgram(); renderKpis(); adToast(a('tAdd'));
+  if(L()){
+    const rec={ event_id:evId(), day:+$('#sDay').value, time:$('#sTime').value||'12:00', dur:$('#sDur').value||'45m', color:'#5b8def',
+      title:txt(title), room:txt($('#sRoom').value||'—'), track:txt($('#sTrack').value||'—'), description:txt('') };
+    OAFAuth.client().from('sessions').insert(rec).then(({error})=>{ if(error){adToast(error.message);return;} $('#sTitle').value=''; reloadAndRender(); adToast(a('tAdd')); });
+  } else {
+    OAF.addSession({ day:+$('#sDay').value, time:$('#sTime').value||'12:00', dur:$('#sDur').value||'45m', color:'#5b8def',
+      title:txt(title), room:txt($('#sRoom').value||'—'), track:txt($('#sTrack').value||'—'), desc:txt('') });
+    $('#sTitle').value=''; renderProgram(); renderKpis(); adToast(a('tAdd'));
+  }
 }
-function adDelSession(id){ if(confirm(a('confirmDel'))){ OAF.removeSession(id); renderProgram(); renderKpis(); adToast(a('tDel')); } }
-function adSendNotif(){ const m=$('#nMsg').value.trim(); if(!m){adToast(a('needMsg'));return;} OAF.addNotification({icon:$('#nIcon').value,title:{fr:m,en:m}}); $('#nMsg').value=''; renderNotifAdmin(); renderKpis(); adToast(a('tNotif')); }
-function adAddSpeaker(){ const n=$('#spkName').value.trim(); if(!n)return; OAF.addSpeaker({name:n,role:{fr:$('#spkRole').value||'—',en:$('#spkRole').value||'—'},country:'🌍',color:'#5b8def'}); $('#spkName').value='';$('#spkRole').value=''; renderPeople(); renderKpis(); adToast(a('tSpk')); }
-function adSetEvent(){ OAF.setCurrentEvent(+$('#setEvent').value); renderAll(); adToast(a('tEvent')); }
-function adReset(){ OAF.reset(); lang=OAF.lang(); renderAll(); adToast(a('tReset')); }
+function adDelSession(id){
+  if(!confirm(a('confirmDel'))) return;
+  if(L()){ OAFAuth.client().from('sessions').delete().eq('id',id).then(({error})=>{ if(error){adToast(error.message);return;} reloadAndRender(); adToast(a('tDel')); }); }
+  else { OAF.removeSession(id); renderProgram(); renderKpis(); adToast(a('tDel')); }
+}
+function adSendNotif(){
+  const m=$('#nMsg').value.trim(); if(!m){adToast(a('needMsg'));return;}
+  if(L()){ OAFAuth.client().from('notifications').insert({event_id:evId(),icon:$('#nIcon').value,title:{fr:m,en:m}}).then(({error})=>{ if(error){adToast(error.message);return;} $('#nMsg').value=''; reloadAndRender(); adToast(a('tNotif')); }); }
+  else { OAF.addNotification({icon:$('#nIcon').value,title:{fr:m,en:m}}); $('#nMsg').value=''; renderNotifAdmin(); renderKpis(); adToast(a('tNotif')); }
+}
+function adAddSpeaker(){
+  const n=$('#spkName').value.trim(); if(!n)return; const r=$('#spkRole').value||'—';
+  if(L()){ OAFAuth.client().from('speakers').insert({event_id:evId(),name:n,role:{fr:r,en:r},country:'🌍'}).then(({error})=>{ if(error){adToast(error.message);return;} $('#spkName').value='';$('#spkRole').value=''; reloadAndRender(); adToast(a('tSpk')); }); }
+  else { OAF.addSpeaker({name:n,role:{fr:r,en:r},country:'🌍',color:'#5b8def'}); $('#spkName').value='';$('#spkRole').value=''; renderPeople(); renderKpis(); adToast(a('tSpk')); }
+}
+function adSetEvent(){ OAF.setCurrentEvent($('#setEvent').value); renderAll(); adToast(a('tEvent')); }
+function adReset(){ if(L()){ adToast(lang==='fr'?'Reset désactivé en mode réel':'Reset disabled in live mode'); return; } OAF.reset(); lang=OAF.lang(); renderAll(); adToast(a('tReset')); }
 function adToggleLang(){ lang=lang==='fr'?'en':'fr'; OAF.setLang(lang); renderAll(); }
+
+/* ===== mode réel : auth admin + chargement depuis Supabase ===== */
+async function adminHydrate(){
+  const sb=OAFAuth.client(); if(!sb) return;
+  try{
+    const palette=['#5b8def','#1B998B','#b5559a','#9a6b00','#E2622C','#13476b'];
+    const tops=['linear-gradient(135deg,#1c1c1c,#000)','linear-gradient(135deg,#0f6e4f,#1B998B)','linear-gradient(135deg,#13476b,#2f7bb0)','linear-gradient(135deg,#7a3b12,#c2691e)'];
+    const [ev,se,sp,po,no,prof]=await Promise.all([
+      sb.from('events').select('*'),
+      sb.from('sessions').select('*'),
+      sb.from('speakers').select('*'),
+      sb.from('sponsors').select('*'),
+      sb.from('notifications').select('*').order('created_at',{ascending:false}),
+      sb.from('profiles').select('*')
+    ]);
+    const order={live:0,upcoming:1,past:2};
+    const events=(ev.data||[]).map((e,i)=>({id:e.id,name:e.name,city:e.city||'',cityShort:e.city_short||'',status:e.status||'upcoming',dates:e.dates||{fr:'',en:''},theme:e.theme||{fr:'',en:''},cover:e.cover_url||null,top:tops[i%tops.length]})).sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
+    const sessions=(se.data||[]).map(s=>({id:s.id,ev:s.event_id,day:s.day||0,time:s.time||'',dur:s.dur||'',title:s.title||{fr:'',en:''},room:s.room||{fr:'',en:''},track:s.track||{fr:'',en:''},desc:s.description||{fr:'',en:''},color:s.color||'#5b8def',star:false,sp:[]}));
+    const speakers=(sp.data||[]).map((s,i)=>({id:s.id,name:s.name,role:s.role||{fr:'',en:''},country:s.country||'🌍',color:palette[i%palette.length],bio:s.bio||{fr:'',en:''},tags:s.tags||[],ses:{fr:[],en:[]}}));
+    const sponsors=(po.data||[]).map((s,i)=>({id:s.id,name:s.name,tier:s.tier||'SILVER',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null}));
+    const attendees=(prof.data||[]).map((p,i)=>({id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],score:80,why:p.looking_for||{fr:'',en:''},look:p.looking_for||{fr:'',en:''},tags:p.interests||[]}));
+    const notifications=(no.data||[]).map(n=>({id:n.id,icon:n.icon||'🔔',ts:new Date(n.created_at).getTime(),title:n.title||{fr:'',en:''}}));
+    OAF.loadServer({ events:events.length?events:undefined, sessions, speakers, sponsors, attendees, notifications });
+  }catch(e){ console.warn('adminHydrate', e); }
+}
+async function bootstrapAdminAuth(){
+  $('#loginWrap').style.display='none';
+  await OAFAuth.ready();
+  const gate=$('#adAuthGate');
+  async function refresh(){
+    const u=OAFAuth.user();
+    if(!u){ gate.classList.add('on'); $('#console').style.display='none'; return; }
+    let admin=false;
+    try{ const {data}=await OAFAuth.client().from('profiles').select('is_admin').eq('id',u.id).single(); admin=data&&data.is_admin; }catch(e){}
+    if(!admin){ gate.classList.add('on'); $('#adAuthMsg').textContent=lang==='fr'?"Ce compte n'a pas les droits administrateur.":'This account is not an admin.'; return; }
+    gate.classList.remove('on'); $('#console').style.display='block';
+    await adminHydrate(); renderAll();
+  }
+  OAFAuth.onChange(refresh); refresh();
+}
+function adAuthSend(){ const e=$('#adEmail').value.trim(); if(!e)return; $('#adAuthMsg').textContent='…'; OAFAuth.sendCode(e).then(({error})=>{ if(error){$('#adAuthMsg').textContent=error.message;return;} $('#adAuthStep2').style.display='block'; $('#adAuthMsg').textContent=lang==='fr'?'Code envoyé ✉️':'Code sent ✉️'; }); }
+function adAuthVerify(){ const e=$('#adEmail').value.trim(),c=$('#adCode').value.trim(); if(!c)return; OAFAuth.verify(e,c).then(({error})=>{ if(error)$('#adAuthMsg').textContent=error.message; }); }
+function adLogout(){ if(L()){ OAFAuth.signOut(); location.reload(); return; } sessionStorage.removeItem('oaf_admin'); $('#console').style.display='none'; $('#loginWrap').style.display='block'; }
 
 document.getElementById('adnav').addEventListener('click', e=>{const b=e.target.closest('button[data-p]');if(b)nav(b.dataset.p);});
 const _ce=document.getElementById('coverEvent'); if(_ce) _ce.addEventListener('change', updateCoverPreview);
@@ -168,4 +234,5 @@ const _ce=document.getElementById('coverEvent'); if(_ce) _ce.addEventListener('c
 /* init */
 renderLabels();
 paintBrand();
-if(sessionStorage.getItem('oaf_admin')==='1') showConsole();
+if(window.OAF_LIVE){ bootstrapAdminAuth(); }
+else if(sessionStorage.getItem('oaf_admin')==='1'){ showConsole(); }

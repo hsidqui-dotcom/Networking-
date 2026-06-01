@@ -119,6 +119,24 @@
 </div>
 <div class="adtoast" id="adToast"></div>
 
+<!-- Connexion admin (mode réel : Supabase + droits is_admin) -->
+<div class="authgate" id="adAuthGate">
+  <div class="authcard">
+    <svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" rx="72" fill="#FFE400"/><text x="200" y="237" text-anchor="middle" fill="#111" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="188">one</text><text x="203" y="306" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="55" letter-spacing="11">AFRICA</text></svg>
+    <h2>Espace organisateur</h2>
+    <p id="adAuthP">Connexion réservée à l'équipe OneAfricaForums.</p>
+    <input id="adEmail" type="email" placeholder="vous@oneafricaforums.com" autocomplete="email" />
+    <button class="btn solid" onclick="adAuthSend()">Recevoir un code</button>
+    <div id="adAuthStep2" style="display:none;margin-top:10px">
+      <input id="adCode" inputmode="numeric" placeholder="Code à 6 chiffres" />
+      <button class="btn yellow" onclick="adAuthVerify()">Se connecter</button>
+    </div>
+    <div class="msg" id="adAuthMsg"></div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="supabase.js"></script>
 <script src="store.js"></script>
 <script src="admin.js"></script>
 </body>
