@@ -27,13 +27,13 @@ where not exists (select 1 from sessions s where s.event_id = (select id from ev
 
 -- 2) INTERVENANTS
 with ev as (select id from events order by created_at limit 1)
-insert into speakers (event_id, name, role, country, color, bio, tags)
-select (select id from ev), v.name, v.role::jsonb, v.country, v.color, v.bio::jsonb, v.tags::text[]
+insert into speakers (event_id, name, role, country, bio, tags)
+select (select id from ev), v.name, v.role::jsonb, v.country, v.bio::jsonb, v.tags::text[]
 from (values
- ('Dr. Amara Okonkwo','{"fr":"Chef économiste · BAD","en":"Chief Economist · AfDB"}','🇳🇬','#E2622C','{"fr":"Économiste de référence sur la ZLECAf.","en":"Leading economist on the AfCFTA."}','{Trade,AfCFTA,Macro}'),
- ('Thabo Nkosi','{"fr":"CEO · Continental Energy","en":"CEO · Continental Energy"}','🇿🇦','#13476b','{"fr":"Plus grand producteur d’énergie renouvelable d’Afrique.","en":"Africa’s largest renewable IPP."}','{Energie,Climat}'),
- ('Fatou Ndiaye','{"fr":"Associée · Sahel Ventures","en":"Partner · Sahel Ventures"}','🇸🇳','#5b8def','{"fr":"Investisseuse early-stage en Afrique francophone.","en":"Early-stage investor across Francophone Africa."}','{VC,Agritech,Fintech}')
-) as v(name,role,country,color,bio,tags)
+ ('Dr. Amara Okonkwo','{"fr":"Chef économiste · BAD","en":"Chief Economist · AfDB"}','🇳🇬','{"fr":"Économiste de référence sur la ZLECAf.","en":"Leading economist on the AfCFTA."}','{Trade,AfCFTA,Macro}'),
+ ('Thabo Nkosi','{"fr":"CEO · Continental Energy","en":"CEO · Continental Energy"}','🇿🇦','{"fr":"Plus grand producteur d’énergie renouvelable d’Afrique.","en":"Africa’s largest renewable IPP."}','{Energie,Climat}'),
+ ('Fatou Ndiaye','{"fr":"Associée · Sahel Ventures","en":"Partner · Sahel Ventures"}','🇸🇳','{"fr":"Investisseuse early-stage en Afrique francophone.","en":"Early-stage investor across Francophone Africa."}','{VC,Agritech,Fintech}')
+) as v(name,role,country,bio,tags)
 where not exists (select 1 from speakers s where s.event_id = (select id from ev));
 
 -- 3) PARTENAIRES
