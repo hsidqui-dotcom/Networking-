@@ -79,6 +79,18 @@
       <div id="ntList"></div>
     </section>
 
+    <!-- CHAT -->
+    <section class="view" data-v="chat">
+      <h2 class="scr" id="chT">Messagerie</h2><div class="sub" id="chS">Vos conversations.</div>
+      <div id="convList"></div>
+    </section>
+    <section class="view" data-v="thread">
+      <button class="back" onclick="show('chat')" id="bkChat">‹ Messagerie</button>
+      <div class="row" style="margin-bottom:10px"><div class="av" id="thAv" style="background:#111;width:40px;height:40px"></div><div class="m"><b id="thName"></b></div></div>
+      <div id="thread" style="min-height:220px;padding-bottom:8px"></div>
+      <div class="chatbar"><input id="msgIn" placeholder="Message…" onkeydown="if(event.key==='Enter')sendMsg()" /><button onclick="sendMsg()">➤</button></div>
+    </section>
+
     <!-- PROFILE -->
     <section class="view" data-v="profile">
       <div style="text-align:center;padding:6px 0">
@@ -108,7 +120,7 @@
     <button class="on" data-t="home" onclick="show('home')"><span class="gi">🏠</span><span data-l="tab.home">Accueil</span></button>
     <button data-t="program" onclick="show('program')"><span class="gi">🗓️</span><span data-l="tab.program">Programme</span></button>
     <button data-t="people" onclick="show('people')"><span class="gi">🤝</span><span data-l="tab.people">Personnes</span></button>
-    <button data-t="notif" onclick="show('notif')"><span class="gi">🔔</span><span data-l="tab.notif">Notifs</span></button>
+    <button data-t="chat" onclick="show('chat')"><span class="gi">💬</span><span data-l="tab.chat">Chat</span></button>
     <button data-t="profile" onclick="show('profile')"><span class="gi">👤</span><span data-l="tab.profile">Profil</span></button>
   </div>
 </div>

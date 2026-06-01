@@ -1,7 +1,8 @@
 /* OAF Connect — attendee PWA logic (reads/writes the shared OAF store) */
 const L = {
   fr: {
-    'tab.home':'Accueil','tab.program':'Programme','tab.people':'Personnes','tab.notif':'Notifs','tab.profile':'Profil',
+    'tab.home':'Accueil','tab.program':'Programme','tab.people':'Personnes','tab.notif':'Notifs','tab.chat':'Chat','tab.profile':'Profil',
+    chT:'Messagerie', chS:'Vos conversations.', bkChat:'‹ Messagerie', chEmpty:"Aucune conversation. Écrivez à quelqu'un depuis l'onglet Participants (bouton 💬).", msg:'Message', newMsg:'💬 Nouveau message',
     welcome:'Bienvenue chez OneAfricaForums 🌍', welcomeSub:'Une seule maison pour chaque forum du continent.',
     segAll:'Tous', segLive:'En cours', segUp:'À venir', segPast:'Passés',
     bkEvents:'‹ Tous les événements', now:'🔴 En direct', meetT:'✨ À rencontrer',
@@ -18,7 +19,8 @@ const L = {
     delegates:'délégués', countries:'pays', speakers:'intervenants', empty:'Rien pour le moment.'
   },
   en: {
-    'tab.home':'Home','tab.program':'Program','tab.people':'People','tab.notif':'Alerts','tab.profile':'Profile',
+    'tab.home':'Home','tab.program':'Program','tab.people':'People','tab.notif':'Alerts','tab.chat':'Chat','tab.profile':'Profile',
+    chT:'Messages', chS:'Your conversations.', bkChat:'‹ Messages', chEmpty:'No conversations yet. Message someone from the Attendees tab (💬 button).', msg:'Message', newMsg:'💬 New message',
     welcome:'Welcome to OneAfricaForums 🌍', welcomeSub:'One home for every forum across the continent.',
     segAll:'All', segLive:'Live', segUp:'Upcoming', segPast:'Past',
     bkEvents:'‹ All events', now:'🔴 Happening now', meetT:'✨ To meet',
@@ -39,18 +41,19 @@ let lang = OAF.lang();
 const t = k => (L[lang] && L[lang][k]) || L.en[k] || k;
 const ini = n => n.replace(/Dr\.\s|Fmr\.\s/,'').split(' ').map(x=>x[0]).slice(0,2).join('');
 const $ = s => document.querySelector(s);
-let curView = 'events', curDay = 0, curFilter = 'all', incomingReqs = [];
+let curView = 'events', curDay = 0, curFilter = 'all', incomingReqs = [], chatWith = null, chatSubscribed = false;
 
 function show(v){
   curView = v;
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.dataset.v === v));
-  const tabFor = { home:'home', program:'program', people:'people', notif:'notif', profile:'profile', events:'home', partners:'home' };
+  const tabFor = { home:'home', program:'program', people:'people', notif:'chat', chat:'chat', thread:'chat', profile:'profile', events:'home', partners:'home' };
   document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.t === tabFor[v]));
-  $('#scroll').scrollTop = 0;
+  if (v !== 'thread') $('#scroll').scrollTop = 0;
   if (v === 'program') renderAgenda();
   if (v === 'people') renderPeople();
   if (v === 'partners') renderPartners();
   if (v === 'notif') renderNotif();
+  if (v === 'chat') renderConversations();
 }
 function renderPartners(){
   $('#prtT').textContent=t('prtT'); $('#prtS').textContent=t('prtS'); $('#bkPart').textContent=t('bkPart');
@@ -163,7 +166,7 @@ function renderPeople(){
   $('#plList').innerHTML = OAF.attendees().map(p=>`
     <div class="card"><div class="row"><div class="av" style="background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">🎯 ${p.why[lang]}</div>
-    <button class="btn solid" style="width:100%;margin-top:10px" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button></div>`).join('');
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button><button class="btn" onclick="openThread('${p.id}')" style="padding:11px 16px">💬</button></div></div>`).join('');
 }
 function doConnect(id,btn){OAF.addConnection(id);btn.textContent=t('connected');btn.disabled=true;btn.style.opacity=.7;const a=OAF.attendees().find(x=>String(x.id)===String(id));toast(t('tConnect')+(a?a.name.split(' ')[0]:''));renderChrome();
   if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){const sb=OAFAuth.client(),me=OAFAuth.user();if(me) sb.from('connections').upsert({requester:me.id,addressee:id,status:'pending'}).then(()=>{},()=>{});}}
@@ -241,6 +244,7 @@ async function hydrate(){
       me: { name: myProf.name||me.email, role: myProf.role||{fr:'Participant',en:'Attendee'}, country: myProf.country||'🌍', look: myProf.looking_for||{fr:'',en:''}, interests: myProf.interests||[], visible: myProf.is_visible!==false }
     });
     renderAll();
+    subscribeChat();
   }catch(e){ console.warn('Hydratation Supabase échouée — données démo conservées', e); }
 }
 function authSend(){
@@ -258,6 +262,62 @@ function authVerify(){
   OAFAuth.verify(email,code).then(({error})=>{ if(error) $('#authMsg').textContent=error.message; });
 }
 function authSignOut(){ if(OAFAuth&&OAFAuth.signOut) OAFAuth.signOut(); }
+
+/* ============ CHAT 1:1 ============ */
+function nameOf(id){ const a=OAF.attendees().find(x=>String(x.id)===String(id)); return a?a.name:'—'; }
+function appendBubble(side,text,time){
+  const th=$('#thread'); if(!th) return;
+  const b=document.createElement('div'); b.className='bub '+side; b.textContent=text;
+  const s=document.createElement('small'); s.textContent=time||(new Date()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); b.appendChild(s);
+  th.appendChild(b); th.scrollTop=th.scrollHeight; $('#scroll').scrollTop=$('#scroll').scrollHeight;
+}
+function openThread(id){
+  chatWith={id:String(id), name:nameOf(id)};
+  $('#thName').textContent=chatWith.name; $('#thAv').textContent=ini(chatWith.name||'· ·');
+  $('#thread').innerHTML=''; $('#bkChat').textContent=t('bkChat');
+  show('thread'); loadMessages(id);
+}
+function loadMessages(id){
+  if(!(OAFAuth&&OAFAuth.live()&&OAFAuth.client())){ $('#thread').innerHTML=`<div class="empty" style="color:var(--muted);font-size:13px">${lang==='fr'?'(démo) Tapez un message ci-dessous.':'(demo) Type a message below.'}</div>`; return; }
+  const sb=OAFAuth.client(), me=OAFAuth.user();
+  sb.from('messages').select('*').or(`and(sender.eq.${me.id},recipient.eq.${id}),and(sender.eq.${id},recipient.eq.${me.id})`).order('created_at',{ascending:true}).then(({data,error})=>{
+    if(error){ $('#thread').innerHTML=`<div class="empty">${error.message}</div>`; return; }
+    $('#thread').innerHTML='';
+    (data||[]).forEach(m=>appendBubble(m.sender===me.id?'me':'them', m.body, new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})));
+    if(!data||!data.length) $('#thread').innerHTML=`<div class="empty" style="color:var(--muted);font-size:13px">${lang==='fr'?'Démarrez la conversation 👋':'Start the conversation 👋'}</div>`;
+  });
+}
+function sendMsg(){
+  const i=$('#msgIn'); const txt=i.value.trim(); if(!txt||!chatWith) return; i.value='';
+  if($('#thread').querySelector('.empty')) $('#thread').innerHTML='';
+  appendBubble('me',txt);
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ const sb=OAFAuth.client(),me=OAFAuth.user(); sb.from('messages').insert({sender:me.id,recipient:chatWith.id,body:txt}).then(({error})=>{ if(error) toast(error.message); }); }
+}
+function renderConversations(){
+  const box=$('#convList'); if(!box) return;
+  $('#chT').textContent=t('chT'); $('#chS').textContent=t('chS');
+  if(!(OAFAuth&&OAFAuth.live()&&OAFAuth.client())){ box.innerHTML=`<div class="empty" style="color:var(--muted);font-size:13px;padding:14px">${t('chEmpty')}</div>`; return; }
+  const sb=OAFAuth.client(), me=OAFAuth.user();
+  sb.from('messages').select('*').or(`sender.eq.${me.id},recipient.eq.${me.id}`).order('created_at',{ascending:false}).then(({data,error})=>{
+    if(error){ box.innerHTML=`<div class="empty">${error.message}</div>`; return; }
+    const seen={}, convs=[];
+    (data||[]).forEach(m=>{ const other=m.sender===me.id?m.recipient:m.sender; if(!seen[other]){ seen[other]=1; convs.push({id:other,last:m.body}); } });
+    box.innerHTML = convs.length ? convs.map(c=>`<div class="card" onclick="openThread('${c.id}')" style="cursor:pointer"><div class="row"><div class="av" style="background:#111">${ini(nameOf(c.id))}</div><div class="m"><b>${nameOf(c.id)}</b><small>${c.last}</small></div></div></div>`).join('') : `<div class="empty" style="color:var(--muted);font-size:13px;padding:14px">${t('chEmpty')}</div>`;
+  });
+}
+function subscribeChat(){
+  if(chatSubscribed || !(OAFAuth&&OAFAuth.live()&&OAFAuth.client())) return;
+  try{
+    const sb=OAFAuth.client(), me=OAFAuth.user();
+    sb.channel('msg-'+me.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`recipient=eq.${me.id}`},payload=>{
+      const m=payload.new;
+      if(chatWith && String(m.sender)===String(chatWith.id) && curView==='thread'){ appendBubble('them',m.body); }
+      else { toast(t('newMsg')); }
+      if(curView==='chat') renderConversations();
+    }).subscribe();
+    chatSubscribed=true;
+  }catch(e){ console.warn('realtime chat', e); }
+}
 
 renderAll();
 show('events');
