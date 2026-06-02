@@ -1,5 +1,6 @@
-/* OAF Connect — service worker (offline app shell, cache-first) */
-const CACHE = 'oaf-connect-v2';
+/* OAF Connect — service worker (network-first: toujours la dernière version en
+   ligne, repli sur le cache hors-ligne). Bump CACHE à chaque évolution majeure. */
+const CACHE = 'oaf-connect-v3';
 const ASSETS = [
   './', './index.html', './admin.html',
   './style.css', './store.js', './app.js', './admin.js',
@@ -15,11 +16,13 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // Réseau d'abord : on récupère la version à jour, on met le cache à jour,
+  // et on ne sert le cache que si le réseau est indisponible (hors-ligne).
   e.respondWith(
-    caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
+    fetch(e.request).then(res => {
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
       return res;
-    }).catch(() => caches.match('./index.html')))
+    }).catch(() => caches.match(e.request).then(hit => hit || caches.match('./index.html')))
   );
 });
