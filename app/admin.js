@@ -3,8 +3,9 @@ const AL = {
   fr: { nDash:'Tableau de bord', nProgram:'Programme', nNotif:'Notifications', nPeople:'Participants', nSettings:'Réglages',
     lgT:'Espace organisateur', lgS:"Réservé à l'équipe OneAfricaForums.", lgBtn:'Se connecter', openApp:"Voir l'app ↗",
     dEngageT:'Engagement en direct', dEngageS:"Mis à jour en temps réel d'après l'activité dans l'app.",
-    pAddT:'Ajouter une session', pAddS:"Elle apparaît immédiatement dans le programme de l'app.", pAddBtn:'＋ Ajouter la session',
-    pListT:'Programme actuel', fTitle:'Titre', fDay:'Jour', fTime:'Heure', fRoom:'Salle', fTrack:'Thème', fDur:'Durée',
+    pAddT:'Ajouter / modifier une session', pAddS:"Elle apparaît immédiatement dans le programme de l'app.", pAddBtn:'＋ Ajouter la session', pUpdBtn:'✓ Enregistrer les modifications', pCancelBtn:'Annuler',
+    pListT:'Programme actuel', fTitle:'Titre (FR)', fTitleEn:'Titre (EN)', fDay:'Jour', fTime:'Heure', fRoom:'Salle (FR)', fRoomEn:'Salle (EN)', fTrack:'Thème (FR)', fTrackEn:'Thème (EN)', fDur:'Durée',
+    pImpT:'Importer un programme (CSV)', pImpS:"Chargez tout le programme d'un coup depuis un fichier CSV bilingue. Idéal pour publier ou rafraîchir le programme complet. Utilisez le modèle ci-dessous.", pImpBtn:'📥 Importer le programme', pImpTplBtn:'⬇ Modèle de programme', pImpReplace:'Remplacer tout le programme existant', confirmReplace:'Remplacer TOUT le programme existant de cet événement ?', tProgImp:'{n} session(s) importée(s) ✓', tUpd:'Session mise à jour ✓',
     nSendT:'Envoyer une notification', nSendS:"Diffusée à tous les participants — visible immédiatement dans l'app.", nSendBtn:'Diffuser', nHistT:'Historique', fIcon:'Icône', fMsg:'Message',
     peSpkT:'Intervenants', peSpkBtn:'＋ Ajouter', peAttT:'Participants', peSpoT:'Partenaires',
     setEvT:'Événement actif', setEvS:"Choisissez l'édition gérée par l'app.", setRT:'Données', setRS:"Restaurer les données d'exemple.", setRBtn:'Réinitialiser la démo', setOut:'Se déconnecter',
@@ -19,8 +20,9 @@ const AL = {
   en: { nDash:'Dashboard', nProgram:'Program', nNotif:'Notifications', nPeople:'People', nSettings:'Settings',
     lgT:'Organizer space', lgS:'For the OneAfricaForums team only.', lgBtn:'Sign in', openApp:'Open app ↗',
     dEngageT:'Live engagement', dEngageS:'Updated in real time from activity in the app.',
-    pAddT:'Add a session', pAddS:'It appears instantly in the app program.', pAddBtn:'＋ Add session',
-    pListT:'Current program', fTitle:'Title', fDay:'Day', fTime:'Time', fRoom:'Room', fTrack:'Track', fDur:'Duration',
+    pAddT:'Add / edit a session', pAddS:'It appears instantly in the app program.', pAddBtn:'＋ Add session', pUpdBtn:'✓ Save changes', pCancelBtn:'Cancel',
+    pListT:'Current program', fTitle:'Title (FR)', fTitleEn:'Title (EN)', fDay:'Day', fTime:'Time', fRoom:'Room (FR)', fRoomEn:'Room (EN)', fTrack:'Track (FR)', fTrackEn:'Track (EN)', fDur:'Duration',
+    pImpT:'Import a program (CSV)', pImpS:'Load the whole program at once from a bilingual CSV file. Ideal to publish or refresh the full program. Use the template below.', pImpBtn:'📥 Import program', pImpTplBtn:'⬇ Program template', pImpReplace:'Replace the entire existing program', confirmReplace:'Replace the ENTIRE existing program for this event?', tProgImp:'{n} session(s) imported ✓', tUpd:'Session updated ✓',
     nSendT:'Send a notification', nSendS:'Broadcast to all attendees — visible instantly in the app.', nSendBtn:'Broadcast', nHistT:'History', fIcon:'Icon', fMsg:'Message',
     peSpkT:'Speakers', peSpkBtn:'＋ Add', peAttT:'Attendees', peSpoT:'Partners',
     setEvT:'Active event', setEvS:'Choose the edition managed by the app.', setRT:'Data', setRS:'Restore sample data.', setRBtn:'Reset demo', setOut:'Sign out',
@@ -52,11 +54,11 @@ function renderLabels(){
   document.documentElement.lang=lang;
   $('#lFr').classList.toggle('on',lang==='fr');$('#lEn').classList.toggle('on',lang==='en');
   document.querySelectorAll('[data-l]').forEach(e=>e.textContent=a(e.dataset.l));
-  [['#lgT','lgT'],['#lgS','lgS'],['#lgBtn','lgBtn'],['#openApp','openApp'],['#dEngageT','dEngageT'],['#dEngageS','dEngageS'],['#pAddT','pAddT'],['#pAddS','pAddS'],['#pAddBtn','pAddBtn'],['#pListT','pListT'],['#fTitle','fTitle'],['#fDay','fDay'],['#fTime','fTime'],['#fRoom','fRoom'],['#fTrack','fTrack'],['#fDur','fDur'],['#nSendT','nSendT'],['#nSendS','nSendS'],['#nSendBtn','nSendBtn'],['#nHistT','nHistT'],['#fIcon','fIcon'],['#fMsg','fMsg'],['#peSpkT','peSpkT'],['#peSpkBtn','peSpkBtn'],['#peAttT','peAttT'],['#peSpoT','peSpoT'],['#setEvT','setEvT'],['#setEvS','setEvS'],['#setRT','setRT'],['#setRS','setRS'],['#setRBtn','setRBtn'],['#setOut','setOut'],
+  [['#lgT','lgT'],['#lgS','lgS'],['#lgBtn','lgBtn'],['#openApp','openApp'],['#dEngageT','dEngageT'],['#dEngageS','dEngageS'],['#pAddT','pAddT'],['#pAddS','pAddS'],['#pAddBtn','pAddBtn'],['#pListT','pListT'],['#fTitle','fTitle'],['#fTitleEn','fTitleEn'],['#fDay','fDay'],['#fTime','fTime'],['#fRoom','fRoom'],['#fRoomEn','fRoomEn'],['#fTrack','fTrack'],['#fTrackEn','fTrackEn'],['#fDur','fDur'],['#pCancelBtn','pCancelBtn'],['#pImpT','pImpT'],['#pImpS','pImpS'],['#pImpTplBtn','pImpTplBtn'],['#pImpReplaceL','pImpReplace'],['#nSendT','nSendT'],['#nSendS','nSendS'],['#nSendBtn','nSendBtn'],['#nHistT','nHistT'],['#fIcon','fIcon'],['#fMsg','fMsg'],['#peSpkT','peSpkT'],['#peSpkBtn','peSpkBtn'],['#peAttT','peAttT'],['#peSpoT','peSpoT'],['#setEvT','setEvT'],['#setEvS','setEvS'],['#setRT','setRT'],['#setRS','setRS'],['#setRBtn','setRBtn'],['#setOut','setOut'],
    ['#peImpS','peImpS'],['#peTplBtn','peTplBtn'],['#peSpoS','peSpoS'],['#setBrandT','setBrandT'],['#setBrandS','setBrandS'],['#setLogoClr','setLogoClr'],['#setCoverT','setCoverT'],['#setCoverS','setCoverS'],['#setCoverClr','setCoverClr']
   ].forEach(([sel,k])=>{const el=$(sel);if(el)el.textContent=a(k);});
   // buttons that contain a hidden <input>: only translate the leading text node
-  [['#peImpBtn','peImpBtn'],['#setLogoBtn','setLogoBtn'],['#setCoverBtn','setCoverBtn']].forEach(([sel,k])=>{const el=$(sel);if(el&&el.childNodes[0])el.childNodes[0].nodeValue=a(k);});
+  [['#peImpBtn','peImpBtn'],['#setLogoBtn','setLogoBtn'],['#setCoverBtn','setCoverBtn'],['#pImpBtn','pImpBtn']].forEach(([sel,k])=>{const el=$(sel);if(el&&el.childNodes[0])el.childNodes[0].nodeValue=a(k);});
   $('#adEvent').textContent = OAF.currentEvent().name;
 }
 function renderKpis(){
@@ -73,7 +75,7 @@ function renderProgram(){
   let html='';
   days.forEach((d,i)=>{const ss=OAF.sessions(OAF.currentEvent().id,i);if(!ss.length)return;
     html+=`<div style="font-weight:800;font-size:13px;margin:12px 0 8px">${d[lang]}</div>`;
-    html+=ss.map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.color}">🗓️</div><div class="m"><b>${s.time} · ${s.title[lang]}</b><small>${s.room[lang]} · ${s.track[lang]} · ${s.dur}</small></div><button class="btn danger" onclick="adDelSession(${s.id})">✕</button></div>`).join('');
+    html+=ss.map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.color}">🗓️</div><div class="m"><b>${s.time} · ${s.title[lang]}</b><small>${s.room[lang]} · ${s.track[lang]} · ${s.dur}</small></div><button class="btn" onclick="adEditSession('${s.id}')" title="Modifier / Edit">✎</button><button class="btn danger" onclick="adDelSession('${s.id}')">✕</button></div>`).join('');
   });
   $('#progList').innerHTML=html||`<div class="empty">${a('empty')}</div>`;
 }
@@ -153,18 +155,120 @@ function evId(){ return OAF.currentEvent() ? OAF.currentEvent().id : null; }
 async function reloadAndRender(){ if(L()){ await adminHydrate(); } renderProgram(); renderNotifAdmin(); renderPeople(); renderKpis(); renderSettings(); }
 
 /* actions */
-function adAddSession(){
-  const title=$('#sTitle').value.trim(); if(!title){adToast(a('needTitle'));return;}
-  const txt=v=>({fr:v,en:v});
+function clearSessionForm(){ ['sTitle','sTitleEn','sRoom','sRoomEn','sTrack','sTrackEn'].forEach(id=>{const el=$('#'+id);if(el)el.value='';}); }
+function adCancelEdit(){
+  $('#sEditId').value=''; clearSessionForm();
+  $('#sTime').value='14:30'; $('#sDur').value='45m';
+  $('#pAddBtn').textContent=a('pAddBtn'); $('#pCancelBtn').style.display='none';
+}
+function adEditSession(id){
+  const s=OAF.get().sessions.find(x=>String(x.id)===String(id)); if(!s)return;
+  $('#sEditId').value=id;
+  $('#sTitle').value=(s.title&&s.title.fr)||''; $('#sTitleEn').value=(s.title&&s.title.en)||'';
+  $('#sDay').value=s.day||0; $('#sTime').value=s.time||''; $('#sDur').value=s.dur||'';
+  $('#sRoom').value=(s.room&&s.room.fr)||''; $('#sRoomEn').value=(s.room&&s.room.en)||'';
+  $('#sTrack').value=(s.track&&s.track.fr)||''; $('#sTrackEn').value=(s.track&&s.track.en)||'';
+  $('#pAddBtn').textContent=a('pUpdBtn'); $('#pCancelBtn').style.display='';
+  const top=$('#pAddT'); if(top&&top.scrollIntoView) top.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function adSaveSession(){
+  const tfr=$('#sTitle').value.trim(); if(!tfr){adToast(a('needTitle'));return;}
+  const pair=(fr,en)=>({fr:fr,en:(en||fr)});
+  const editId=$('#sEditId').value;
+  const fields={
+    day:+$('#sDay').value, time:$('#sTime').value||'12:00', dur:$('#sDur').value||'45m',
+    title:pair(tfr,$('#sTitleEn').value.trim()),
+    room:pair($('#sRoom').value.trim()||'—',$('#sRoomEn').value.trim()),
+    track:pair($('#sTrack').value.trim()||'—',$('#sTrackEn').value.trim())
+  };
   if(L()){
-    const rec={ event_id:evId(), day:+$('#sDay').value, time:$('#sTime').value||'12:00', dur:$('#sDur').value||'45m', color:'#5b8def',
-      title:txt(title), room:txt($('#sRoom').value||'—'), track:txt($('#sTrack').value||'—'), description:txt('') };
-    OAFAuth.client().from('sessions').insert(rec).then(({error})=>{ if(error){adToast(error.message);return;} $('#sTitle').value=''; reloadAndRender(); adToast(a('tAdd')); });
+    const sb=OAFAuth.client();
+    if(editId){
+      sb.from('sessions').update({day:fields.day,time:fields.time,dur:fields.dur,title:fields.title,room:fields.room,track:fields.track}).eq('id',editId)
+        .then(({error})=>{ if(error){adToast(error.message);return;} adCancelEdit(); reloadAndRender(); adToast(a('tUpd')); });
+    } else {
+      sb.from('sessions').insert(Object.assign({event_id:evId(),color:'#5b8def',description:{fr:'',en:''}},fields))
+        .then(({error})=>{ if(error){adToast(error.message);return;} clearSessionForm(); reloadAndRender(); adToast(a('tAdd')); });
+    }
   } else {
-    OAF.addSession({ day:+$('#sDay').value, time:$('#sTime').value||'12:00', dur:$('#sDur').value||'45m', color:'#5b8def',
-      title:txt(title), room:txt($('#sRoom').value||'—'), track:txt($('#sTrack').value||'—'), desc:txt('') });
-    $('#sTitle').value=''; renderProgram(); renderKpis(); adToast(a('tAdd'));
+    if(editId){ OAF.updateSession(editId,fields); adCancelEdit(); }
+    else { OAF.addSession(Object.assign({color:'#5b8def',desc:{fr:'',en:''}},fields)); clearSessionForm(); }
+    renderProgram(); renderKpis(); adToast(a(editId?'tUpd':'tAdd'));
   }
+}
+
+/* ---- import du programme (CSV bilingue) ---- */
+function parseProgramCsv(text){
+  text=text.replace(/^﻿/,'');
+  const lines=text.split(/\r?\n/).filter(l=>l.trim().length);
+  if(!lines.length)return [];
+  const head=lines[0];
+  const delim=(head.split(';').length>head.split(',').length)?';':',';
+  const split=line=>{const r=[];let cur='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){cur+='"';i++;}else q=!q;}else if(ch===delim&&!q){r.push(cur);cur='';}else cur+=ch;}r.push(cur);return r.map(x=>x.trim());};
+  const norm=s=>s.toLowerCase().replace(/[^a-z]/g,'');
+  const H=split(head).map(norm);
+  const col=(...names)=>{for(const n of names){const i=H.indexOf(n);if(i>=0)return i;}return -1;};
+  const ix={ day:col('jour','day'), time:col('heure','time','horaire'), dur:col('duree','dur','duration'),
+    tfr:col('titrefr','titlefr','titre','title'), ten:col('titreen','titleen'),
+    rfr:col('sallefr','roomfr','salle','room'), ren:col('salleen','roomen'),
+    kfr:col('themefr','trackfr','theme','track'), ken:col('themeen','tracken'),
+    dfr:col('descriptionfr','descfr','description','desc'), den:col('descriptionen','descen'),
+    color:col('couleur','color') };
+  if(ix.tfr<0)return []; // en-tête non reconnu
+  const palette=['#1E8C5A','#13476b','#1B998B','#9a6b00','#E2622C','#5b8def','#b5559a','#111111'];
+  const trackColor={}; let ci=0;
+  const get=(c,arr)=>(c>=0&&c<arr.length)?arr[c]:'';
+  const out=[];
+  for(let li=1;li<lines.length;li++){
+    const c=split(lines[li]);
+    const tfr=get(ix.tfr,c); if(!tfr)continue;
+    const kfr=get(ix.kfr,c)||'—'; const ken=get(ix.ken,c)||kfr;
+    let jour=parseInt(get(ix.day,c),10); if(isNaN(jour))jour=1; const day=Math.max(0,jour-1);
+    let color=get(ix.color,c);
+    if(!color){const key=ken||kfr; if(!trackColor[key]){trackColor[key]=palette[ci%palette.length];ci++;} color=trackColor[key];}
+    const rfr=get(ix.rfr,c)||'—'; const dfr=get(ix.dfr,c);
+    out.push({ day, time:get(ix.time,c)||'12:00', dur:get(ix.dur,c)||'45m', color,
+      title:{fr:tfr,en:get(ix.ten,c)||tfr}, room:{fr:rfr,en:get(ix.ren,c)||rfr},
+      track:{fr:kfr,en:ken}, desc:{fr:dfr,en:get(ix.den,c)||dfr} });
+  }
+  return out;
+}
+async function adImportProgram(e){
+  const f=e.target.files[0]; if(!f)return;
+  let text='';
+  try{ text=await f.text(); }
+  catch(_){ text=await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsText(f);}); }
+  e.target.value='';
+  const rows=parseProgramCsv(text);
+  if(!rows.length){ adToast(a('csvEmpty')); return; }
+  const replace=$('#pImpReplace').checked;
+  if(replace&&!confirm(a('confirmReplace')))return;
+  if(L()){
+    const sb=OAFAuth.client(); const ev=evId();
+    if(replace){ const {error:de}=await sb.from('sessions').delete().eq('event_id',ev); if(de){adToast(de.message);return;} }
+    const recs=rows.map(r=>({event_id:ev,day:r.day,time:r.time,dur:r.dur,color:r.color,title:r.title,room:r.room,track:r.track,description:r.desc}));
+    const {error}=await sb.from('sessions').insert(recs);
+    if(error){ adToast(error.message); return; }
+    await reloadAndRender();
+  } else {
+    if(replace){ OAF.get().sessions.filter(s=>String(s.ev)===String(evId())).slice().forEach(s=>OAF.removeSession(s.id)); }
+    rows.forEach(r=>OAF.addSession({day:r.day,time:r.time,dur:r.dur,color:r.color,title:r.title,room:r.room,track:r.track,desc:r.desc}));
+    renderProgram(); renderKpis();
+  }
+  $('#pImpReplace').checked=false;
+  adToast(a('tProgImp').replace('{n}',rows.length));
+}
+function adProgramTemplate(){
+  const rows=[
+    ['jour','heure','duree','titre_fr','titre_en','salle_fr','salle_en','theme_fr','theme_en','description_fr','description_en','couleur'],
+    ['1','09:00','30m','Ouverture & bienvenue','Opening & welcome','Grande scène','Main Stage','Plénière','Plenary','Le Président ouvre le forum.','The Chair opens the forum.',''],
+    ['1','09:30','60m','Keynote : financer la ZLECAf','Keynote: Financing the AfCFTA','Grande scène','Main Stage','Investissement','Investment','Capital public & privé.','Public & private capital.',''],
+    ['2','10:30','45m','Transition énergétique','Energy transition','Salle A','Room A','Énergie','Energy','Financer la transition juste.','Financing a just transition.','']
+  ];
+  const esc=v=>/[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
+  const csv='﻿'+rows.map(r=>r.map(esc).join(',')).join('\r\n')+'\r\n';
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  const link=document.createElement('a'); link.href=url; link.download='programme_modele.csv'; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
 }
 function adDelSession(id){
   if(!confirm(a('confirmDel'))) return;

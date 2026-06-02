@@ -65,6 +65,16 @@
 
   const nextId = arr => arr.reduce((m, x) => Math.max(m, x.id), 0) + 1;
 
+  // Construit les libellés de jours (Jour 1 / Day 1…) d'après les sessions d'un événement.
+  function deriveDays(sessions, ev) {
+    let max = -1;
+    sessions.forEach(s => { if (String(s.ev) === String(ev) && (s.day || 0) > max) max = s.day || 0; });
+    const n = Math.max(1, max + 1);
+    const out = [];
+    for (let i = 0; i < n; i++) out.push({ fr: 'Jour ' + (i + 1), en: 'Day ' + (i + 1) });
+    return out;
+  }
+
   const API = {
     KEY,
     get: () => state,
@@ -83,8 +93,8 @@
     updateMe(patch) { state.me = Object.assign(state.me, patch); persist(); },
 
     addSession(s) { s.id = nextId(state.sessions); s.ev = s.ev ?? state.currentEvent; state.sessions.push(s); persist(); return s.id; },
-    updateSession(id, patch) { const s = state.sessions.find(x => x.id === id); if (s) Object.assign(s, patch); persist(); },
-    removeSession(id) { state.sessions = state.sessions.filter(x => x.id !== id); persist(); },
+    updateSession(id, patch) { const s = state.sessions.find(x => String(x.id) === String(id)); if (s) Object.assign(s, patch); persist(); },
+    removeSession(id) { state.sessions = state.sessions.filter(x => String(x.id) !== String(id)); persist(); },
 
     addNotification(n) { n.id = nextId(state.notifications); n.ts = Date.now(); state.notifications.push(n); persist(); return n.id; },
 
@@ -138,11 +148,14 @@
       if (p.speakers)      state.speakers = p.speakers;
       if (p.sponsors)      state.sponsors = p.sponsors;
       if (p.notifications) state.notifications = p.notifications;
-      if (p.days)          state.days = p.days;
       if (p.bookmarks)     state.me.bookmarks = p.bookmarks;
       if (p.connections)   state.me.connections = p.connections;
       if (p.currentEvent != null) state.currentEvent = p.currentEvent;
       if (p.me)            state.me = Object.assign(state.me, p.me);
+      // Jours : libellés fournis explicitement, sinon déduits du programme (s'adapte
+      // automatiquement au nombre de jours réel de l'événement actif).
+      if (p.days)          state.days = p.days;
+      else if (p.sessions) state.days = deriveDays(state.sessions, state.currentEvent);
     }
   };
 

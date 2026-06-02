@@ -49,16 +49,28 @@
     <!-- PROGRAM -->
     <div class="adpage" data-p="program">
       <div class="panel">
-        <h3 id="pAddT">Ajouter une session</h3><div class="desc" id="pAddS">Elle apparaît immédiatement dans le programme de l'app.</div>
+        <h3 id="pAddT">Ajouter / modifier une session</h3><div class="desc" id="pAddS">Elle apparaît immédiatement dans le programme de l'app.</div>
+        <input type="hidden" id="sEditId" value="" />
         <div class="grid2">
-          <div class="field"><label id="fTitle">Titre</label><input id="sTitle" placeholder="Titre de la session" /></div>
+          <div class="field"><label id="fTitle">Titre (FR)</label><input id="sTitle" placeholder="Titre de la session" /></div>
+          <div class="field"><label id="fTitleEn">Titre (EN)</label><input id="sTitleEn" placeholder="Session title" /></div>
           <div class="field"><label id="fDay">Jour</label><select id="sDay"></select></div>
           <div class="field"><label id="fTime">Heure</label><input id="sTime" placeholder="09:30" value="14:30" /></div>
-          <div class="field"><label id="fRoom">Salle</label><input id="sRoom" placeholder="Salle A" /></div>
-          <div class="field"><label id="fTrack">Thème</label><input id="sTrack" placeholder="Fintech" /></div>
+          <div class="field"><label id="fRoom">Salle (FR)</label><input id="sRoom" placeholder="Salle A" /></div>
+          <div class="field"><label id="fRoomEn">Salle (EN)</label><input id="sRoomEn" placeholder="Room A" /></div>
+          <div class="field"><label id="fTrack">Thème (FR)</label><input id="sTrack" placeholder="Fintech" /></div>
+          <div class="field"><label id="fTrackEn">Thème (EN)</label><input id="sTrackEn" placeholder="Fintech" /></div>
           <div class="field"><label id="fDur">Durée</label><input id="sDur" placeholder="45m" value="45m" /></div>
         </div>
-        <button class="btn solid" onclick="adAddSession()" id="pAddBtn">＋ Ajouter la session</button>
+        <button class="btn solid" onclick="adSaveSession()" id="pAddBtn">＋ Ajouter la session</button>
+        <button class="btn" onclick="adCancelEdit()" id="pCancelBtn" style="display:none">Annuler</button>
+      </div>
+      <div class="panel">
+        <h3 id="pImpT">Importer un programme (CSV)</h3>
+        <div class="desc" id="pImpS">Chargez tout le programme d'un coup depuis un fichier CSV bilingue.</div>
+        <label class="checkrow" style="display:flex;align-items:center;gap:8px;margin:10px 0;font-size:13px;cursor:pointer"><input type="checkbox" id="pImpReplace" /><span id="pImpReplaceL">Remplacer tout le programme existant</span></label>
+        <label class="btn solid" id="pImpBtn" style="cursor:pointer">📥 Importer le programme<input type="file" accept=".csv,text/csv" hidden onchange="adImportProgram(event)" /></label>
+        <button class="btn" onclick="adProgramTemplate()" id="pImpTplBtn">⬇ Modèle de programme</button>
       </div>
       <div class="panel"><h3 id="pListT">Programme actuel</h3><div class="desc" id="pListS"></div><div id="progList"></div></div>
     </div>
