@@ -181,6 +181,11 @@ do $$ begin
   if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='messages')      then alter publication supabase_realtime add table messages;      end if;
   if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='notifications') then alter publication supabase_realtime add table notifications; end if;
   if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='connections')   then alter publication supabase_realtime add table connections;   end if;
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='events')        then alter publication supabase_realtime add table events;        end if;
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='sessions')      then alter publication supabase_realtime add table sessions;      end if;
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='speakers')      then alter publication supabase_realtime add table speakers;      end if;
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='sponsors')      then alter publication supabase_realtime add table sponsors;      end if;
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='event_attendees') then alter publication supabase_realtime add table event_attendees; end if;
 end $$;
 
 -- ============================================================================

@@ -252,11 +252,12 @@ async function hydrate(){
       sessions, speakers, sponsors, attendees, notifications,
       bookmarks:(bk.data||[]).map(b=>String(b.session_id)),
       connections:(cn.data||[]).map(c=>String(c.addressee)),
-      currentEvent: events.length?events[0].id:undefined,
+      currentEvent: (function(){ const c=(OAF.currentEvent()||{}).id; return (c!=null)?c:(events.length?events[0].id:undefined); })(),
       me: { name: myProf.name||me.email, role: myProf.role||{fr:'Participant',en:'Attendee'}, country: myProf.country||'🌍', look: myProf.looking_for||{fr:'',en:''}, interests: myProf.interests||[], visible: myProf.is_visible!==false }
     });
     renderAll();
     subscribeChat();
+    subscribeContent();
   }catch(e){ console.warn('Hydratation Supabase échouée — données démo conservées', e); }
 }
 function authSend(){
@@ -329,6 +330,25 @@ function subscribeChat(){
     }).subscribe();
     chatSubscribed=true;
   }catch(e){ console.warn('realtime chat', e); }
+}
+let contentSubscribed=false, contentTimer=null;
+function subscribeContent(){
+  if(contentSubscribed || !(OAFAuth&&OAFAuth.live()&&OAFAuth.client())) return;
+  try{
+    const sb=OAFAuth.client();
+    // Rafraîchit le contenu (programme, intervenants, partenaires, bannière, notifs,
+    // participants) dès qu'une modif admin survient — débounce pour grouper les rafales.
+    const refresh=()=>{ clearTimeout(contentTimer); contentTimer=setTimeout(()=>{ hydrate(); }, 400); };
+    sb.channel('content')
+      .on('postgres_changes',{event:'*',schema:'public',table:'events'},refresh)
+      .on('postgres_changes',{event:'*',schema:'public',table:'sessions'},refresh)
+      .on('postgres_changes',{event:'*',schema:'public',table:'speakers'},refresh)
+      .on('postgres_changes',{event:'*',schema:'public',table:'sponsors'},refresh)
+      .on('postgres_changes',{event:'*',schema:'public',table:'notifications'},refresh)
+      .on('postgres_changes',{event:'*',schema:'public',table:'event_attendees'},refresh)
+      .subscribe();
+    contentSubscribed=true;
+  }catch(e){ console.warn('realtime content', e); }
 }
 
 /* ============ RENDEZ-VOUS (RDV) ============ */
