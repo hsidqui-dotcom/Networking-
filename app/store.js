@@ -154,8 +154,13 @@
       if (p.me)            state.me = Object.assign(state.me, p.me);
       // Jours : libellés fournis explicitement, sinon déduits du programme (s'adapte
       // automatiquement au nombre de jours réel de l'événement actif).
+      // On résout l'événement courant comme le getter currentEvent() (la valeur brute
+      // state.currentEvent peut valoir 0 alors que les sessions portent un id UUID).
       if (p.days)          state.days = p.days;
-      else if (p.sessions) state.days = deriveDays(state.sessions, state.currentEvent);
+      else if (p.sessions) {
+        const curEv = (state.events.find(e => String(e.id) === String(state.currentEvent)) || state.events[0] || {}).id;
+        state.days = deriveDays(state.sessions, curEv);
+      }
     }
   };
 

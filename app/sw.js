@@ -1,6 +1,6 @@
 /* OAF Connect — service worker (network-first: toujours la dernière version en
    ligne, repli sur le cache hors-ligne). Bump CACHE à chaque évolution majeure. */
-const CACHE = 'oaf-connect-v3';
+const CACHE = 'oaf-connect-v4';
 const ASSETS = [
   './', './index.html', './admin.html',
   './style.css', './store.js', './app.js', './admin.js',
