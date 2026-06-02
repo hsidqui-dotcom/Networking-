@@ -108,6 +108,7 @@
     setSponsorLogo(id, dataUrl) { const s = state.sponsors.find(x => x.id === id); if (s) { s.logo = dataUrl || null; persist(); } },
     setEventCover(id, dataUrl) { const e = state.events.find(x => String(x.id) === String(id)); if (e) { e.cover = dataUrl || null; persist(); } },
     updateEvent(id, patch) { const e = state.events.find(x => String(x.id) === String(id)); if (e) { Object.assign(e, patch); persist(); } },
+    addEvent(e) { const id = state.events.reduce((m, x) => Math.max(m, Number(x.id) || 0), 0) + 1; const ev = Object.assign({ id, status: 'upcoming', dates: { fr: '', en: '' }, theme: { fr: '', en: '' }, cover: null }, e); state.events.push(ev); persist(); return id; },
     importAttendees(rows) {
       const palette = ['#5b8def', '#1B998B', '#b5559a', '#9a6b00', '#E2622C', '#13476b'];
       rows.forEach(r => {

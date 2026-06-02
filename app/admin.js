@@ -115,6 +115,26 @@ async function adSaveEvent(){
   }
   adToast(lang==='fr'?'Événement enregistré ✓':'Event saved ✓');
 }
+async function adCreateEvent(){
+  const name=($('#newEvName').value||'').trim();
+  if(!name){adToast(lang==='fr'?'Indiquez un nom':'Enter a name');return;}
+  const city=($('#newEvCity').value||'').trim();
+  const dfr=($('#newEvDatesFr').value||'').trim(); const den=($('#newEvDatesEn').value||'').trim()||dfr;
+  const status=$('#newEvStatus').value||'upcoming';
+  const cityShort=city.split(',')[0].trim();
+  if(L()){
+    const {data,error}=await OAFAuth.client().from('events').insert({name,city,city_short:cityShort,status,dates:{fr:dfr,en:den}}).select('id').single();
+    if(error){adToast(error.message);return;}
+    await reloadAndRender();
+    if(data&&data.id){ OAF.setCurrentEvent(data.id); }
+    renderAll();
+  } else {
+    const id=OAF.addEvent({name,city,cityShort,status,dates:{fr:dfr,en:den}});
+    OAF.setCurrentEvent(id); renderAll();
+  }
+  ['newEvName','newEvCity','newEvDatesFr','newEvDatesEn'].forEach(id=>{const el=$('#'+id);if(el)el.value='';});
+  adToast(lang==='fr'?'Événement créé ✓':'Event created ✓');
+}
 
 function renderPage(){ if(page==='dash')renderKpis(); else if(page==='program')renderProgram(); else if(page==='notif')renderNotifAdmin(); else if(page==='people')renderPeople(); else if(page==='settings')renderSettings(); }
 function renderAll(){ renderLabels(); paintBrand(); renderKpis(); renderProgram(); renderNotifAdmin(); renderPeople(); renderSettings(); }

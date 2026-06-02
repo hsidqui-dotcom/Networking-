@@ -130,6 +130,14 @@
         <div class="field"><label id="fEvCity">Ville</label><input id="evCity" placeholder="Lomé, Togo" /></div>
         <button class="btn solid" onclick="adSaveEvent()" id="evSaveBtn">💾 Enregistrer</button>
       </div>
+      <div class="panel"><h3 id="setNewT">＋ Créer un événement</h3><div class="desc" id="setNewS">Ajoutez un nouveau forum. Il apparaît sur l'accueil et devient l'événement actif.</div>
+        <div class="field"><label id="fNewName">Nom</label><input id="newEvName" placeholder="Africa Ports Forum 2026" /></div>
+        <div class="field"><label id="fNewCity">Ville</label><input id="newEvCity" placeholder="Lomé, Togo" /></div>
+        <div class="field"><label id="fNewDatesFr">Dates (FR)</label><input id="newEvDatesFr" placeholder="19–21 mai 2026" /></div>
+        <div class="field"><label id="fNewDatesEn">Dates (EN)</label><input id="newEvDatesEn" placeholder="19–21 May 2026" /></div>
+        <div class="field"><label id="fNewStatus">Statut</label><select id="newEvStatus"><option value="upcoming">À venir</option><option value="live">En cours</option><option value="past">Passé</option></select></div>
+        <button class="btn solid" onclick="adCreateEvent()" id="newEvBtn">＋ Créer l'événement</button>
+      </div>
       <div class="panel"><h3 id="setRT">Données</h3><div class="desc" id="setRS">Restaurer les données d'exemple.</div>
         <button class="btn danger" onclick="adReset()" id="setRBtn">Réinitialiser la démo</button>
         <button class="btn" onclick="adLogout()" id="setOut" style="margin-left:8px">Se déconnecter</button></div>
