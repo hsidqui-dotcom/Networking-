@@ -91,7 +91,7 @@ function renderPeople(){
 const DEFAULT_LOGO='<svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" rx="72" fill="#FFE400"/><text x="200" y="237" text-anchor="middle" fill="#111" font-family="\'Arial Black\',Arial,sans-serif" font-weight="900" font-size="188">one</text><text x="203" y="306" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="55" letter-spacing="11">AFRICA</text></svg>';
 const logoMarkup=d=>d?`<img src="${d}" style="width:100%;height:100%;object-fit:cover">`:DEFAULT_LOGO;
 function paintBrand(){const el=$('#adLogo');if(el)el.innerHTML=logoMarkup(OAF.appLogo());}
-function updateCoverPreview(){const sel=$('#coverEvent');if(!sel)return;const e=OAF.events().find(x=>x.id===+sel.value);const cv=e&&e.cover;$('#coverPreview').innerHTML=cv?`<img src="${cv}" style="width:100%;height:100%;object-fit:cover">`:'';}
+function updateCoverPreview(){const sel=$('#coverEvent');if(!sel)return;const e=OAF.events().find(x=>String(x.id)===String(sel.value));const cv=e&&e.cover;$('#coverPreview').innerHTML=cv?`<img src="${cv}" style="width:100%;height:100%;object-fit:cover">`:'';}
 function renderSettings(){
   $('#setEvent').innerHTML=OAF.events().map(e=>`<option value="${e.id}" ${e.id===OAF.currentEvent().id?'selected':''}>${e.name}</option>`).join('');
   $('#coverEvent').innerHTML=OAF.events().map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
@@ -125,8 +125,8 @@ function processImg(file, cb, max){
 }
 function adSetLogo(e){ const f=e.target.files[0]; if(!f)return; processImg(f,d=>{OAF.setAppLogo(d);renderSettings();adToast(a('tLogo'));},192); e.target.value=''; }
 function adClearLogo(){ OAF.setAppLogo(null); renderSettings(); adToast(a('tLogoClr')); }
-function adSetCover(e){ const f=e.target.files[0]; if(!f)return; const id=+$('#coverEvent').value; processImg(f,d=>{OAF.setEventCover(id,d);renderSettings();adToast(a('tCover'));},560); e.target.value=''; }
-function adClearCover(){ OAF.setEventCover(+$('#coverEvent').value,null); renderSettings(); adToast(a('tCover')); }
+function adSetCover(e){ const f=e.target.files[0]; if(!f)return; const id=$('#coverEvent').value; processImg(f,async d=>{ OAF.setEventCover(id,d); if(L()){ const {error}=await OAFAuth.client().from('events').update({cover_url:d}).eq('id',id); if(error){adToast(error.message);return;} } renderSettings(); adToast(a('tCover')); },560); e.target.value=''; }
+async function adClearCover(){ const id=$('#coverEvent').value; OAF.setEventCover(id,null); if(L()){ const {error}=await OAFAuth.client().from('events').update({cover_url:null}).eq('id',id); if(error){adToast(error.message);return;} } renderSettings(); adToast(a('tCover')); }
 function adSponsorLogo(e,id){ const f=e.target.files[0]; if(!f)return; processImg(f,d=>{OAF.setSponsorLogo(id,d);renderPeople();adToast(a('tSponsorLogo'));},160); e.target.value=''; }
 
 /* ---- CSV import ---- */
