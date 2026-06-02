@@ -107,6 +107,7 @@
     setAppLogo(dataUrl) { state.branding.logo = dataUrl || null; persist(); },
     setSponsorLogo(id, dataUrl) { const s = state.sponsors.find(x => x.id === id); if (s) { s.logo = dataUrl || null; persist(); } },
     setEventCover(id, dataUrl) { const e = state.events.find(x => String(x.id) === String(id)); if (e) { e.cover = dataUrl || null; persist(); } },
+    updateEvent(id, patch) { const e = state.events.find(x => String(x.id) === String(id)); if (e) { Object.assign(e, patch); persist(); } },
     importAttendees(rows) {
       const palette = ['#5b8def', '#1B998B', '#b5559a', '#9a6b00', '#E2622C', '#13476b'];
       rows.forEach(r => {

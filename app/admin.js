@@ -98,6 +98,22 @@ function renderSettings(){
   paintBrand();
   $('#brandPreview').innerHTML=logoMarkup(OAF.appLogo());
   updateCoverPreview();
+  const ce=OAF.currentEvent()||{}; const set=(id,v)=>{const el=$('#'+id);if(el)el.value=v||'';};
+  set('evName',ce.name); set('evDatesFr',ce.dates&&ce.dates.fr); set('evDatesEn',ce.dates&&ce.dates.en); set('evCity',ce.city);
+}
+async function adSaveEvent(){
+  const ev=OAF.currentEvent(); if(!ev){adToast(a('csvEmpty'));return;}
+  const name=($('#evName').value||'').trim()||ev.name;
+  const dfr=($('#evDatesFr').value||'').trim(); const den=($('#evDatesEn').value||'').trim()||dfr;
+  const city=($('#evCity').value||'').trim();
+  if(L()){
+    const {error}=await OAFAuth.client().from('events').update({name,dates:{fr:dfr,en:den},city}).eq('id',ev.id);
+    if(error){adToast(error.message);return;}
+    await reloadAndRender();
+  } else {
+    OAF.updateEvent(ev.id,{name,dates:{fr:dfr,en:den},city}); renderAll();
+  }
+  adToast(lang==='fr'?'Événement enregistré ✓':'Event saved ✓');
 }
 
 function renderPage(){ if(page==='dash')renderKpis(); else if(page==='program')renderProgram(); else if(page==='notif')renderNotifAdmin(); else if(page==='people')renderPeople(); else if(page==='settings')renderSettings(); }

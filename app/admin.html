@@ -123,6 +123,13 @@
       </div>
       <div class="panel"><h3 id="setEvT">Événement actif</h3><div class="desc" id="setEvS">Choisissez l'édition gérée par l'app.</div>
         <div class="field"><select id="setEvent" onchange="adSetEvent()"></select></div></div>
+      <div class="panel"><h3 id="setEdT">Détails de l'événement</h3><div class="desc" id="setEdS">Nom, dates et ville affichés sur la carte d'accueil.</div>
+        <div class="field"><label id="fEvName">Nom</label><input id="evName" placeholder="Africa Ports Forum 2026" /></div>
+        <div class="field"><label id="fEvDatesFr">Dates (FR)</label><input id="evDatesFr" placeholder="19–21 mai 2026" /></div>
+        <div class="field"><label id="fEvDatesEn">Dates (EN)</label><input id="evDatesEn" placeholder="19–21 May 2026" /></div>
+        <div class="field"><label id="fEvCity">Ville</label><input id="evCity" placeholder="Lomé, Togo" /></div>
+        <button class="btn solid" onclick="adSaveEvent()" id="evSaveBtn">💾 Enregistrer</button>
+      </div>
       <div class="panel"><h3 id="setRT">Données</h3><div class="desc" id="setRS">Restaurer les données d'exemple.</div>
         <button class="btn danger" onclick="adReset()" id="setRBtn">Réinitialiser la démo</button>
         <button class="btn" onclick="adLogout()" id="setOut" style="margin-left:8px">Se déconnecter</button></div>
