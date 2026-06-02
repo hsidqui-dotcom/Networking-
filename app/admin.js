@@ -84,7 +84,7 @@ function renderNotifAdmin(){
   $('#notifList').innerHTML=list.length?list.map(n=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:#FFF4BF;color:#111">${n.icon||'🔔'}</div><div class="m"><b>${n.title[lang]||n.title.en||n.title}</b><small>${new Date(n.ts).toLocaleString()}</small></div></div>`).join(''):`<div class="empty">${a('empty')}</div>`;
 }
 function renderPeople(){
-  $('#spkList').innerHTML=OAF.speakers().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${s.color}">${ini(s.name)}</div><div class="m"><b>${s.name}</b><small>${s.role[lang]} · ${s.country}</small></div></div>`).join('');
+  $('#spkList').innerHTML=OAF.speakers().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${s.color}">${ini(s.name)}</div><div class="m"><b>${s.name}</b><small>${s.role[lang]} · ${s.country}</small></div><button class="btn danger" onclick="adDelSpeaker('${s.id}')">✕</button></div>`).join('');
   $('#attList').innerHTML=OAF.attendees().map(p=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}${p.guest?' <span class="tag" style="font-size:9px">importé</span>':''}</b><small>${p.role[lang]} · ${p.country}</small></div><span class="tag match">${p.score}</span>${p.guest?`<button class="btn danger" onclick="adDelGuest('${p.gid}')">✕</button>`:''}</div>`).join('');
   $('#spoList').innerHTML=OAF.sponsors().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.logo?'#fff':s.color};color:${s.tc};overflow:hidden">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div><div class="m"><b>${s.name}</b></div><label class="btn" style="padding:6px 10px;font-size:12px;margin-right:6px">${a('sponsorLogoBtn')}<input type="file" accept="image/*" hidden onchange="adSponsorLogo(event,${s.id})"></label><span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${s.tier}</span></div>`).join('');
 }
@@ -330,6 +330,27 @@ function adAddSpeaker(){
   const n=$('#spkName').value.trim(); if(!n)return; const r=$('#spkRole').value||'—';
   if(L()){ OAFAuth.client().from('speakers').insert({event_id:evId(),name:n,role:{fr:r,en:r},country:'🌍'}).then(({error})=>{ if(error){adToast(error.message);return;} $('#spkName').value='';$('#spkRole').value=''; reloadAndRender(); adToast(a('tSpk')); }); }
   else { OAF.addSpeaker({name:n,role:{fr:r,en:r},country:'🌍',color:'#5b8def'}); $('#spkName').value='';$('#spkRole').value=''; renderPeople(); renderKpis(); adToast(a('tSpk')); }
+}
+function adImportSpeakers(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=async ()=>{ const rows=parseCsv(r.result); if(!rows.length){adToast(a('csvEmpty'));return;}
+    if(L()){
+      const ev=evId();
+      const recs=rows.map(x=>({event_id:ev,name:x.name,role:{fr:x.role||'',en:x.role||''},country:x.country||'🌍',bio:{fr:x.interests||'',en:x.interests||''}}));
+      const {error}=await OAFAuth.client().from('speakers').insert(recs);
+      if(error){adToast(error.message);return;}
+      await reloadAndRender();
+    } else { rows.forEach(x=>OAF.addSpeaker({name:x.name,role:{fr:x.role||'',en:x.role||''},country:x.country||'🌍',color:'#5b8def'})); renderPeople(); renderKpis(); }
+    adToast(a('tImport').replace('{n}',rows.length)); };
+  r.readAsText(f); e.target.value=''; }
+function adSpeakerTemplate(){
+  const csv='﻿name,role,country,bio\r\nDominique Lafont,CEO · Lafont Africa Corporation,🇫🇷,"Expert des infrastructures portuaires africaines."\r\nAmina Okonkwo,Chef économiste · BAD,🇳🇬,"Spécialiste du financement des infrastructures."\r\n';
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  const link=document.createElement('a'); link.href=url; link.download='intervenants_modele.csv'; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+}
+function adDelSpeaker(id){
+  if(!confirm(a('confirmDel'))) return;
+  if(L()){ OAFAuth.client().from('speakers').delete().eq('id',id).then(({error})=>{ if(error){adToast(error.message);return;} reloadAndRender(); adToast(a('tDel')); }); }
+  else { OAF.get().speakers=OAF.get().speakers.filter(s=>String(s.id)!==String(id)); renderPeople(); renderKpis(); adToast(a('tDel')); }
 }
 function adSetEvent(){ OAF.setCurrentEvent($('#setEvent').value); renderAll(); adToast(a('tEvent')); }
 function adReset(){ if(L()){ adToast(lang==='fr'?'Reset désactivé en mode réel':'Reset disabled in live mode'); return; } OAF.reset(); lang=OAF.lang(); renderAll(); adToast(a('tReset')); }

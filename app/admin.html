@@ -89,7 +89,13 @@
 
     <!-- PEOPLE -->
     <div class="adpage" data-p="people">
-      <div class="panel"><h3 id="peSpkT">Intervenants</h3><div id="spkList"></div>
+      <div class="panel"><h3 id="peSpkT">Intervenants</h3>
+        <div class="desc" id="peSpkImpS">Ajoutez-les un par un, ou importez une liste (CSV : nom, rôle, pays, bio).</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+          <label class="btn solid" id="peSpkImpBtn">📥 Importer un CSV<input type="file" accept=".csv,text/csv" hidden onchange="adImportSpeakers(event)"></label>
+          <button class="btn" onclick="adSpeakerTemplate()" id="peSpkTplBtn">⬇ Modèle CSV</button>
+        </div>
+        <div id="spkList"></div>
         <div class="grid2" style="margin-top:10px"><div class="field"><input id="spkName" placeholder="Nom de l'intervenant" /></div><div class="field"><input id="spkRole" placeholder="Rôle · Société" /></div></div>
         <button class="btn" onclick="adAddSpeaker()" id="peSpkBtn">＋ Ajouter</button>
       </div>
