@@ -122,8 +122,15 @@ function renderEvents(){
       <div class="bd"><div class="r1">📍 ${e.city} · 🗓️ ${e.dates[lang]}</div><div class="th">${e.theme[lang]}</div></div>
     </div>`).join('');
 }
+async function joinEvent(id){
+  const sb=(typeof OAFAuth!=='undefined')&&OAFAuth.client&&OAFAuth.client();
+  const me=(typeof OAFAuth!=='undefined')&&OAFAuth.user&&OAFAuth.user();
+  if(!sb||!me||id==null) return;
+  try{ await sb.from('event_attendees').upsert({event_id:id,profile_id:me.id},{onConflict:'event_id,profile_id',ignoreDuplicates:true}); }catch(_){}
+}
 function enterEvent(id){
   OAF.setCurrentEvent(id); const e=OAF.currentEvent();
+  joinEvent(id);
   $('#abTitle').textContent=e.name; $('#abSub').textContent=e.cityShort;
   $('#hKicker').textContent='📍 '+e.cityShort.toUpperCase()+' · '+e.dates[lang].toUpperCase();
   $('#hTheme').textContent=e.theme[lang]; $('#hCity').textContent=e.city;
@@ -212,7 +219,7 @@ async function hydrate(){
   try{
     const palette=['#5b8def','#1B998B','#b5559a','#9a6b00','#E2622C','#13476b'];
     const tops=['linear-gradient(135deg,#1c1c1c,#000)','linear-gradient(135deg,#0f6e4f,#1B998B)','linear-gradient(135deg,#13476b,#2f7bb0)','linear-gradient(135deg,#7a3b12,#c2691e)','linear-gradient(135deg,#5a4a8a,#8a6fb5)'];
-    const [ev,se,sp,po,no,bk,cn,prof] = await Promise.all([
+    const [ev,se,sp,po,no,bk,cn,prof,ea] = await Promise.all([
       sb.from('events').select('*'),
       sb.from('sessions').select('*'),
       sb.from('speakers').select('*'),
@@ -220,16 +227,18 @@ async function hydrate(){
       sb.from('notifications').select('*').order('created_at',{ascending:false}),
       sb.from('bookmarks').select('session_id').eq('profile_id',me.id),
       sb.from('connections').select('addressee').eq('requester',me.id),
-      sb.from('profiles').select('*').eq('is_visible',true)
+      sb.from('profiles').select('*').eq('is_visible',true),
+      sb.from('event_attendees').select('event_id,profile_id')
     ]);
     if(ev.error) throw ev.error;
+    const eaMap={}; ((ea&&ea.data)||[]).forEach(r=>{ (eaMap[r.profile_id]=eaMap[r.profile_id]||[]).push(r.event_id); });
     const order={live:0,upcoming:1,past:2};
     const events=(ev.data||[]).map((e,i)=>({id:e.id,name:e.name,city:e.city||'',cityShort:e.city_short||(e.city||'').split(',')[0],status:e.status||'upcoming',dates:e.dates||{fr:'',en:''},theme:e.theme||{fr:'',en:''},cover:e.cover_url||null,top:tops[i%tops.length]}))
       .sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
     const sessions=(se.data||[]).map(s=>({id:s.id,ev:s.event_id,day:s.day||0,time:s.time||'',dur:s.dur||'',title:s.title||{fr:'',en:''},room:s.room||{fr:'',en:''},track:s.track||{fr:'',en:''},desc:s.description||{fr:'',en:''},color:s.color||'#5b8def',star:false,sp:[]}));
     const speakers=(sp.data||[]).map((s,i)=>({id:s.id,name:s.name,role:s.role||{fr:'',en:''},country:s.country||'🌍',color:s.color||palette[i%palette.length],bio:s.bio||{fr:'',en:''},tags:s.tags||[],ses:{fr:[],en:[]}}));
     const sponsors=(po.data||[]).map((s,i)=>({id:s.id,name:s.name,tier:s.tier||'SILVER',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null}));
-    const attendees=(prof.data||[]).filter(p=>p.id!==me.id).map((p,i)=>({id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],score:80,why:p.looking_for||{fr:'',en:''},look:p.looking_for||{fr:'',en:''},tags:p.interests||[]}));
+    const attendees=(prof.data||[]).filter(p=>p.id!==me.id).map((p,i)=>({id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],score:80,why:p.looking_for||{fr:'',en:''},look:p.looking_for||{fr:'',en:''},tags:p.interests||[],evs:eaMap[p.id]||[]}));
     const notifications=(no.data||[]).map(n=>({id:n.id,icon:n.icon||'🔔',ts:new Date(n.created_at).getTime(),title:n.title||{fr:'',en:''}}));
     const profById={}; (prof.data||[]).forEach(p=>profById[p.id]=p);
     const myProf=profById[me.id] || {};

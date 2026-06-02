@@ -75,6 +75,12 @@
     return out;
   }
 
+  // Résout l'id de l'événement actif (state.currentEvent peut valoir 0 / une valeur brute).
+  function curEvId() { return (state.events.find(e => String(e.id) === String(state.currentEvent)) || state.events[0] || {}).id; }
+  // Un participant appartient-il au forum actif ? (evs = liste des forums rejoints ;
+  // si absente — données démo — il reste visible partout, rétro-compatible.)
+  function inCurrentEvent(p) { if (!p.evs) return true; const cur = curEvId(); return p.evs.some(e => String(e) === String(cur)); }
+
   const API = {
     KEY,
     get: () => state,
@@ -84,7 +90,7 @@
     setCurrentEvent(id) { state.currentEvent = id; persist(); },
     events: () => state.events,
     speakers: () => state.speakers,
-    attendees: () => state.attendees,
+    attendees: () => state.attendees.filter(inCurrentEvent),
     sponsors: () => state.sponsors,
     days: () => state.days,
     sessions: (ev, day) => state.sessions.filter(s => s.ev === (ev ?? state.currentEvent) && (day == null || s.day === day)).sort((a, b) => a.time.localeCompare(b.time)),
@@ -131,7 +137,7 @@
 
     stats() {
       return {
-        attendees: state.attendees.length,
+        attendees: state.attendees.filter(inCurrentEvent).length,
         speakers: state.speakers.length,
         sponsors: state.sponsors.length,
         sessions: state.sessions.filter(s => s.ev === state.currentEvent).length,
