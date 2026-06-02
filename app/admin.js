@@ -85,7 +85,7 @@ function renderNotifAdmin(){
 }
 function renderPeople(){
   $('#spkList').innerHTML=OAF.speakers().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${s.color}">${ini(s.name)}</div><div class="m"><b>${s.name}</b><small>${s.role[lang]} · ${s.country}</small></div></div>`).join('');
-  $('#attList').innerHTML=OAF.attendees().map(p=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><span class="tag match">${p.score}</span></div>`).join('');
+  $('#attList').innerHTML=OAF.attendees().map(p=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}${p.guest?' <span class="tag" style="font-size:9px">importé</span>':''}</b><small>${p.role[lang]} · ${p.country}</small></div><span class="tag match">${p.score}</span>${p.guest?`<button class="btn danger" onclick="adDelGuest('${p.gid}')">✕</button>`:''}</div>`).join('');
   $('#spoList').innerHTML=OAF.sponsors().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.logo?'#fff':s.color};color:${s.tc};overflow:hidden">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div><div class="m"><b>${s.name}</b></div><label class="btn" style="padding:6px 10px;font-size:12px;margin-right:6px">${a('sponsorLogoBtn')}<input type="file" accept="image/*" hidden onchange="adSponsorLogo(event,${s.id})"></label><span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${s.tier}</span></div>`).join('');
 }
 const DEFAULT_LOGO='<svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" rx="72" fill="#FFE400"/><text x="200" y="237" text-anchor="middle" fill="#111" font-family="\'Arial Black\',Arial,sans-serif" font-weight="900" font-size="188">one</text><text x="203" y="306" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="55" letter-spacing="11">AFRICA</text></svg>';
@@ -177,8 +177,18 @@ function parseCsv(text){
   return out;
 }
 function adImportCsv(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader();
-  r.onload=()=>{ const rows=parseCsv(r.result); if(!rows.length){adToast(a('csvEmpty'));return;} const n=OAF.importAttendees(rows); renderPeople(); renderKpis(); adToast(a('tImport').replace('{n}',n)); };
+  r.onload=async ()=>{ const rows=parseCsv(r.result); if(!rows.length){adToast(a('csvEmpty'));return;}
+    if(L()){
+      const ev=evId();
+      const recs=rows.map(x=>({event_id:ev,name:x.name,role:{fr:x.role||'',en:x.role||''},country:x.country||'🌍',interests:(x.interests||'').split(',').map(s=>s.trim()).filter(Boolean)}));
+      const {error}=await OAFAuth.client().from('guests').insert(recs);
+      if(error){adToast(error.message);return;}
+      await reloadAndRender();
+    } else { OAF.importAttendees(rows); renderPeople(); renderKpis(); }
+    adToast(a('tImport').replace('{n}',rows.length)); };
   r.readAsText(f); e.target.value=''; }
+async function adDelGuest(gid){ if(!confirm(a('confirmDel')))return; if(L()){ const {error}=await OAFAuth.client().from('guests').delete().eq('id',gid); if(error){adToast(error.message);return;} await reloadAndRender(); adToast(a('tDel')); } }
+async function adClearGuests(){ if(!confirm(lang==='fr'?'Supprimer tous les participants importés de ce forum ?':'Delete all imported attendees of this forum?'))return; if(L()){ const {error}=await OAFAuth.client().from('guests').delete().eq('event_id',evId()); if(error){adToast(error.message);return;} await reloadAndRender(); adToast(a('tDel')); } }
 function adCsvTemplate(){
   const csv='name,role,country,interests\nAmadou Diallo,CEO · SolarMali,🇲🇱,"Énergie, Climat"\nGrace Mwangi,Founder · AgriKenya,🇰🇪,"Agritech, Investissement"\nJoseph Banda,Investor · Lusaka Capital,🇿🇲,"Fintech, Seed"\n';
   const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
@@ -331,14 +341,15 @@ async function adminHydrate(){
   try{
     const palette=['#5b8def','#1B998B','#b5559a','#9a6b00','#E2622C','#13476b'];
     const tops=['linear-gradient(135deg,#1c1c1c,#000)','linear-gradient(135deg,#0f6e4f,#1B998B)','linear-gradient(135deg,#13476b,#2f7bb0)','linear-gradient(135deg,#7a3b12,#c2691e)'];
-    const [ev,se,sp,po,no,prof,ea]=await Promise.all([
+    const [ev,se,sp,po,no,prof,ea,gu]=await Promise.all([
       sb.from('events').select('*'),
       sb.from('sessions').select('*'),
       sb.from('speakers').select('*'),
       sb.from('sponsors').select('*'),
       sb.from('notifications').select('*').order('created_at',{ascending:false}),
       sb.from('profiles').select('*'),
-      sb.from('event_attendees').select('event_id,profile_id')
+      sb.from('event_attendees').select('event_id,profile_id'),
+      sb.from('guests').select('*')
     ]);
     const eaMap={}; ((ea&&ea.data)||[]).forEach(r=>{ (eaMap[r.profile_id]=eaMap[r.profile_id]||[]).push(r.event_id); });
     const order={live:0,upcoming:1,past:2};
@@ -347,6 +358,7 @@ async function adminHydrate(){
     const speakers=(sp.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,role:s.role||{fr:'',en:''},country:s.country||'🌍',color:palette[i%palette.length],bio:s.bio||{fr:'',en:''},tags:s.tags||[],ses:{fr:[],en:[]}}));
     const sponsors=(po.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,tier:s.tier||'SILVER',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null}));
     const attendees=(prof.data||[]).map((p,i)=>({id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],score:80,why:p.looking_for||{fr:'',en:''},look:p.looking_for||{fr:'',en:''},tags:p.interests||[],evs:eaMap[p.id]||[]}));
+    ((gu&&gu.data)||[]).forEach((g,i)=>{ attendees.push({id:'g_'+g.id,gid:g.id,guest:true,name:g.name||'—',role:g.role||{fr:'',en:''},country:g.country||'🌍',color:palette[(attendees.length+i)%palette.length],score:75,why:g.looking_for||{fr:'',en:''},look:g.looking_for||{fr:'',en:''},tags:g.interests||[],evs:[g.event_id]}); });
     const notifications=(no.data||[]).map(n=>({id:n.id,icon:n.icon||'🔔',ts:new Date(n.created_at).getTime(),title:n.title||{fr:'',en:''}}));
     OAF.loadServer({ events:events.length?events:undefined, sessions, speakers, sponsors, attendees, notifications });
   }catch(e){ console.warn('adminHydrate', e); }

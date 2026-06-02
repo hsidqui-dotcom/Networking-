@@ -98,6 +98,7 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
           <label class="btn solid" id="peImpBtn">📥 Importer un CSV<input type="file" accept=".csv,text/csv" hidden onchange="adImportCsv(event)"></label>
           <button class="btn" onclick="adCsvTemplate()" id="peTplBtn">⬇ Modèle CSV</button>
+          <button class="btn danger" onclick="adClearGuests()" id="peClrBtn">🗑️ Vider l'annuaire importé</button>
         </div>
         <div id="attList"></div>
       </div>

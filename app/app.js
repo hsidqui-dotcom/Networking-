@@ -173,12 +173,16 @@ function acceptReq(id){
 }
 function renderPeople(){
   renderRequests();
-  $('#plList').innerHTML = OAF.attendees().map(p=>`
-    <div class="card"><div class="row"><div class="av" style="background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div>
+  $('#plList').innerHTML = OAF.attendees().map(p=>{
+    const actions = p.guest
+      ? `<div style="font-size:11px;color:var(--muted);margin-top:10px;font-style:italic">${lang==='fr'?'📇 Profil importé — networking dès son inscription':'📇 Imported profile — networking once they sign in'}</div>`
+      : `<div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button><button class="btn" onclick="openThread('${p.id}')" style="padding:11px 14px">💬</button><button class="btn" onclick="openPropose('${p.id}')" style="padding:11px 14px">📅</button></div>`;
+    return `<div class="card"><div class="row"><div class="av" style="background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">🎯 ${p.why[lang]}</div>
-    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button><button class="btn" onclick="openThread('${p.id}')" style="padding:11px 14px">💬</button><button class="btn" onclick="openPropose('${p.id}')" style="padding:11px 14px">📅</button></div></div>`).join('');
+    ${actions}</div>`;
+  }).join('');
 }
-function doConnect(id,btn){OAF.addConnection(id);btn.textContent=t('connected');btn.disabled=true;btn.style.opacity=.7;const a=OAF.attendees().find(x=>String(x.id)===String(id));toast(t('tConnect')+(a?a.name.split(' ')[0]:''));renderChrome();
+function doConnect(id,btn){if(String(id).indexOf('g_')===0){toast(lang==='fr'?"Ce participant pourra échanger dès son inscription.":'This attendee can connect once they sign in.');return;}OAF.addConnection(id);btn.textContent=t('connected');btn.disabled=true;btn.style.opacity=.7;const a=OAF.attendees().find(x=>String(x.id)===String(id));toast(t('tConnect')+(a?a.name.split(' ')[0]:''));renderChrome();
   if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){const sb=OAFAuth.client(),me=OAFAuth.user();if(me) sb.from('connections').upsert({requester:me.id,addressee:id,status:'pending'}).then(()=>{},()=>{});}}
 function renderNotif(){
   const list = OAF.notifications();
@@ -219,7 +223,7 @@ async function hydrate(){
   try{
     const palette=['#5b8def','#1B998B','#b5559a','#9a6b00','#E2622C','#13476b'];
     const tops=['linear-gradient(135deg,#1c1c1c,#000)','linear-gradient(135deg,#0f6e4f,#1B998B)','linear-gradient(135deg,#13476b,#2f7bb0)','linear-gradient(135deg,#7a3b12,#c2691e)','linear-gradient(135deg,#5a4a8a,#8a6fb5)'];
-    const [ev,se,sp,po,no,bk,cn,prof,ea] = await Promise.all([
+    const [ev,se,sp,po,no,bk,cn,prof,ea,gu] = await Promise.all([
       sb.from('events').select('*'),
       sb.from('sessions').select('*'),
       sb.from('speakers').select('*'),
@@ -228,7 +232,8 @@ async function hydrate(){
       sb.from('bookmarks').select('session_id').eq('profile_id',me.id),
       sb.from('connections').select('addressee').eq('requester',me.id),
       sb.from('profiles').select('*').eq('is_visible',true),
-      sb.from('event_attendees').select('event_id,profile_id')
+      sb.from('event_attendees').select('event_id,profile_id'),
+      sb.from('guests').select('*')
     ]);
     if(ev.error) throw ev.error;
     const eaMap={}; ((ea&&ea.data)||[]).forEach(r=>{ (eaMap[r.profile_id]=eaMap[r.profile_id]||[]).push(r.event_id); });
@@ -239,6 +244,7 @@ async function hydrate(){
     const speakers=(sp.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,role:s.role||{fr:'',en:''},country:s.country||'🌍',color:s.color||palette[i%palette.length],bio:s.bio||{fr:'',en:''},tags:s.tags||[],ses:{fr:[],en:[]}}));
     const sponsors=(po.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,tier:s.tier||'SILVER',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null}));
     const attendees=(prof.data||[]).filter(p=>p.id!==me.id).map((p,i)=>({id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],score:80,why:p.looking_for||{fr:'',en:''},look:p.looking_for||{fr:'',en:''},tags:p.interests||[],evs:eaMap[p.id]||[]}));
+    ((gu&&gu.data)||[]).forEach((g,i)=>{ const has=g.looking_for&&(g.looking_for.fr||g.looking_for.en); const why=has?g.looking_for:{fr:(g.interests||[]).join(', ')||'Participant',en:(g.interests||[]).join(', ')||'Attendee'}; attendees.push({id:'g_'+g.id,gid:g.id,guest:true,name:g.name||'—',role:g.role||{fr:'',en:''},country:g.country||'🌍',color:palette[(attendees.length+i)%palette.length],score:75,why,look:g.looking_for||{fr:'',en:''},tags:g.interests||[],evs:[g.event_id]}); });
     const notifications=(no.data||[]).map(n=>({id:n.id,icon:n.icon||'🔔',ts:new Date(n.created_at).getTime(),title:n.title||{fr:'',en:''}}));
     const profById={}; (prof.data||[]).forEach(p=>profById[p.id]=p);
     const myProf=profById[me.id] || {};
@@ -285,6 +291,7 @@ function appendBubble(side,text,time){
   th.appendChild(b); th.scrollTop=th.scrollHeight; $('#scroll').scrollTop=$('#scroll').scrollHeight;
 }
 function openThread(id){
+  if(String(id).indexOf('g_')===0){toast(lang==='fr'?"Ce participant pourra échanger dès son inscription.":'This attendee can connect once they sign in.');return;}
   chatWith={id:String(id), name:nameOf(id)};
   $('#thName').textContent=chatWith.name; $('#thAv').textContent=ini(chatWith.name||'· ·');
   $('#thread').innerHTML=''; $('#bkChat').textContent=t('bkChat');
@@ -346,6 +353,7 @@ function subscribeContent(){
       .on('postgres_changes',{event:'*',schema:'public',table:'sponsors'},refresh)
       .on('postgres_changes',{event:'*',schema:'public',table:'notifications'},refresh)
       .on('postgres_changes',{event:'*',schema:'public',table:'event_attendees'},refresh)
+      .on('postgres_changes',{event:'*',schema:'public',table:'guests'},refresh)
       .subscribe();
     contentSubscribed=true;
   }catch(e){ console.warn('realtime content', e); }
@@ -354,7 +362,7 @@ function subscribeContent(){
 /* ============ RENDEZ-VOUS (RDV) ============ */
 let localMeetings=[], proposeTarget=null;
 function slots(){ const d=OAF.days(); const times=['11:00','13:15','10:00']; return d.slice(0,3).map((x,i)=>`${x[lang]} · ${times[i]}`); }
-function openPropose(id){ proposeTarget=String(id); show('meetings'); }
+function openPropose(id){ if(String(id).indexOf('g_')===0){toast(lang==='fr'?"Ce participant pourra échanger dès son inscription.":'This attendee can connect once they sign in.');return;} proposeTarget=String(id); show('meetings'); }
 function renderPropose(){
   const box=$('#meetPropose'); if(!box) return;
   if(!proposeTarget){ box.innerHTML=''; return; }

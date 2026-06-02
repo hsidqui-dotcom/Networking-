@@ -189,6 +189,29 @@ do $$ begin
 end $$;
 
 -- ============================================================================
+-- Annuaire de participants importés (sans compte), propre à chaque forum.
+-- Permet de pré-remplir un forum avec une liste (CSV) avant l'événement.
+-- ============================================================================
+create table if not exists guests (
+  id uuid primary key default uuid_generate_v4(),
+  event_id uuid references events(id) on delete cascade,
+  name text not null,
+  role jsonb default '{"fr":"","en":""}',
+  country text default '🌍',
+  interests text[] default '{}',
+  looking_for jsonb default '{"fr":"","en":""}',
+  created_at timestamptz default now()
+);
+alter table guests enable row level security;
+drop policy if exists "guests_read"  on guests;
+drop policy if exists "guests_admin" on guests;
+create policy "guests_read"  on guests for select using (auth.role() = 'authenticated');
+create policy "guests_admin" on guests for all    using (is_admin()) with check (is_admin());
+do $$ begin
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='guests') then alter publication supabase_realtime add table guests; end if;
+end $$;
+
+-- ============================================================================
 -- DONNÉE D'EXEMPLE (insérée seulement si la table est vide)
 -- ============================================================================
 insert into events (name, city, city_short, status, dates, theme)
