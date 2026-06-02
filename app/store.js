@@ -80,6 +80,8 @@
   // Un participant appartient-il au forum actif ? (evs = liste des forums rejoints ;
   // si absente — données démo — il reste visible partout, rétro-compatible.)
   function inCurrentEvent(p) { if (!p.evs) return true; const cur = curEvId(); return p.evs.some(e => String(e) === String(cur)); }
+  // Élément mono-événement (intervenant, partenaire) : si pas d'ev (démo) → visible partout.
+  function evMatch(x) { if (x.ev == null) return true; return String(x.ev) === String(curEvId()); }
 
   const API = {
     KEY,
@@ -89,9 +91,9 @@
     currentEvent() { return state.events.find(e => String(e.id) === String(state.currentEvent)) || state.events[0]; },
     setCurrentEvent(id) { state.currentEvent = id; persist(); },
     events: () => state.events,
-    speakers: () => state.speakers,
+    speakers: () => state.speakers.filter(evMatch),
     attendees: () => state.attendees.filter(inCurrentEvent),
-    sponsors: () => state.sponsors,
+    sponsors: () => state.sponsors.filter(evMatch),
     days: () => state.days,
     sessions: (ev, day) => state.sessions.filter(s => s.ev === (ev ?? state.currentEvent) && (day == null || s.day === day)).sort((a, b) => a.time.localeCompare(b.time)),
     notifications: () => [...state.notifications].sort((a, b) => b.ts - a.ts),
@@ -138,8 +140,8 @@
     stats() {
       return {
         attendees: state.attendees.filter(inCurrentEvent).length,
-        speakers: state.speakers.length,
-        sponsors: state.sponsors.length,
+        speakers: state.speakers.filter(evMatch).length,
+        sponsors: state.sponsors.filter(evMatch).length,
         sessions: state.sessions.filter(s => s.ev === state.currentEvent).length,
         connections: state.me.connections.length,
         bookmarks: state.me.bookmarks.length,
