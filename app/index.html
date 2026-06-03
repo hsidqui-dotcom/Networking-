@@ -57,6 +57,10 @@
     <!-- PROGRAM -->
     <section class="view" data-v="program">
       <h2 class="scr" id="pgT">Programme</h2><div class="sub" id="pgS">Touchez une séance pour voir le détail et les intervenants.</div>
+      <div class="day-tabs" id="pgMode" style="margin-bottom:8px">
+        <button id="pgModeAll" class="on" onclick="setAgendaMode('all')">Programme</button>
+        <button id="pgModeMine" onclick="setAgendaMode('mine')">★ Mon agenda</button>
+      </div>
       <div class="day-tabs" id="dayTabs"></div>
       <div id="agenda"></div>
     </section>
@@ -76,6 +80,7 @@
     <!-- PEOPLE -->
     <section class="view" data-v="people">
       <h2 class="scr" id="plT">Participants</h2><div class="sub" id="plS">Classés par correspondance IA.</div>
+      <input id="plSearch" oninput="renderPeople()" placeholder="🔍 Rechercher…" style="width:100%;box-sizing:border-box;padding:11px 13px;border:1px solid var(--line,#e3e3e3);border-radius:12px;font-size:14px;margin-bottom:12px;background:#fff" />
       <div id="reqList"></div>
       <div id="plList"></div>
     </section>
