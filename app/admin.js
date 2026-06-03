@@ -221,15 +221,33 @@ function adEditSession(id){
 }
 function renderLineupPicker(s){
   const box=$('#sLineup'); if(!box) return;
-  if(!s){ box.innerHTML=`<div class="desc">${lang==='fr'?'Enregistrez la séance, puis cliquez ✎ sur la séance pour affecter les intervenants.':'Save the session, then click ✎ to assign speakers.'}</div>`; return; }
+  if(!s){ box.innerHTML=`<div class="desc">${lang==='fr'?'Enregistrez la séance, puis cliquez ✎ dessus pour affecter les intervenants.':'Save the session, then click ✎ to assign speakers.'}</div>`; return; }
   const spk=OAF.speakers();
   if(!spk.length){ box.innerHTML=`<div class="desc">${lang==='fr'?'Ajoutez d’abord des intervenants (onglet Personnes).':'Add speakers first (People tab).'}</div>`; return; }
   const lu={}; (s.lineup||[]).forEach(l=>lu[String(l.id)]=l.role);
-  box.innerHTML=`<div class="desc">${lang==='fr'?'Cochez les intervenants ; marquez un « Modérateur ».':'Check speakers; mark one as “Moderator”.'}</div>`+spk.map(p=>{ const r=lu[String(p.id)]; const mod=r==='moderator';
-    return `<label class="li" style="gap:8px"><input type="checkbox" class="luChk" data-id="${p.id}" ${r?'checked':''}><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><button type="button" class="btn ${mod?'solid':''}" data-mod="${p.id}" onclick="toggleMod('${p.id}',this)" style="padding:5px 9px;font-size:11px">${lang==='fr'?'Modérateur':'Moderator'}</button></label>`;
+  const rows=spk.map(p=>{ const r=lu[String(p.id)]; const on=!!r; const mod=r==='moderator';
+    return `<div class="li luRow" data-row="${p.id}" style="gap:8px;${on?'':'opacity:.45'}">
+      <input type="checkbox" class="luChk" data-id="${p.id}" ${on?'checked':''} onchange="luToggle('${p.id}')" style="width:18px;height:18px;flex:none">
+      <div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div>
+      <button type="button" class="btn ${mod?'solid':''} luMod" data-mod="${p.id}" onclick="luSetMod('${p.id}')" style="padding:5px 9px;font-size:11px;${on?'':'display:none'}">⭐ ${lang==='fr'?'Modérateur':'Moderator'}</button>
+    </div>`;
   }).join('');
+  box.innerHTML=`<div class="desc">${lang==='fr'?'① Cochez les intervenants de CETTE séance. ② Touchez ⭐ pour désigner le modérateur (un seul).':'① Check THIS session’s speakers. ② Tap ⭐ to set the moderator (only one).'}</div>${rows}`;
 }
-function toggleMod(id,btn){ btn.classList.toggle('solid'); if(btn.classList.contains('solid')){ const chk=document.querySelector('.luChk[data-id="'+id+'"]'); if(chk) chk.checked=true; } }
+function luToggle(id){
+  const chk=document.querySelector('.luChk[data-id="'+id+'"]');
+  const row=document.querySelector('.luRow[data-row="'+id+'"]');
+  const mod=document.querySelector('.luMod[data-mod="'+id+'"]');
+  const on=chk&&chk.checked;
+  if(row) row.style.opacity=on?'':'0.45';
+  if(mod){ mod.style.display=on?'':'none'; if(!on) mod.classList.remove('solid'); }
+}
+function luSetMod(id){
+  const btn=document.querySelector('.luMod[data-mod="'+id+'"]'); if(!btn) return;
+  const wasMod=btn.classList.contains('solid');
+  document.querySelectorAll('.luMod').forEach(b=>b.classList.remove('solid'));
+  if(!wasMod){ btn.classList.add('solid'); const chk=document.querySelector('.luChk[data-id="'+id+'"]'); if(chk&&!chk.checked){ chk.checked=true; luToggle(id); btn.classList.add('solid'); } }
+}
 function collectLineup(){ const out=[]; document.querySelectorAll('.luChk').forEach(chk=>{ if(chk.checked){ const id=chk.dataset.id; const mb=document.querySelector('.btn[data-mod="'+id+'"]'); out.push({speaker_id:id,role:(mb&&mb.classList.contains('solid'))?'moderator':'speaker'}); } }); return out; }
 async function saveLineup(sessionId){ if(!L())return; const sb=OAFAuth.client(); await sb.from('session_speakers').delete().eq('session_id',sessionId); const recs=collectLineup().map(x=>({session_id:sessionId,speaker_id:x.speaker_id,role:x.role})); if(recs.length){ const {error}=await sb.from('session_speakers').insert(recs); if(error){adToast(error.message);} } }
 async function adSaveSession(){
