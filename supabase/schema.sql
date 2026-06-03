@@ -45,7 +45,9 @@ create table if not exists events (
   name text not null, city text default '', city_short text default '',
   status text default 'upcoming' check (status in ('live','upcoming','past')),
   dates jsonb default '{"fr":"","en":""}', theme jsonb default '{"fr":"","en":""}',
-  cover_url text, info jsonb default '{}', created_at timestamptz default now()
+  cover_url text, info jsonb default '{}',
+  starts_at timestamptz, ends_at timestamptz, auto_status boolean default false,
+  created_at timestamptz default now()
 );
 create table if not exists sessions (
   id uuid primary key default uuid_generate_v4(),

@@ -173,14 +173,23 @@ function buildMatch(myTags, myLook, p){
 function profileIncomplete(){ const me=OAF.me(); if(!me) return false; const noTags=!(me.interests&&me.interests.length); const noLook=!(me.look&&(me.look.fr||me.look.en)); const noName=!me.name || String(me.name).indexOf('@')>=0; return noTags||noLook||noName; }
 function renderOnboarding(){ const box=$('#hOnboard'); if(!box) return; const live=OAFAuth&&OAFAuth.live&&OAFAuth.live(); if(live && profileIncomplete()){ box.innerHTML=`<div class="card" style="border:1.5px solid var(--yellow);background:linear-gradient(180deg,#fffdf3,#fff)"><b style="font-size:13.5px">${t('obT')}</b><p style="font-size:12.5px;color:var(--muted);margin:6px 0 10px">${t('obS')}</p><button class="btn solid" style="width:100%" onclick="show('profile')">${t('obBtn')}</button></div>`; } else { box.innerHTML=''; } }
 
+/* Statut effectif d'un événement : calculé d'après les dates réelles si le mode
+   automatique est activé (et les dates renseignées), sinon le statut manuel. */
+function evStatus(e){
+  if(e && e.auto && e.starts && e.ends){
+    const now=Date.now(), s=Date.parse(e.starts), en=Date.parse(e.ends);
+    if(!isNaN(s)&&!isNaN(en)){ if(now<s) return 'upcoming'; if(now>en) return 'past'; return 'live'; }
+  }
+  return (e&&e.status)||'upcoming';
+}
 function renderEvents(){
   const order={live:0,upcoming:1,past:2};
-  const list = OAF.events().filter(e=>curFilter==='all'||e.status===curFilter).sort((a,b)=>order[a.status]-order[b.status]);
   const stTxt={live:lang==='fr'?'● EN COURS':'● LIVE',upcoming:lang==='fr'?'À VENIR':'UPCOMING',past:lang==='fr'?'PASSÉ':'PAST'};
   const tops={0:'linear-gradient(135deg,#1c1c1c,#000)',1:'linear-gradient(135deg,#0f6e4f,#1B998B)',2:'linear-gradient(135deg,#7a3b12,#c2691e)'};
-  $('#evList').innerHTML = list.length ? list.map(e=>`
+  const list = OAF.events().map(e=>({e,st:evStatus(e)})).filter(x=>curFilter==='all'||x.st===curFilter).sort((a,b)=>order[a.st]-order[b.st]);
+  $('#evList').innerHTML = list.length ? list.map(({e,st})=>`
     <div class="evc" onclick="enterEvent('${e.id}')">
-      <div class="top" style="background:${e.cover?`#222 url(${e.cover}) center/cover`:(e.top||tops[e.id]||'#222')}"><span class="st ${e.status}">${stTxt[e.status]}</span><b>${e.name}</b></div>
+      <div class="top" style="background:${e.cover?`#222 url(${e.cover}) center/cover`:(e.top||tops[e.id]||'#222')}"><span class="st ${st}">${stTxt[st]}</span><b>${e.name}</b></div>
       <div class="bd"><div class="r1">📍 ${e.city} · 🗓️ ${(e.dates&&e.dates[lang])||''}</div><div class="th">${(e.theme&&e.theme[lang])||''}</div></div>
     </div>`).join('') : `<div class="empty" style="color:var(--muted);font-size:13px;padding:18px;text-align:center">${lang==='fr'?'Aucun événement dans cette catégorie.':'No event in this category.'}</div>`;
 }
@@ -414,7 +423,7 @@ async function hydrate(){
     const eaMap={}; ((ea&&ea.data)||[]).forEach(r=>{ (eaMap[r.profile_id]=eaMap[r.profile_id]||[]).push(r.event_id); });
     const ssMap={}; ((ss&&ss.data)||[]).forEach(r=>{ (ssMap[r.session_id]=ssMap[r.session_id]||[]).push({id:r.speaker_id,role:r.role}); });
     const order={live:0,upcoming:1,past:2};
-    const events=(ev.data||[]).map((e,i)=>({id:e.id,name:e.name,city:e.city||'',cityShort:e.city_short||(e.city||'').split(',')[0],status:e.status||'upcoming',dates:e.dates||{fr:'',en:''},theme:e.theme||{fr:'',en:''},cover:e.cover_url||null,info:e.info||{},top:tops[i%tops.length]}))
+    const events=(ev.data||[]).map((e,i)=>({id:e.id,name:e.name,city:e.city||'',cityShort:e.city_short||(e.city||'').split(',')[0],status:e.status||'upcoming',starts:e.starts_at||null,ends:e.ends_at||null,auto:!!e.auto_status,dates:e.dates||{fr:'',en:''},theme:e.theme||{fr:'',en:''},cover:e.cover_url||null,info:e.info||{},top:tops[i%tops.length]}))
       .sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
     const sessions=(se.data||[]).map(s=>({id:s.id,ev:s.event_id,day:s.day||0,time:s.time||'',dur:s.dur||'',title:s.title||{fr:'',en:''},room:s.room||{fr:'',en:''},track:s.track||{fr:'',en:''},desc:s.description||{fr:'',en:''},color:s.color||'#5b8def',star:false,sp:[],lineup:ssMap[s.id]||[]}));
     const speakers=(sp.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,role:s.role||{fr:'',en:''},country:s.country||'🌍',color:s.color||palette[i%palette.length],photo:s.photo_url||null,bio:s.bio||{fr:'',en:''},tags:s.tags||[],ses:{fr:[],en:[]}}));

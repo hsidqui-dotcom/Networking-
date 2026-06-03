@@ -101,9 +101,15 @@ function renderSettings(){
   const ce=OAF.currentEvent()||{}; const set=(id,v)=>{const el=$('#'+id);if(el)el.value=v||'';};
   set('evName',ce.name); set('evDatesFr',ce.dates&&ce.dates.fr); set('evDatesEn',ce.dates&&ce.dates.en); set('evCity',ce.city);
   set('evThemeFr',ce.theme&&ce.theme.fr); set('evThemeEn',ce.theme&&ce.theme.en);
-  set('evStatus',ce.status||'upcoming');
+  set('evStatus', ce.auto ? 'auto' : (ce.status||'upcoming'));
+  set('evStart', isoToLocal(ce.starts)); set('evEnd', isoToLocal(ce.ends));
+  adToggleAutoFields();
   const inf=ce.info||{}; set('infVenue',inf.venue); set('infAddress',inf.address); set('infHours',inf.hours); set('infWifi',inf.wifi); set('infContact',inf.contact); set('infEmail',inf.email); set('infEmergency',inf.emergency); set('infNotesFr',inf.notes&&inf.notes.fr); set('infNotesEn',inf.notes&&inf.notes.en);
 }
+/* datetime-local <-> ISO helpers (le navigateur travaille en heure locale) */
+function isoToLocal(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
+function localToIso(v){ if(!v) return null; const d=new Date(v); return isNaN(d)?null:d.toISOString(); }
+function adToggleAutoFields(){ const sel=$('#evStatus'), box=$('#evAutoFields'); if(sel&&box) box.style.display = sel.value==='auto' ? 'block' : 'none'; }
 async function adSaveEvent(){
   const ev=OAF.currentEvent(); if(!ev){adToast(a('csvEmpty'));return;}
   const name=($('#evName').value||'').trim()||ev.name;
@@ -111,15 +117,19 @@ async function adSaveEvent(){
   const city=($('#evCity').value||'').trim();
   const tfr=($('#evThemeFr').value||'').trim(); const ten=($('#evThemeEn').value||'').trim()||tfr;
   const cityShort=city.split(',')[0].trim()||city;
-  const status=($('#evStatus')&&$('#evStatus').value)||ev.status||'upcoming';
+  const sel=($('#evStatus')&&$('#evStatus').value)||ev.status||'upcoming';
+  const auto=sel==='auto';
+  const status=auto?(ev.status||'upcoming'):sel; // on garde un statut manuel valide en repli
+  const starts=auto?localToIso($('#evStart')&&$('#evStart').value):null;
+  const ends=auto?localToIso($('#evEnd')&&$('#evEnd').value):null;
   const gv=id=>(($('#'+id)&&$('#'+id).value)||'').trim();
   const info={venue:gv('infVenue'),address:gv('infAddress'),hours:gv('infHours'),wifi:gv('infWifi'),contact:gv('infContact'),email:gv('infEmail'),emergency:gv('infEmergency'),notes:{fr:gv('infNotesFr'),en:gv('infNotesEn')||gv('infNotesFr')}};
   if(L()){
-    const {error}=await OAFAuth.client().from('events').update({name,dates:{fr:dfr,en:den},city,city_short:cityShort,theme:{fr:tfr,en:ten},status,info}).eq('id',ev.id);
+    const {error}=await OAFAuth.client().from('events').update({name,dates:{fr:dfr,en:den},city,city_short:cityShort,theme:{fr:tfr,en:ten},status,auto_status:auto,starts_at:starts,ends_at:ends,info}).eq('id',ev.id);
     if(error){adToast(error.message);return;}
     await reloadAndRender();
   } else {
-    OAF.updateEvent(ev.id,{name,dates:{fr:dfr,en:den},city,cityShort,theme:{fr:tfr,en:ten},status,info}); renderAll();
+    OAF.updateEvent(ev.id,{name,dates:{fr:dfr,en:den},city,cityShort,theme:{fr:tfr,en:ten},status,auto,starts,ends,info}); renderAll();
   }
   adToast(lang==='fr'?'Événement enregistré ✓':'Event saved ✓');
 }
@@ -444,7 +454,7 @@ async function adminHydrate(){
     const eaMap={}; ((ea&&ea.data)||[]).forEach(r=>{ (eaMap[r.profile_id]=eaMap[r.profile_id]||[]).push(r.event_id); });
     const ssMap={}; ((ss&&ss.data)||[]).forEach(r=>{ (ssMap[r.session_id]=ssMap[r.session_id]||[]).push({id:r.speaker_id,role:r.role}); });
     const order={live:0,upcoming:1,past:2};
-    const events=(ev.data||[]).map((e,i)=>({id:e.id,name:e.name,city:e.city||'',cityShort:e.city_short||'',status:e.status||'upcoming',dates:e.dates||{fr:'',en:''},theme:e.theme||{fr:'',en:''},cover:e.cover_url||null,info:e.info||{},top:tops[i%tops.length]})).sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
+    const events=(ev.data||[]).map((e,i)=>({id:e.id,name:e.name,city:e.city||'',cityShort:e.city_short||'',status:e.status||'upcoming',starts:e.starts_at||null,ends:e.ends_at||null,auto:!!e.auto_status,dates:e.dates||{fr:'',en:''},theme:e.theme||{fr:'',en:''},cover:e.cover_url||null,info:e.info||{},top:tops[i%tops.length]})).sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
     const sessions=(se.data||[]).map(s=>({id:s.id,ev:s.event_id,day:s.day||0,time:s.time||'',dur:s.dur||'',title:s.title||{fr:'',en:''},room:s.room||{fr:'',en:''},track:s.track||{fr:'',en:''},desc:s.description||{fr:'',en:''},color:s.color||'#5b8def',star:false,sp:[],lineup:ssMap[s.id]||[]}));
     const speakers=(sp.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,role:s.role||{fr:'',en:''},country:s.country||'🌍',color:palette[i%palette.length],bio:s.bio||{fr:'',en:''},tags:s.tags||[],ses:{fr:[],en:[]}}));
     const sponsors=(po.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,tier:s.tier||'SILVER',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null}));
