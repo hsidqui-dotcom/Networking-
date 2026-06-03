@@ -244,6 +244,35 @@ function luAdd(id){ if(!id) return; if(!lineupDraft.some(l=>String(l.id)===Strin
 function luRemove(id){ lineupDraft=lineupDraft.filter(l=>String(l.id)!==String(id)); renderLineupPicker(true); }
 function luSetMod(id){ const cur=lineupDraft.find(l=>String(l.id)===String(id)); if(!cur) return; const wasMod=cur.role==='moderator'; lineupDraft.forEach(l=>l.role='speaker'); if(!wasMod) cur.role='moderator'; renderLineupPicker(true); }
 function collectLineup(){ return lineupDraft.map(l=>({speaker_id:l.id,role:l.role})); }
+async function adAutofillLineups(){
+  if(!L()){ adToast(lang==='fr'?'Disponible en mode réel uniquement.':'Live mode only.'); return; }
+  const speakers=OAF.speakers();
+  if(!speakers.length){ adToast(lang==='fr'?'Ajoutez d’abord des intervenants (onglet Personnes).':'Add speakers first (People tab).'); return; }
+  if(!confirm(lang==='fr'?'Détecter et affecter les intervenants depuis les descriptions des séances ? Les séances déjà renseignées ne seront pas modifiées.':'Detect and assign speakers from session descriptions? Sessions already filled won’t be changed.')) return;
+  const norm=s=>(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const sessions=OAF.sessions(evId()); let filled=0; const recs=[];
+  sessions.forEach(s=>{
+    if(s.lineup&&s.lineup.length) return;
+    const d=norm(((s.desc&&s.desc.fr)||'')+' '+((s.desc&&s.desc.en)||''));
+    if(!d) return;
+    let modIdx=-1; ['moderateur','moderator','modere par'].forEach(k=>{const i=d.indexOf(k); if(i>=0&&(modIdx<0||i<modIdx)) modIdx=i;});
+    const found=[];
+    speakers.forEach(p=>{
+      const clean=p.name.replace(/^(hon\.?|dr|col\.?|mme|m\.)\s+/i,'').trim();
+      const parts=clean.split(/\s+/); const full=norm(clean); const first=norm(parts[0]||''), last=norm(parts[parts.length-1]||'');
+      let pos=-1;
+      if(full&&d.includes(full)) pos=d.indexOf(full);
+      else if(last.length>3&&d.includes(last)&&first&&d.includes(first)) pos=d.indexOf(last);
+      if(pos>=0) found.push({id:p.id,role:(modIdx>=0&&pos>=modIdx)?'moderator':'speaker'});
+    });
+    if(found.length){ filled++; found.forEach(f=>recs.push({session_id:s.id,speaker_id:f.id,role:f.role})); }
+  });
+  if(!recs.length){ adToast(lang==='fr'?'Aucun intervenant détecté (déjà fait ?).':'None detected (already done?).'); return; }
+  const {error}=await OAFAuth.client().from('session_speakers').insert(recs);
+  if(error){ adToast(error.message); return; }
+  await reloadAndRender();
+  adToast(lang==='fr'?('✓ '+filled+' séance(s) pré-remplie(s)'):('✓ '+filled+' session(s) prefilled'));
+}
 async function saveLineup(sessionId){ if(!L())return; const sb=OAFAuth.client(); await sb.from('session_speakers').delete().eq('session_id',sessionId); const recs=collectLineup().map(x=>({session_id:sessionId,speaker_id:x.speaker_id,role:x.role})); if(recs.length){ const {error}=await sb.from('session_speakers').insert(recs); if(error){adToast(error.message);} } }
 async function adSaveSession(){
   const tfr=$('#sTitle').value.trim(); if(!tfr){adToast(a('needTitle'));return;}

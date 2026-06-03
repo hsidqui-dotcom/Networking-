@@ -73,7 +73,9 @@
         <label class="btn solid" id="pImpBtn" style="cursor:pointer">📥 Importer le programme<input type="file" accept=".csv,text/csv" hidden onchange="adImportProgram(event)" /></label>
         <button class="btn" onclick="adProgramTemplate()" id="pImpTplBtn">⬇ Modèle de programme</button>
       </div>
-      <div class="panel"><h3 id="pListT">Programme actuel</h3><div class="desc" id="pListS"></div><div id="progList"></div></div>
+      <div class="panel"><h3 id="pListT">Programme actuel</h3><div class="desc" id="pListS"></div>
+        <button class="btn solid" onclick="adAutofillLineups()" id="pAutoBtn" style="margin-bottom:10px">✨ Pré-remplir les intervenants (depuis les descriptions)</button>
+        <div id="progList"></div></div>
     </div>
 
     <!-- NOTIFICATIONS -->
