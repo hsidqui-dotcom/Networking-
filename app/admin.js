@@ -247,8 +247,8 @@ function collectLineup(){ return lineupDraft.map(l=>({speaker_id:l.id,role:l.rol
 async function adAutofillLineups(){
   if(!L()){ adToast(lang==='fr'?'Disponible en mode réel uniquement.':'Live mode only.'); return; }
   const speakers=OAF.speakers();
-  if(!speakers.length){ adToast(lang==='fr'?'Ajoutez d’abord des intervenants (onglet Personnes).':'Add speakers first (People tab).'); return; }
-  if(!confirm(lang==='fr'?'Détecter et affecter les intervenants depuis les descriptions des séances ? Les séances déjà renseignées ne seront pas modifiées.':'Detect and assign speakers from session descriptions? Sessions already filled won’t be changed.')) return;
+  if(!speakers.length){ adToast(lang==='fr'?'Importez d’abord les intervenants (onglet Personnes → Intervenants).':'Import speakers first (People → Speakers).'); return; }
+  adToast(lang==='fr'?'Analyse des descriptions…':'Scanning descriptions…');
   const norm=s=>(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const sessions=OAF.sessions(evId()); let filled=0; const recs=[];
   sessions.forEach(s=>{
