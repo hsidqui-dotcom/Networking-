@@ -444,7 +444,7 @@ function subscribeContent(){
       .on('postgres_changes',{event:'*',schema:'public',table:'sessions'},refresh)
       .on('postgres_changes',{event:'*',schema:'public',table:'speakers'},refresh)
       .on('postgres_changes',{event:'*',schema:'public',table:'sponsors'},refresh)
-      .on('postgres_changes',{event:'*',schema:'public',table:'notifications'},refresh)
+      .on('postgres_changes',{event:'*',schema:'public',table:'notifications'},p=>{ if(p.eventType==='INSERT'&&p.new){ const ev=OAF.currentEvent(); if(!p.new.event_id||!ev||String(p.new.event_id)===String(ev.id)){ const ti=(p.new.title&&(p.new.title[lang]||p.new.title.fr||p.new.title.en))||''; if(ti) toast('🔔 '+ti); } } refresh(); })
       .on('postgres_changes',{event:'*',schema:'public',table:'event_attendees'},refresh)
       .on('postgres_changes',{event:'*',schema:'public',table:'guests'},refresh)
       .on('postgres_changes',{event:'*',schema:'public',table:'session_speakers'},refresh)
