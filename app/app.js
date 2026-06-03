@@ -178,11 +178,16 @@ function renderEvents(){
   const list = OAF.events().filter(e=>curFilter==='all'||e.status===curFilter).sort((a,b)=>order[a.status]-order[b.status]);
   const stTxt={live:lang==='fr'?'● EN COURS':'● LIVE',upcoming:lang==='fr'?'À VENIR':'UPCOMING',past:lang==='fr'?'PASSÉ':'PAST'};
   const tops={0:'linear-gradient(135deg,#1c1c1c,#000)',1:'linear-gradient(135deg,#0f6e4f,#1B998B)',2:'linear-gradient(135deg,#7a3b12,#c2691e)'};
-  $('#evList').innerHTML = list.map(e=>`
+  $('#evList').innerHTML = list.length ? list.map(e=>`
     <div class="evc" onclick="enterEvent('${e.id}')">
       <div class="top" style="background:${e.cover?`#222 url(${e.cover}) center/cover`:(e.top||tops[e.id]||'#222')}"><span class="st ${e.status}">${stTxt[e.status]}</span><b>${e.name}</b></div>
-      <div class="bd"><div class="r1">📍 ${e.city} · 🗓️ ${e.dates[lang]}</div><div class="th">${e.theme[lang]}</div></div>
-    </div>`).join('');
+      <div class="bd"><div class="r1">📍 ${e.city} · 🗓️ ${(e.dates&&e.dates[lang])||''}</div><div class="th">${(e.theme&&e.theme[lang])||''}</div></div>
+    </div>`).join('') : `<div class="empty" style="color:var(--muted);font-size:13px;padding:18px;text-align:center">${lang==='fr'?'Aucun événement dans cette catégorie.':'No event in this category.'}</div>`;
+}
+function setFilter(f, btn){
+  curFilter=f;
+  const seg=$('#evSeg'); if(seg) Array.prototype.forEach.call(seg.children, b=>b.classList.toggle('on', b===btn));
+  renderEvents();
 }
 async function joinEvent(id){
   const sb=(typeof OAFAuth!=='undefined')&&OAFAuth.client&&OAFAuth.client();

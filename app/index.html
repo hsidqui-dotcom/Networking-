@@ -33,8 +33,8 @@
         <div class="slg">« Empowering South-South cooperation »</div>
       </div>
       <div class="seg" id="evSeg">
-        <button class="on" data-f="all">Tous</button><button data-f="live">En cours</button>
-        <button data-f="upcoming">À venir</button><button data-f="past">Passés</button>
+        <button class="on" data-f="all" onclick="setFilter('all',this)">Tous</button><button data-f="live" onclick="setFilter('live',this)">En cours</button>
+        <button data-f="upcoming" onclick="setFilter('upcoming',this)">À venir</button><button data-f="past" onclick="setFilter('past',this)">Passés</button>
       </div>
       <div id="evList"></div>
     </section>
@@ -148,7 +148,7 @@
       <div class="card"><div class="row"><div class="m"><b id="pfLang">🌐 Langue</b><small id="pfLangS">Français · EN · PT · AR</small></div><button class="btn" onclick="toggleLang()" id="pfLangBtn">EN</button></div></div>
       <div class="banner">🛠️ <div style="flex:1"><span id="pfAdmin">Espace organisateur (démo)</span></div><a href="admin.html">Admin →</a></div>
       <div class="card"><div class="row"><div class="m"><b id="pfReset">Réinitialiser la démo</b><small id="pfResetS">Restaurer les données d'exemple</small></div><button class="btn danger" onclick="resetDemo()" id="pfResetBtn">Reset</button></div></div>
-      <p style="text-align:center;color:var(--muted);font-size:11px;margin-top:14px">OAF Connect · <b>build 26</b> · © 2026 OneAfricaForums</p>
+      <p style="text-align:center;color:var(--muted);font-size:11px;margin-top:14px">OAF Connect · <b>build 27</b> · © 2026 OneAfricaForums</p>
     </section>
   </div>
 

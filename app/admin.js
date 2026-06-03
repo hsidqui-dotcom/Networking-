@@ -101,6 +101,7 @@ function renderSettings(){
   const ce=OAF.currentEvent()||{}; const set=(id,v)=>{const el=$('#'+id);if(el)el.value=v||'';};
   set('evName',ce.name); set('evDatesFr',ce.dates&&ce.dates.fr); set('evDatesEn',ce.dates&&ce.dates.en); set('evCity',ce.city);
   set('evThemeFr',ce.theme&&ce.theme.fr); set('evThemeEn',ce.theme&&ce.theme.en);
+  set('evStatus',ce.status||'upcoming');
   const inf=ce.info||{}; set('infVenue',inf.venue); set('infAddress',inf.address); set('infHours',inf.hours); set('infWifi',inf.wifi); set('infContact',inf.contact); set('infEmail',inf.email); set('infEmergency',inf.emergency); set('infNotesFr',inf.notes&&inf.notes.fr); set('infNotesEn',inf.notes&&inf.notes.en);
 }
 async function adSaveEvent(){
@@ -110,14 +111,15 @@ async function adSaveEvent(){
   const city=($('#evCity').value||'').trim();
   const tfr=($('#evThemeFr').value||'').trim(); const ten=($('#evThemeEn').value||'').trim()||tfr;
   const cityShort=city.split(',')[0].trim()||city;
+  const status=($('#evStatus')&&$('#evStatus').value)||ev.status||'upcoming';
   const gv=id=>(($('#'+id)&&$('#'+id).value)||'').trim();
   const info={venue:gv('infVenue'),address:gv('infAddress'),hours:gv('infHours'),wifi:gv('infWifi'),contact:gv('infContact'),email:gv('infEmail'),emergency:gv('infEmergency'),notes:{fr:gv('infNotesFr'),en:gv('infNotesEn')||gv('infNotesFr')}};
   if(L()){
-    const {error}=await OAFAuth.client().from('events').update({name,dates:{fr:dfr,en:den},city,city_short:cityShort,theme:{fr:tfr,en:ten},info}).eq('id',ev.id);
+    const {error}=await OAFAuth.client().from('events').update({name,dates:{fr:dfr,en:den},city,city_short:cityShort,theme:{fr:tfr,en:ten},status,info}).eq('id',ev.id);
     if(error){adToast(error.message);return;}
     await reloadAndRender();
   } else {
-    OAF.updateEvent(ev.id,{name,dates:{fr:dfr,en:den},city,cityShort,theme:{fr:tfr,en:ten},info}); renderAll();
+    OAF.updateEvent(ev.id,{name,dates:{fr:dfr,en:den},city,cityShort,theme:{fr:tfr,en:ten},status,info}); renderAll();
   }
   adToast(lang==='fr'?'Événement enregistré ✓':'Event saved ✓');
 }
