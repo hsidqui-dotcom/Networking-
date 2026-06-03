@@ -18,6 +18,7 @@ const L = {
     connect:'＋ Se connecter', connected:'✓ Connecté', meet:'📅 RDV', live:'● LIVE', schedule:'Voir le programme',
     bookmarks:'sessions enregistrées', connections:'connexions', tConnect:'Demande envoyée à ', tBook:'Ajouté à mon agenda ⭐', tUnbook:'Retiré', tReset:'Démo réinitialisée ✓',
     agEmpty:'Aucune séance dans votre agenda. Touchez ☆ sur une séance pour l’ajouter.', plNone:'Aucun participant trouvé.', agMall:'Programme', agMine:'★ Mon agenda', plSearchPh:'🔍 Rechercher (nom, fonction, intérêt)',
+    ifT:'Infos pratiques', ifS:"Tout ce qu'il faut savoir sur le forum.", ifVenue:'Lieu', ifAddress:'Adresse', ifDates:'Dates', ifHours:'Horaires', ifContacts:'Contacts & accès', ifContact:'Téléphone', ifEmergency:'Urgences', ifNotes:'Bon à savoir',
     delegates:'délégués', countries:'pays', speakers:'intervenants', empty:'Rien pour le moment.'
   },
   en: {
@@ -38,6 +39,7 @@ const L = {
     connect:'＋ Connect', connected:'✓ Connected', meet:'📅 Meet', live:'● LIVE', schedule:'See program',
     bookmarks:'saved sessions', connections:'connections', tConnect:'Request sent to ', tBook:'Added to My Agenda ⭐', tUnbook:'Removed', tReset:'Demo reset ✓',
     agEmpty:'No sessions in your agenda yet. Tap ☆ on a session to add it.', plNone:'No attendees found.', agMall:'Program', agMine:'★ My agenda', plSearchPh:'🔍 Search (name, role, interest)',
+    ifT:'Practical info', ifS:'Everything you need to know about the forum.', ifVenue:'Venue', ifAddress:'Address', ifDates:'Dates', ifHours:'Hours', ifContacts:'Contacts & access', ifContact:'Phone', ifEmergency:'Emergency', ifNotes:'Good to know',
     delegates:'delegates', countries:'countries', speakers:'speakers', empty:'Nothing yet.'
   }
 };
@@ -51,7 +53,7 @@ let curSession = null, curSpeaker = null, qaChannel = null, qaList = [], nameMap
 function show(v){
   curView = v;
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.dataset.v === v));
-  const tabFor = { home:'home', program:'program', session:'program', speaker:'program', people:'people', notif:'chat', chat:'chat', thread:'chat', profile:'profile', events:'home', partners:'home', meetings:'home' };
+  const tabFor = { home:'home', program:'program', session:'program', speaker:'program', people:'people', notif:'chat', chat:'chat', thread:'chat', profile:'profile', events:'home', partners:'home', meetings:'home', info:'home' };
   document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.t === tabFor[v]));
   if (v !== 'thread') $('#scroll').scrollTop = 0;
   if (v !== 'session' && qaChannel){ try{ OAFAuth.client().removeChannel(qaChannel); }catch(_){} qaChannel=null; }
@@ -60,6 +62,7 @@ function show(v){
   if (v === 'speaker') renderSpeaker();
   if (v === 'people') renderPeople();
   if (v === 'partners') renderPartners();
+  if (v === 'info') renderInfo();
   if (v === 'notif') renderNotif();
   if (v === 'chat') renderConversations();
   if (v === 'meetings') loadMeetings();
@@ -71,6 +74,19 @@ function renderPartners(){
       <div class="av" style="width:50px;height:50px;border-radius:13px;overflow:hidden;background:${s.logo?'#fff':s.color};color:${s.tc}">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div>
       <div class="m"><b>${s.name}</b><small>${s.tier}</small></div>
       <span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${s.tier}</span></div></div>`).join('');
+}
+function renderInfo(){
+  $('#ifT').textContent=t('ifT'); $('#ifS').textContent=t('ifS'); if($('#bkInfo'))$('#bkInfo').textContent=t('bkPart');
+  const e=OAF.currentEvent()||{}; const inf=e.info||{};
+  const row=(ic,label,val,href)=>{ if(!val) return ''; const inner=href?`<a href="${href}" style="color:var(--green,#1B998B);text-decoration:none">${escapeHtml(val)}</a>`:escapeHtml(val); return `<div class="row" style="align-items:flex-start;padding:9px 0;border-top:1px solid var(--line,#eee)"><div style="width:26px;font-size:16px">${ic}</div><div class="m"><small style="color:var(--muted)">${label}</small><b style="font-weight:600;font-size:14px">${inner}</b></div></div>`; };
+  const notes=inf.notes&&inf.notes[lang];
+  let html=`<div class="card"><div class="row"><div class="m"><b style="font-size:15px">${escapeHtml(e.name||'')}</b><small>${(e.theme&&e.theme[lang])||''}</small></div></div>
+    <div style="margin-top:4px">${row('📍',t('ifVenue'),inf.venue||e.city)}${row('🗺️',t('ifAddress'),inf.address)}${row('🗓️',t('ifDates'),(e.dates&&e.dates[lang])||'')}${row('🕒',t('ifHours'),inf.hours)}</div></div>`;
+  const conn=`${row('📶','Wi-Fi',inf.wifi)}${row('☎️',t('ifContact'),inf.contact,inf.contact?('tel:'+String(inf.contact).replace(/[^+0-9]/g,'')):'')}${row('✉️','Email',inf.email,inf.email?('mailto:'+inf.email):'')}${row('🆘',t('ifEmergency'),inf.emergency)}`;
+  if(conn.replace(/\s/g,'')) html+=`<div class="card"><b style="font-size:13px">${t('ifContacts')}</b><div style="margin-top:4px">${conn}</div></div>`;
+  if(notes) html+=`<div class="card"><b style="font-size:13px">${t('ifNotes')}</b><p style="font-size:13.5px;line-height:1.55;margin-top:8px;white-space:pre-line">${escapeHtml(notes)}</p></div>`;
+  html+=`<div class="card" style="cursor:pointer" onclick="show('partners')"><div class="row"><div style="width:26px;font-size:16px">⭐</div><div class="m"><b style="font-size:14px">${t('tiPartners')}</b><small>${OAF.sponsors().length} ${lang==='fr'?'partenaires':'partners'}</small></div><span style="color:var(--muted)">›</span></div></div>`;
+  $('#infoBody').innerHTML=html;
 }
 
 function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('on'),2200);}
@@ -180,7 +196,7 @@ function enterEvent(id){
   $('#hKicker').textContent='📍 '+e.cityShort.toUpperCase()+' · '+e.dates[lang].toUpperCase();
   $('#hTheme').textContent=e.theme[lang]; $('#hCity').textContent=e.city;
   $('#hTiles').innerHTML = [
-    ['🗓️','tiProgram','program'],['🎤','tiSpeakers','people'],['🤝','tiPeople','people'],['📅','tiMeet','meetings'],['⭐','tiPartners','partners'],['ℹ️','tiInfo','home']
+    ['🗓️','tiProgram','program'],['🎤','tiSpeakers','people'],['🤝','tiPeople','people'],['📅','tiMeet','meetings'],['⭐','tiPartners','partners'],['ℹ️','tiInfo','info']
   ].map(([ic,k,v])=>`<div class="tile" onclick="show('${v}')"><div class="ic">${ic}</div><b>${t(k)}</b></div>`).join('');
   // live + matches
   const live = OAF.sessions(e.id,0).find(s=>s.track[lang].toLowerCase().includes('invest')||s.title[lang].includes('Keynote'))||OAF.sessions(e.id,0)[0];
@@ -389,7 +405,7 @@ async function hydrate(){
     const eaMap={}; ((ea&&ea.data)||[]).forEach(r=>{ (eaMap[r.profile_id]=eaMap[r.profile_id]||[]).push(r.event_id); });
     const ssMap={}; ((ss&&ss.data)||[]).forEach(r=>{ (ssMap[r.session_id]=ssMap[r.session_id]||[]).push({id:r.speaker_id,role:r.role}); });
     const order={live:0,upcoming:1,past:2};
-    const events=(ev.data||[]).map((e,i)=>({id:e.id,name:e.name,city:e.city||'',cityShort:e.city_short||(e.city||'').split(',')[0],status:e.status||'upcoming',dates:e.dates||{fr:'',en:''},theme:e.theme||{fr:'',en:''},cover:e.cover_url||null,top:tops[i%tops.length]}))
+    const events=(ev.data||[]).map((e,i)=>({id:e.id,name:e.name,city:e.city||'',cityShort:e.city_short||(e.city||'').split(',')[0],status:e.status||'upcoming',dates:e.dates||{fr:'',en:''},theme:e.theme||{fr:'',en:''},cover:e.cover_url||null,info:e.info||{},top:tops[i%tops.length]}))
       .sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
     const sessions=(se.data||[]).map(s=>({id:s.id,ev:s.event_id,day:s.day||0,time:s.time||'',dur:s.dur||'',title:s.title||{fr:'',en:''},room:s.room||{fr:'',en:''},track:s.track||{fr:'',en:''},desc:s.description||{fr:'',en:''},color:s.color||'#5b8def',star:false,sp:[],lineup:ssMap[s.id]||[]}));
     const speakers=(sp.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,role:s.role||{fr:'',en:''},country:s.country||'🌍',color:s.color||palette[i%palette.length],photo:s.photo_url||null,bio:s.bio||{fr:'',en:''},tags:s.tags||[],ses:{fr:[],en:[]}}));
