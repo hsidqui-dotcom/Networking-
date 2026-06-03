@@ -1,6 +1,9 @@
-/* OAF Connect — service worker (network-first: toujours la dernière version en
-   ligne, repli sur le cache hors-ligne). Bump CACHE à chaque évolution majeure. */
-const CACHE = 'oaf-connect-v23';
+/* OAF Connect — service worker.
+   Stratégie : réseau d'abord (toujours la dernière version en ligne), repli
+   sur le cache uniquement hors-ligne. Mise à jour automatique : le nouveau
+   worker prend le contrôle immédiatement et la page se recharge toute seule
+   (voir l'enregistrement dans index.html). Bump CACHE à chaque évolution. */
+const CACHE = 'oaf-connect-v24';
 const ASSETS = [
   './', './index.html', './admin.html',
   './style.css', './store.js', './app.js', './admin.js',
@@ -10,15 +13,27 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', e => {
+  // Le nouveau worker s'active sans attendre la fermeture des onglets.
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
+
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  // On supprime TOUS les anciens caches (pas seulement ceux d'une autre version)
+  // pour éliminer tout mélange ancien/nouveau, puis on prend le contrôle.
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
 });
+
+// Permet à la page de forcer l'activation du worker en attente.
+self.addEventListener('message', e => { if (e.data === 'skipWaiting') self.skipWaiting(); });
+
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   // Réseau d'abord : on récupère la version à jour, on met le cache à jour,
-  // et on ne sert le cache que si le réseau est indisponible (hors-ligne).
+  // et on ne sert le cache que si le réseau est réellement indisponible.
   e.respondWith(
     fetch(e.request).then(res => {
       const copy = res.clone();

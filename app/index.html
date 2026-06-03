@@ -148,7 +148,7 @@
       <div class="card"><div class="row"><div class="m"><b id="pfLang">🌐 Langue</b><small id="pfLangS">Français · EN · PT · AR</small></div><button class="btn" onclick="toggleLang()" id="pfLangBtn">EN</button></div></div>
       <div class="banner">🛠️ <div style="flex:1"><span id="pfAdmin">Espace organisateur (démo)</span></div><a href="admin.html">Admin →</a></div>
       <div class="card"><div class="row"><div class="m"><b id="pfReset">Réinitialiser la démo</b><small id="pfResetS">Restaurer les données d'exemple</small></div><button class="btn danger" onclick="resetDemo()" id="pfResetBtn">Reset</button></div></div>
-      <p style="text-align:center;color:var(--muted);font-size:11px;margin-top:14px">OAF Connect · <b>build 23</b> · © 2026 OneAfricaForums</p>
+      <p style="text-align:center;color:var(--muted);font-size:11px;margin-top:14px">OAF Connect · <b>build 24</b> · © 2026 OneAfricaForums</p>
     </section>
   </div>
 
@@ -184,7 +184,25 @@
 <script src="store.js"></script>
 <script src="app.js"></script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+if ('serviceWorker' in navigator) {
+  // Recharge la page une seule fois quand un nouveau service worker prend le
+  // contrôle — garantit que l'on charge toujours la dernière version déployée.
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return; refreshing = true; window.location.reload();
+  });
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    // Active immédiatement toute nouvelle version détectée.
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      if (nw) nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) nw.postMessage('skipWaiting');
+      });
+    });
+    // Vérifie une mise à jour à chaque ouverture.
+    try { reg.update(); } catch (_) {}
+  }).catch(() => {});
+}
 </script>
 </body>
 </html>
