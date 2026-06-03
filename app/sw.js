@@ -3,7 +3,7 @@
    sur le cache uniquement hors-ligne. Mise à jour automatique : le nouveau
    worker prend le contrôle immédiatement et la page se recharge toute seule
    (voir l'enregistrement dans index.html). Bump CACHE à chaque évolution. */
-const CACHE = 'oaf-connect-v28';
+const CACHE = 'oaf-connect-v29';
 const ASSETS = [
   './', './index.html', './admin.html',
   './style.css', './store.js', './app.js', './admin.js',
@@ -32,10 +32,15 @@ self.addEventListener('message', e => { if (e.data === 'skipWaiting') self.skipW
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Réseau d'abord : on récupère la version à jour, on met le cache à jour,
-  // et on ne sert le cache que si le réseau est réellement indisponible.
+  // Réseau d'abord, en CONTOURNANT le cache HTTP du navigateur pour nos propres
+  // fichiers (no-store) : iOS/Safari sert parfois un ancien .js depuis son cache
+  // HTTP même si le HTML est à jour, ce qui mélange ancien et nouveau code. On
+  // force donc une vraie requête réseau, on met notre cache à jour, et on ne sert
+  // le cache que si le réseau est réellement indisponible (hors-ligne).
+  const sameOrigin = new URL(e.request.url).origin === self.location.origin;
+  const req = sameOrigin ? new Request(e.request, { cache: 'no-store' }) : e.request;
   e.respondWith(
-    fetch(e.request).then(res => {
+    fetch(req).then(res => {
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
       return res;
