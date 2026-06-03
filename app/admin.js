@@ -100,18 +100,21 @@ function renderSettings(){
   updateCoverPreview();
   const ce=OAF.currentEvent()||{}; const set=(id,v)=>{const el=$('#'+id);if(el)el.value=v||'';};
   set('evName',ce.name); set('evDatesFr',ce.dates&&ce.dates.fr); set('evDatesEn',ce.dates&&ce.dates.en); set('evCity',ce.city);
+  set('evThemeFr',ce.theme&&ce.theme.fr); set('evThemeEn',ce.theme&&ce.theme.en);
 }
 async function adSaveEvent(){
   const ev=OAF.currentEvent(); if(!ev){adToast(a('csvEmpty'));return;}
   const name=($('#evName').value||'').trim()||ev.name;
   const dfr=($('#evDatesFr').value||'').trim(); const den=($('#evDatesEn').value||'').trim()||dfr;
   const city=($('#evCity').value||'').trim();
+  const tfr=($('#evThemeFr').value||'').trim(); const ten=($('#evThemeEn').value||'').trim()||tfr;
+  const cityShort=city.split(',')[0].trim()||city;
   if(L()){
-    const {error}=await OAFAuth.client().from('events').update({name,dates:{fr:dfr,en:den},city}).eq('id',ev.id);
+    const {error}=await OAFAuth.client().from('events').update({name,dates:{fr:dfr,en:den},city,city_short:cityShort,theme:{fr:tfr,en:ten}}).eq('id',ev.id);
     if(error){adToast(error.message);return;}
     await reloadAndRender();
   } else {
-    OAF.updateEvent(ev.id,{name,dates:{fr:dfr,en:den},city}); renderAll();
+    OAF.updateEvent(ev.id,{name,dates:{fr:dfr,en:den},city,cityShort,theme:{fr:tfr,en:ten}}); renderAll();
   }
   adToast(lang==='fr'?'Événement enregistré ✓':'Event saved ✓');
 }

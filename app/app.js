@@ -44,7 +44,7 @@ const t = k => (L[lang] && L[lang][k]) || L.en[k] || k;
 const ini = n => n.replace(/Dr\.\s|Fmr\.\s/,'').split(' ').map(x=>x[0]).slice(0,2).join('');
 const $ = s => document.querySelector(s);
 let curView = 'events', curDay = 0, curFilter = 'all', incomingReqs = [], chatWith = null, chatSubscribed = false;
-let curSession = null, curSpeaker = null, qaChannel = null, qaList = [];
+let curSession = null, curSpeaker = null, qaChannel = null, qaList = [], nameMap = {};
 
 function show(v){
   curView = v;
@@ -340,6 +340,7 @@ async function hydrate(){
     const notifications=(no.data||[]).map(n=>({id:n.id,icon:n.icon||'🔔',ts:new Date(n.created_at).getTime(),title:n.title||{fr:'',en:''}}));
     const profById={}; (prof.data||[]).forEach(p=>profById[p.id]=p);
     const myProf=profById[me.id] || {};
+    nameMap={}; (prof.data||[]).forEach(p=>{ nameMap[p.id]=p.name||'—'; }); ((gu&&gu.data)||[]).forEach(g=>{ nameMap['g_'+g.id]=g.name||'—'; }); nameMap[me.id]=myProf.name||me.email;
     // demandes de connexion reçues (en attente)
     try{
       const inc=await sb.from('connections').select('id,requester,status').eq('addressee',me.id).eq('status','pending');
@@ -375,7 +376,7 @@ function authVerify(){
 function authSignOut(){ if(OAFAuth&&OAFAuth.signOut) OAFAuth.signOut(); }
 
 /* ============ CHAT 1:1 ============ */
-function nameOf(id){ const a=OAF.attendees().find(x=>String(x.id)===String(id)); return a?a.name:'—'; }
+function nameOf(id){ const a=OAF.attendees().find(x=>String(x.id)===String(id)); if(a) return a.name; return nameMap[id]||'—'; }
 function appendBubble(side,text,time){
   const th=$('#thread'); if(!th) return;
   const b=document.createElement('div'); b.className='bub '+side; b.textContent=text;
