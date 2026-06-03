@@ -169,7 +169,8 @@ drop policy if exists "msg_send" on messages;
 drop policy if exists "meet_rw"  on meetings;
 drop policy if exists "bm_rw"    on bookmarks;
 create policy "conn_rw" on connections for all
-  using (requester = auth.uid() or addressee = auth.uid()) with check (requester = auth.uid());
+  using (requester = auth.uid() or addressee = auth.uid())
+  with check (requester = auth.uid() or addressee = auth.uid());
 create policy "msg_read" on messages for select using (sender = auth.uid() or recipient = auth.uid());
 create policy "msg_send" on messages for insert with check (sender = auth.uid());
 create policy "meet_rw" on meetings for all

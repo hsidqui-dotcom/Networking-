@@ -1,0 +1,23 @@
+-- ============================================================================
+-- APF 2026 — Correctif : permettre au DESTINATAIRE d'accepter une connexion
+-- et un rendez-vous (sinon erreur "row-level security policy violation").
+-- A coller dans Supabase -> SQL Editor -> Run (une fois). Sans risque.
+-- ============================================================================
+
+-- Connexions : l'emetteur OU le destinataire peuvent mettre a jour le statut
+drop policy if exists "conn_rw" on connections;
+create policy "conn_rw" on connections for all
+  using (requester = auth.uid() or addressee = auth.uid())
+  with check (requester = auth.uid() or addressee = auth.uid());
+
+-- Rendez-vous : l'organisateur OU l'invite peuvent accepter/refuser
+drop policy if exists "meet_rw" on meetings;
+create policy "meet_rw" on meetings for all
+  using (organizer = auth.uid() or guest = auth.uid())
+  with check (organizer = auth.uid() or guest = auth.uid());
+
+-- Temps reel pour les rendez-vous (si pas deja active)
+do $$ begin
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='meetings')
+  then alter publication supabase_realtime add table meetings; end if;
+end $$;
