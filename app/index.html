@@ -46,6 +46,7 @@
         <small style="color:var(--yellow);font-weight:800;font-size:10.5px" id="hKicker"></small>
         <h3 style="margin-top:5px" id="hTheme"></h3><p id="hCity"></p>
       </div>
+      <div id="hOnboard"></div>
       <div class="tiles" id="hTiles"></div>
       <div class="sec"><b id="hNow">🔴 En direct</b></div>
       <div id="hLive"></div>
@@ -116,8 +117,9 @@
     <!-- PROFILE -->
     <section class="view" data-v="profile">
       <div style="text-align:center;padding:6px 0">
-        <div class="avatar" id="pfAvatar" style="width:80px;height:80px;background:var(--yellow);color:#111;font-size:26px;margin:0 auto 10px">AK</div>
+        <div class="avatar" id="pfAvatar" style="width:80px;height:80px;background:var(--yellow);color:#111;font-size:26px;margin:0 auto 10px;overflow:hidden">AK</div>
         <h3 id="pfName" style="font-size:19px">Amina Keïta</h3><p id="pfRole" style="color:var(--muted);font-size:12.5px"></p>
+        <div style="margin-top:8px"><label class="btn" style="padding:5px 11px;font-size:11px;cursor:pointer">📷 <span id="pfPhotoBtn">Photo</span><input type="file" accept="image/*" hidden onchange="setMyPhoto(event)"></label></div>
         <div style="margin-top:8px"><span class="modepill" id="authBadge">démo</span> <button class="btn" id="signOutBtn" style="display:none;padding:5px 10px;font-size:11px" onclick="authSignOut()">Déconnexion</button></div>
       </div>
       <div class="card"><div class="row"><div class="m"><b id="pfStatT">Mon activité</b><small id="pfStatS"></small></div></div></div>

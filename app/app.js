@@ -14,7 +14,7 @@ const L = {
     admin:'Espace organisateur (démo)', reset:'Réinitialiser la démo', resetS:"Restaurer les données d'exemple",
     tiProgram:'Programme', tiPeople:'Participants', tiSpeakers:'Intervenants', tiPartners:'Partenaires', tiNotif:'Notifications', tiInfo:'Infos',
     prtT:'Partenaires', prtS:'Nos partenaires & sponsors.', bkPart:'‹ Accueil',
-    pfEditT:'Mon profil', pfLName:'Nom', pfLRole:'Fonction · Société', pfLCountry:'Pays', pfLLook:'Je recherche…', pfLInterests:"Centres d'intérêt (séparés par des virgules)", pfLVisible:"Visible dans l'annuaire (networking)", pfSaveBtn:'Enregistrer mon profil', tSaved:'Profil enregistré ✓', reqTitle:'🤝 Demandes de connexion', accept:'Accepter', tAccepted:'Connexion acceptée ✓',
+    pfEditT:'Mon profil', pfLName:'Nom', pfLRole:'Fonction · Société', pfLCountry:'Pays', pfLLook:'Je recherche…', pfLInterests:"Centres d'intérêt (séparés par des virgules)", pfLVisible:"Visible dans l'annuaire (networking)", pfSaveBtn:'Enregistrer mon profil', tSaved:'Profil enregistré ✓', pfPhotoBtn:'Photo', tPhoto:'Photo mise à jour ✓', obT:'👋 Complétez votre profil', obS:'Ajoutez vos centres d’intérêt et ce que vous recherchez pour obtenir des suggestions de mise en relation pertinentes.', obBtn:'Compléter mon profil', reqTitle:'🤝 Demandes de connexion', accept:'Accepter', tAccepted:'Connexion acceptée ✓',
     connect:'＋ Se connecter', connected:'✓ Connecté', meet:'📅 RDV', live:'● LIVE', schedule:'Voir le programme',
     bookmarks:'sessions enregistrées', connections:'connexions', tConnect:'Demande envoyée à ', tBook:'Ajouté à mon agenda ⭐', tUnbook:'Retiré', tReset:'Démo réinitialisée ✓',
     delegates:'délégués', countries:'pays', speakers:'intervenants', empty:'Rien pour le moment.'
@@ -33,7 +33,7 @@ const L = {
     admin:'Organizer space (demo)', reset:'Reset the demo', resetS:'Restore sample data',
     tiProgram:'Program', tiPeople:'Attendees', tiSpeakers:'Speakers', tiPartners:'Partners', tiNotif:'Notifications', tiInfo:'Info',
     prtT:'Partners', prtS:'Our partners & sponsors.', bkPart:'‹ Home',
-    pfEditT:'My profile', pfLName:'Name', pfLRole:'Role · Company', pfLCountry:'Country', pfLLook:'I\'m looking for…', pfLInterests:'Interests (comma-separated)', pfLVisible:'Visible in the directory (networking)', pfSaveBtn:'Save my profile', tSaved:'Profile saved ✓', reqTitle:'🤝 Connection requests', accept:'Accept', tAccepted:'Connection accepted ✓',
+    pfEditT:'My profile', pfLName:'Name', pfLRole:'Role · Company', pfLCountry:'Country', pfLLook:'I\'m looking for…', pfLInterests:'Interests (comma-separated)', pfLVisible:'Visible in the directory (networking)', pfSaveBtn:'Save my profile', tSaved:'Profile saved ✓', pfPhotoBtn:'Photo', tPhoto:'Photo updated ✓', obT:'👋 Complete your profile', obS:'Add your interests and what you’re looking for to get relevant networking suggestions.', obBtn:'Complete my profile', reqTitle:'🤝 Connection requests', accept:'Accept', tAccepted:'Connection accepted ✓',
     connect:'＋ Connect', connected:'✓ Connected', meet:'📅 Meet', live:'● LIVE', schedule:'See program',
     bookmarks:'saved sessions', connections:'connections', tConnect:'Request sent to ', tBook:'Added to My Agenda ⭐', tUnbook:'Removed', tReset:'Demo reset ✓',
     delegates:'delegates', countries:'countries', speakers:'speakers', empty:'Nothing yet.'
@@ -87,11 +87,13 @@ function renderChrome(){
   $('#pfLangBtn').textContent = lang==='fr'?'EN':'FR';
   const me=OAF.me();
   if($('#pfName')) $('#pfName').textContent = me.name||'';
-  if($('#pfAvatar')) $('#pfAvatar').textContent = ini(me.name||'· ·');
+  if($('#pfAvatar')) $('#pfAvatar').innerHTML = me.photo?`<img src="${me.photo}" alt="" style="width:100%;height:100%;object-fit:cover">`:ini(me.name||'· ·');
+  if($('#pfPhotoBtn')) $('#pfPhotoBtn').textContent = t('pfPhotoBtn');
   $('#pfRole').textContent = (me.role&&me.role[lang]||'') + ' · ' + (me.country||'');
   fillProfileInputs();
   const st = OAF.stats();
   $('#pfStatS').textContent = `${st.bookmarks} ${t('bookmarks')} · ${st.connections} ${t('connections')}`;
+  renderOnboarding();
 }
 function fillProfileInputs(){
   const me=OAF.me();
@@ -115,6 +117,42 @@ function saveProfile(){
     if(u) sb.from('profiles').update({name, role:{fr:role,en:role}, country, looking_for:{fr:look,en:look}, interests, is_visible:visible}).eq('id',u.id).then(({error})=>{ if(error) toast(error.message); });}
   renderChrome(); toast(t('tSaved'));
 }
+
+/* ===== Avatar : photo si disponible, sinon initiales ===== */
+function avBox(p, extra){ extra=extra||''; const ph=p&&p.photo; return `<div class="av" style="overflow:hidden;background:${ph?'#fff':((p&&p.color)||'#111')};${extra}">${ph?`<img src="${ph}" alt="" style="width:100%;height:100%;object-fit:cover">`:ini((p&&p.name)||'· ·')}</div>`; }
+
+/* ===== Image → data URL réduite (photo de profil, gardée légère) ===== */
+function oafImg(file, cb, max){ max=max||256; const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ try{ const sc=Math.min(1,max/Math.max(im.width,im.height)); const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(im.width*sc)); c.height=Math.max(1,Math.round(im.height*sc)); c.getContext('2d').drawImage(im,0,0,c.width,c.height); cb(c.toDataURL('image/jpeg',0.82)); }catch(e){ cb(r.result); } }; im.onerror=()=>cb(r.result); im.src=r.result; }; r.readAsDataURL(file); }
+function setMyPhoto(ev){ const f=ev.target.files&&ev.target.files[0]; ev.target.value=''; if(!f) return; oafImg(f,(url)=>{ OAF.updateMe({photo:url}); renderChrome(); toast(t('tPhoto')); if(OAFAuth&&OAFAuth.live&&OAFAuth.live()&&OAFAuth.client()){ const sb=OAFAuth.client(),u=OAFAuth.user(); if(u) sb.from('profiles').update({photo_url:url}).eq('id',u.id).then(({error})=>{ if(error) toast(error.message); }); } },256); }
+
+/* ===== Score d'affinité de mise en relation (intérêts communs + recherche) ===== */
+function _norm(s){ return String(s==null?'':s).toLowerCase().trim(); }
+function buildMatch(myTags, myLook, p){
+  const mineMap={}; (myTags||[]).forEach(x=>{ const n=_norm(x); if(n) mineMap[n]=x; });
+  const shared=[];
+  (p.tags||[]).forEach(x=>{ const n=_norm(x); if(n&&mineMap[n]&&shared.indexOf(mineMap[n])<0) shared.push(mineMap[n]); });
+  const myLookTxt=_norm(((myLook&&myLook.fr)||'')+' '+((myLook&&myLook.en)||''));
+  const lookHits=[];
+  (p.tags||[]).forEach(x=>{ const n=_norm(x); if(n&&myLookTxt&&myLookTxt.indexOf(n)>=0&&lookHits.indexOf(x)<0) lookHits.push(x); });
+  const theirLookTxt=_norm(((p.look&&p.look.fr)||'')+' '+((p.look&&p.look.en)||''));
+  let reverse=0; Object.keys(mineMap).forEach(n=>{ if(theirLookTxt&&theirLookTxt.indexOf(n)>=0) reverse++; });
+  let score=52 + shared.length*12 + lookHits.length*6 + reverse*6;
+  if(p.look&&(p.look.fr||p.look.en)) score+=3;
+  if((p.tags||[]).length) score+=2;
+  score=Math.max(45,Math.min(98,Math.round(score)));
+  let why;
+  if(shared.length){ const l=shared.slice(0,3).join(', '); const n=shared.length; why={fr:`${n} intérêt${n>1?'s':''} en commun · ${l}`, en:`${n} shared interest${n>1?'s':''} · ${l}`}; }
+  else if(lookHits.length){ const l=lookHits.slice(0,2).join(', '); why={fr:`Correspond à votre recherche · ${l}`, en:`Matches what you seek · ${l}`}; }
+  else if(p.look&&(p.look.fr||p.look.en)){ why=p.look; }
+  else if((p.tags||[]).length){ const l=p.tags.slice(0,3).join(', '); why={fr:l,en:l}; }
+  else { why={fr:'Participe à ce forum',en:'Attending this forum'}; }
+  return {score, why};
+}
+
+/* ===== Incitation à compléter le profil (1er lancement) ===== */
+function profileIncomplete(){ const me=OAF.me(); if(!me) return false; const noTags=!(me.interests&&me.interests.length); const noLook=!(me.look&&(me.look.fr||me.look.en)); const noName=!me.name || String(me.name).indexOf('@')>=0; return noTags||noLook||noName; }
+function renderOnboarding(){ const box=$('#hOnboard'); if(!box) return; const live=OAFAuth&&OAFAuth.live&&OAFAuth.live(); if(live && profileIncomplete()){ box.innerHTML=`<div class="card" style="border:1.5px solid var(--yellow);background:linear-gradient(180deg,#fffdf3,#fff)"><b style="font-size:13.5px">${t('obT')}</b><p style="font-size:12.5px;color:var(--muted);margin:6px 0 10px">${t('obS')}</p><button class="btn solid" style="width:100%" onclick="show('profile')">${t('obBtn')}</button></div>`; } else { box.innerHTML=''; } }
+
 function renderEvents(){
   const order={live:0,upcoming:1,past:2};
   const list = OAF.events().filter(e=>curFilter==='all'||e.status===curFilter).sort((a,b)=>order[a.status]-order[b.status]);
@@ -145,7 +183,8 @@ function enterEvent(id){
   const live = OAF.sessions(e.id,0).find(s=>s.track[lang].toLowerCase().includes('invest')||s.title[lang].includes('Keynote'))||OAF.sessions(e.id,0)[0];
   $('#hLive').innerHTML = live?`<div class="card"><div class="row"><div class="av" style="background:#111;border-radius:12px">🎤</div><div class="m"><b>${live.title[lang]}</b><small>${live.room[lang]} · ${live.time}</small></div><span class="tag live">${t('live')}</span></div></div>`:'';
   const p = OAF.attendees()[0];
-  $('#hMatch').innerHTML = p ? `<div class="card"><div class="row"><div class="av" style="background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div><div style="font-size:11.5px;color:var(--muted);margin-top:9px">🎯 ${(p.why&&p.why[lang])||''}</div><button class="btn solid" style="width:100%;margin-top:11px" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button></div>` : `<div class="card" style="color:var(--muted);font-size:13px">${lang==='fr'?'Les participants apparaîtront ici dès les premières inscriptions.':'Attendees will appear here as people sign up.'}</div>`;
+  $('#hMatch').innerHTML = p ? `<div class="card"><div class="row">${avBox(p)}<div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div><div style="font-size:11.5px;color:var(--muted);margin-top:9px">🎯 ${(p.why&&p.why[lang])||''}</div><button class="btn solid" style="width:100%;margin-top:11px" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button></div>` : `<div class="card" style="color:var(--muted);font-size:13px">${lang==='fr'?'Les participants apparaîtront ici dès les premières inscriptions.':'Attendees will appear here as people sign up.'}</div>`;
+  renderOnboarding();
   show('home');
 }
 function renderDayTabs(){
@@ -267,7 +306,7 @@ function renderPeople(){
     const actions = p.guest
       ? `<div style="font-size:11px;color:var(--muted);margin-top:10px;font-style:italic">${lang==='fr'?'📇 Profil importé — networking dès son inscription':'📇 Imported profile — networking once they sign in'}</div>`
       : `<div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button><button class="btn" onclick="openThread('${p.id}')" style="padding:11px 14px">💬</button><button class="btn" onclick="openPropose('${p.id}')" style="padding:11px 14px">📅</button></div>`;
-    return `<div class="card"><div class="row"><div class="av" style="background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div>
+    return `<div class="card"><div class="row">${avBox(p)}<div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">🎯 ${p.why[lang]}</div>
     ${actions}</div>`;
   }).join('');
@@ -335,8 +374,11 @@ async function hydrate(){
     const sessions=(se.data||[]).map(s=>({id:s.id,ev:s.event_id,day:s.day||0,time:s.time||'',dur:s.dur||'',title:s.title||{fr:'',en:''},room:s.room||{fr:'',en:''},track:s.track||{fr:'',en:''},desc:s.description||{fr:'',en:''},color:s.color||'#5b8def',star:false,sp:[],lineup:ssMap[s.id]||[]}));
     const speakers=(sp.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,role:s.role||{fr:'',en:''},country:s.country||'🌍',color:s.color||palette[i%palette.length],bio:s.bio||{fr:'',en:''},tags:s.tags||[],ses:{fr:[],en:[]}}));
     const sponsors=(po.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,tier:s.tier||'SILVER',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null}));
-    const attendees=(prof.data||[]).filter(p=>p.id!==me.id).map((p,i)=>({id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],score:80,why:p.looking_for||{fr:'',en:''},look:p.looking_for||{fr:'',en:''},tags:p.interests||[],evs:eaMap[p.id]||[]}));
-    ((gu&&gu.data)||[]).forEach((g,i)=>{ const has=g.looking_for&&(g.looking_for.fr||g.looking_for.en); const why=has?g.looking_for:{fr:(g.interests||[]).join(', ')||'Participant',en:(g.interests||[]).join(', ')||'Attendee'}; attendees.push({id:'g_'+g.id,gid:g.id,guest:true,name:g.name||'—',role:g.role||{fr:'',en:''},country:g.country||'🌍',color:palette[(attendees.length+i)%palette.length],score:75,why,look:g.looking_for||{fr:'',en:''},tags:g.interests||[],evs:[g.event_id]}); });
+    const _myP=(prof.data||[]).find(p=>p.id===me.id)||{};
+    const _myTags=_myP.interests||[]; const _myLook=_myP.looking_for||{fr:'',en:''};
+    const attendees=(prof.data||[]).filter(p=>p.id!==me.id).map((p,i)=>{ const a={id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],photo:p.photo_url||null,look:p.looking_for||{fr:'',en:''},tags:p.interests||[],evs:eaMap[p.id]||[]}; const m=buildMatch(_myTags,_myLook,a); a.score=m.score; a.why=m.why; return a; });
+    ((gu&&gu.data)||[]).forEach((g,i)=>{ const a={id:'g_'+g.id,gid:g.id,guest:true,name:g.name||'—',role:g.role||{fr:'',en:''},country:g.country||'🌍',color:palette[(attendees.length+i)%palette.length],photo:g.photo_url||null,look:g.looking_for||{fr:'',en:''},tags:g.interests||[],evs:[g.event_id]}; const m=buildMatch(_myTags,_myLook,a); a.score=m.score; a.why=m.why; attendees.push(a); });
+    attendees.sort((a,b)=>b.score-a.score);
     const notifications=(no.data||[]).map(n=>({id:n.id,icon:n.icon||'🔔',ts:new Date(n.created_at).getTime(),title:n.title||{fr:'',en:''}}));
     const profById={}; (prof.data||[]).forEach(p=>profById[p.id]=p);
     const myProf=profById[me.id] || {};
@@ -352,7 +394,7 @@ async function hydrate(){
       bookmarks:(bk.data||[]).map(b=>String(b.session_id)),
       connections:(cn.data||[]).map(c=>String(c.addressee)),
       currentEvent: (function(){ const c=(OAF.currentEvent()||{}).id; return (c!=null)?c:(events.length?events[0].id:undefined); })(),
-      me: { name: myProf.name||me.email, role: myProf.role||{fr:'Participant',en:'Attendee'}, country: myProf.country||'🌍', look: myProf.looking_for||{fr:'',en:''}, interests: myProf.interests||[], visible: myProf.is_visible!==false }
+      me: { name: myProf.name||me.email, role: myProf.role||{fr:'Participant',en:'Attendee'}, country: myProf.country||'🌍', look: myProf.looking_for||{fr:'',en:''}, interests: myProf.interests||[], visible: myProf.is_visible!==false, photo: myProf.photo_url||null }
     });
     renderAll();
     subscribeChat();
