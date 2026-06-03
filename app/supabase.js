@@ -8,7 +8,9 @@ window.OAFAuth = (function () {
     if (!window.OAF_LIVE) return null;
     try {
       const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-      client = createClient(window.OAF_CONFIG.SUPABASE_URL, window.OAF_CONFIG.SUPABASE_ANON_KEY);
+      client = createClient(window.OAF_CONFIG.SUPABASE_URL, window.OAF_CONFIG.SUPABASE_ANON_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'oaf-auth' }
+      });
       const { data } = await client.auth.getSession();
       user = data && data.session ? data.session.user : null;
       client.auth.onAuthStateChange((_e, session) => {
