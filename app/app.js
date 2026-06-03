@@ -436,6 +436,15 @@ async function hydrate(){
     const notifications=(no.data||[]).map(n=>({id:n.id,icon:n.icon||'🔔',ts:new Date(n.created_at).getTime(),title:n.title||{fr:'',en:''}}));
     const profById={}; (prof.data||[]).forEach(p=>profById[p.id]=p);
     const myProf=profById[me.id] || {};
+    // Récupère automatiquement nom + photo depuis Google/LinkedIn (comme Whova),
+    // une seule fois : on ne touche pas un nom/une photo déjà personnalisés.
+    try{
+      const mm=(me&&me.user_metadata)||{};
+      const oauthPhoto=mm.avatar_url||mm.picture||null, oauthName=mm.full_name||mm.name||null, patch={};
+      if(oauthPhoto && !myProf.photo_url){ patch.photo_url=oauthPhoto; myProf.photo_url=oauthPhoto; }
+      if(oauthName && !myProf.name){ patch.name=oauthName; myProf.name=oauthName; }
+      if(Object.keys(patch).length && OAFAuth.client()) OAFAuth.client().from('profiles').update(patch).eq('id',me.id).then(()=>{},()=>{});
+    }catch(_){}
     nameMap={}; (prof.data||[]).forEach(p=>{ nameMap[p.id]=p.name||'—'; }); ((gu&&gu.data)||[]).forEach(g=>{ nameMap['g_'+g.id]=g.name||'—'; }); nameMap[me.id]=myProf.name||me.email;
     // demandes de connexion reçues (en attente)
     try{
@@ -454,6 +463,11 @@ async function hydrate(){
     subscribeChat();
     subscribeContent();
   }catch(e){ console.warn('Hydratation Supabase échouée — données démo conservées', e); }
+}
+function authOAuth(provider){
+  if(!(OAFAuth&&OAFAuth.signInWith)) return;
+  const m=$('#authMsg'); if(m) m.textContent='…';
+  OAFAuth.signInWith(provider).then(({error})=>{ if(error&&m) m.textContent=error.message; }).catch(e=>{ if(m) m.textContent=String(e&&e.message||e); });
 }
 function authSend(){
   const email=$('#authEmail').value.trim(); if(!email)return;

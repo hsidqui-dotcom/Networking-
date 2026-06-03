@@ -148,7 +148,7 @@
       <div class="card"><div class="row"><div class="m"><b id="pfLang">🌐 Langue</b><small id="pfLangS">Français · EN · PT · AR</small></div><button class="btn" onclick="toggleLang()" id="pfLangBtn">EN</button></div></div>
       <div class="banner">🛠️ <div style="flex:1"><span id="pfAdmin">Espace organisateur (démo)</span></div><a href="admin.html">Admin →</a></div>
       <div class="card"><div class="row"><div class="m"><b id="pfReset">Réinitialiser la démo</b><small id="pfResetS">Restaurer les données d'exemple</small></div><button class="btn danger" onclick="resetDemo()" id="pfResetBtn">Reset</button></div></div>
-      <p style="text-align:center;color:var(--muted);font-size:11px;margin-top:14px">OAF Connect · <b>build 29</b> · © 2026 OneAfricaForums</p>
+      <p style="text-align:center;color:var(--muted);font-size:11px;margin-top:14px">OAF Connect · <b>build 30</b> · © 2026 OneAfricaForums</p>
     </section>
   </div>
 
@@ -167,7 +167,10 @@
   <div class="authcard">
     <svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" fill="#F2E500"/><text x="200" y="190" text-anchor="middle" fill="#111" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="168">one</text><text x="200" y="272" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">AFRICA</text><text x="200" y="338" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">FORUMS</text></svg>
     <h2 id="authT">Connexion</h2>
-    <p id="authP">Recevez un code de connexion par e-mail.</p>
+    <p id="authP">Connectez-vous pour rejoindre l'événement.</p>
+    <button class="btn" id="authGoogle" onclick="authOAuth('google')" style="width:100%;background:#fff;color:#111;border:1px solid #dadce0;font-weight:600;margin-bottom:8px">Continuer avec Google</button>
+    <button class="btn" id="authLinkedin" onclick="authOAuth('linkedin_oidc')" style="width:100%;background:#0a66c2;color:#fff;font-weight:600;border:0">Continuer avec LinkedIn</button>
+    <div class="authsep" style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:14px 0"><span style="flex:1;height:1px;background:var(--line,#e3e3e3)"></span><span id="authOr">ou par e-mail</span><span style="flex:1;height:1px;background:var(--line,#e3e3e3)"></span></div>
     <input id="authEmail" type="email" placeholder="vous@exemple.com" autocomplete="email" />
     <button class="btn solid" id="authSend" onclick="authSend()">Recevoir un code</button>
     <div id="authStep2" style="display:none;margin-top:10px">

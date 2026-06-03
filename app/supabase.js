@@ -31,6 +31,7 @@ window.OAFAuth = (function () {
     client: () => client,
     user: () => user,
     onChange: (f) => listeners.push(f),
+    async signInWith(provider) { await ready; return client.auth.signInWithOAuth({ provider, options: { redirectTo: location.origin + location.pathname } }); },
     async sendCode(email) { await ready; return client.auth.signInWithOtp({ email }); },
     async verify(email, token) { await ready; return client.auth.verifyOtp({ email, token, type: 'email' }); },
     async signOut() { await ready; if (client) return client.auth.signOut(); }
