@@ -206,6 +206,7 @@ function adCancelEdit(){
   $('#sEditId').value=''; clearSessionForm();
   $('#sTime').value='14:30'; $('#sDur').value='45m';
   $('#pAddBtn').textContent=a('pAddBtn'); $('#pCancelBtn').style.display='none';
+  renderLineupPicker(null);
 }
 function adEditSession(id){
   const s=OAF.get().sessions.find(x=>String(x.id)===String(id)); if(!s)return;
@@ -215,9 +216,23 @@ function adEditSession(id){
   $('#sRoom').value=(s.room&&s.room.fr)||''; $('#sRoomEn').value=(s.room&&s.room.en)||'';
   $('#sTrack').value=(s.track&&s.track.fr)||''; $('#sTrackEn').value=(s.track&&s.track.en)||'';
   $('#pAddBtn').textContent=a('pUpdBtn'); $('#pCancelBtn').style.display='';
+  renderLineupPicker(s);
   const top=$('#pAddT'); if(top&&top.scrollIntoView) top.scrollIntoView({behavior:'smooth',block:'start'});
 }
-function adSaveSession(){
+function renderLineupPicker(s){
+  const box=$('#sLineup'); if(!box) return;
+  if(!s){ box.innerHTML=`<div class="desc">${lang==='fr'?'Enregistrez la séance, puis cliquez ✎ sur la séance pour affecter les intervenants.':'Save the session, then click ✎ to assign speakers.'}</div>`; return; }
+  const spk=OAF.speakers();
+  if(!spk.length){ box.innerHTML=`<div class="desc">${lang==='fr'?'Ajoutez d’abord des intervenants (onglet Personnes).':'Add speakers first (People tab).'}</div>`; return; }
+  const lu={}; (s.lineup||[]).forEach(l=>lu[String(l.id)]=l.role);
+  box.innerHTML=`<div class="desc">${lang==='fr'?'Cochez les intervenants ; marquez un « Modérateur ».':'Check speakers; mark one as “Moderator”.'}</div>`+spk.map(p=>{ const r=lu[String(p.id)]; const mod=r==='moderator';
+    return `<label class="li" style="gap:8px"><input type="checkbox" class="luChk" data-id="${p.id}" ${r?'checked':''}><div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><button type="button" class="btn ${mod?'solid':''}" data-mod="${p.id}" onclick="toggleMod('${p.id}',this)" style="padding:5px 9px;font-size:11px">${lang==='fr'?'Modérateur':'Moderator'}</button></label>`;
+  }).join('');
+}
+function toggleMod(id,btn){ btn.classList.toggle('solid'); if(btn.classList.contains('solid')){ const chk=document.querySelector('.luChk[data-id="'+id+'"]'); if(chk) chk.checked=true; } }
+function collectLineup(){ const out=[]; document.querySelectorAll('.luChk').forEach(chk=>{ if(chk.checked){ const id=chk.dataset.id; const mb=document.querySelector('.btn[data-mod="'+id+'"]'); out.push({speaker_id:id,role:(mb&&mb.classList.contains('solid'))?'moderator':'speaker'}); } }); return out; }
+async function saveLineup(sessionId){ if(!L())return; const sb=OAFAuth.client(); await sb.from('session_speakers').delete().eq('session_id',sessionId); const recs=collectLineup().map(x=>({session_id:sessionId,speaker_id:x.speaker_id,role:x.role})); if(recs.length){ const {error}=await sb.from('session_speakers').insert(recs); if(error){adToast(error.message);} } }
+async function adSaveSession(){
   const tfr=$('#sTitle').value.trim(); if(!tfr){adToast(a('needTitle'));return;}
   const pair=(fr,en)=>({fr:fr,en:(en||fr)});
   const editId=$('#sEditId').value;
@@ -230,11 +245,14 @@ function adSaveSession(){
   if(L()){
     const sb=OAFAuth.client();
     if(editId){
-      sb.from('sessions').update({day:fields.day,time:fields.time,dur:fields.dur,title:fields.title,room:fields.room,track:fields.track}).eq('id',editId)
-        .then(({error})=>{ if(error){adToast(error.message);return;} adCancelEdit(); reloadAndRender(); adToast(a('tUpd')); });
+      const {error}=await sb.from('sessions').update({day:fields.day,time:fields.time,dur:fields.dur,title:fields.title,room:fields.room,track:fields.track}).eq('id',editId);
+      if(error){adToast(error.message);return;}
+      await saveLineup(editId);
+      adCancelEdit(); await reloadAndRender(); adToast(a('tUpd'));
     } else {
-      sb.from('sessions').insert(Object.assign({event_id:evId(),color:'#5b8def',description:{fr:'',en:''}},fields))
-        .then(({error})=>{ if(error){adToast(error.message);return;} clearSessionForm(); reloadAndRender(); adToast(a('tAdd')); });
+      const {error}=await sb.from('sessions').insert(Object.assign({event_id:evId(),color:'#5b8def',description:{fr:'',en:''}},fields));
+      if(error){adToast(error.message);return;}
+      clearSessionForm(); await reloadAndRender(); adToast(a('tAdd'));
     }
   } else {
     if(editId){ OAF.updateSession(editId,fields); adCancelEdit(); }
@@ -362,7 +380,7 @@ async function adminHydrate(){
   try{
     const palette=['#5b8def','#1B998B','#b5559a','#9a6b00','#E2622C','#13476b'];
     const tops=['linear-gradient(135deg,#1c1c1c,#000)','linear-gradient(135deg,#0f6e4f,#1B998B)','linear-gradient(135deg,#13476b,#2f7bb0)','linear-gradient(135deg,#7a3b12,#c2691e)'];
-    const [ev,se,sp,po,no,prof,ea,gu]=await Promise.all([
+    const [ev,se,sp,po,no,prof,ea,gu,ss]=await Promise.all([
       sb.from('events').select('*'),
       sb.from('sessions').select('*'),
       sb.from('speakers').select('*'),
@@ -370,12 +388,14 @@ async function adminHydrate(){
       sb.from('notifications').select('*').order('created_at',{ascending:false}),
       sb.from('profiles').select('*'),
       sb.from('event_attendees').select('event_id,profile_id'),
-      sb.from('guests').select('*')
+      sb.from('guests').select('*'),
+      sb.from('session_speakers').select('session_id,speaker_id,role')
     ]);
     const eaMap={}; ((ea&&ea.data)||[]).forEach(r=>{ (eaMap[r.profile_id]=eaMap[r.profile_id]||[]).push(r.event_id); });
+    const ssMap={}; ((ss&&ss.data)||[]).forEach(r=>{ (ssMap[r.session_id]=ssMap[r.session_id]||[]).push({id:r.speaker_id,role:r.role}); });
     const order={live:0,upcoming:1,past:2};
     const events=(ev.data||[]).map((e,i)=>({id:e.id,name:e.name,city:e.city||'',cityShort:e.city_short||'',status:e.status||'upcoming',dates:e.dates||{fr:'',en:''},theme:e.theme||{fr:'',en:''},cover:e.cover_url||null,top:tops[i%tops.length]})).sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
-    const sessions=(se.data||[]).map(s=>({id:s.id,ev:s.event_id,day:s.day||0,time:s.time||'',dur:s.dur||'',title:s.title||{fr:'',en:''},room:s.room||{fr:'',en:''},track:s.track||{fr:'',en:''},desc:s.description||{fr:'',en:''},color:s.color||'#5b8def',star:false,sp:[]}));
+    const sessions=(se.data||[]).map(s=>({id:s.id,ev:s.event_id,day:s.day||0,time:s.time||'',dur:s.dur||'',title:s.title||{fr:'',en:''},room:s.room||{fr:'',en:''},track:s.track||{fr:'',en:''},desc:s.description||{fr:'',en:''},color:s.color||'#5b8def',star:false,sp:[],lineup:ssMap[s.id]||[]}));
     const speakers=(sp.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,role:s.role||{fr:'',en:''},country:s.country||'🌍',color:palette[i%palette.length],bio:s.bio||{fr:'',en:''},tags:s.tags||[],ses:{fr:[],en:[]}}));
     const sponsors=(po.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,tier:s.tier||'SILVER',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null}));
     const attendees=(prof.data||[]).map((p,i)=>({id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],score:80,why:p.looking_for||{fr:'',en:''},look:p.looking_for||{fr:'',en:''},tags:p.interests||[],evs:eaMap[p.id]||[]}));

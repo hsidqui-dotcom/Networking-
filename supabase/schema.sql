@@ -212,6 +212,54 @@ do $$ begin
 end $$;
 
 -- ============================================================================
+-- Fiches de séance : intervenants/modérateur par séance + Q&A du public
+-- ============================================================================
+create table if not exists session_speakers (
+  session_id uuid references sessions(id) on delete cascade,
+  speaker_id uuid references speakers(id) on delete cascade,
+  role text default 'speaker' check (role in ('speaker','moderator')),
+  primary key (session_id, speaker_id)
+);
+alter table session_speakers enable row level security;
+drop policy if exists "ss_read"  on session_speakers;
+drop policy if exists "ss_admin" on session_speakers;
+create policy "ss_read"  on session_speakers for select using (auth.role() = 'authenticated');
+create policy "ss_admin" on session_speakers for all    using (is_admin()) with check (is_admin());
+
+create table if not exists questions (
+  id uuid primary key default uuid_generate_v4(),
+  session_id uuid references sessions(id) on delete cascade,
+  event_id uuid references events(id) on delete cascade,
+  author uuid references profiles(id) on delete set null,
+  body text not null,
+  created_at timestamptz default now()
+);
+alter table questions enable row level security;
+drop policy if exists "q_read"   on questions;
+drop policy if exists "q_insert" on questions;
+drop policy if exists "q_admin"  on questions;
+create policy "q_read"   on questions for select using (auth.role() = 'authenticated');
+create policy "q_insert" on questions for insert with check (author = auth.uid());
+create policy "q_admin"  on questions for all    using (is_admin()) with check (is_admin());
+
+create table if not exists question_votes (
+  question_id uuid references questions(id) on delete cascade,
+  profile_id uuid references profiles(id) on delete cascade,
+  primary key (question_id, profile_id)
+);
+alter table question_votes enable row level security;
+drop policy if exists "qv_read" on question_votes;
+drop policy if exists "qv_self" on question_votes;
+create policy "qv_read" on question_votes for select using (auth.role() = 'authenticated');
+create policy "qv_self" on question_votes for all    using (profile_id = auth.uid()) with check (profile_id = auth.uid());
+
+do $$ begin
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='session_speakers') then alter publication supabase_realtime add table session_speakers; end if;
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='questions')        then alter publication supabase_realtime add table questions;        end if;
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='question_votes')   then alter publication supabase_realtime add table question_votes;   end if;
+end $$;
+
+-- ============================================================================
 -- DONNÉE D'EXEMPLE (insérée seulement si la table est vide)
 -- ============================================================================
 insert into events (name, city, city_short, status, dates, theme)

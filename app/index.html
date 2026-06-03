@@ -55,9 +55,21 @@
 
     <!-- PROGRAM -->
     <section class="view" data-v="program">
-      <h2 class="scr" id="pgT">Programme</h2><div class="sub" id="pgS">Touchez ☆ pour ajouter à votre agenda.</div>
+      <h2 class="scr" id="pgT">Programme</h2><div class="sub" id="pgS">Touchez une séance pour voir le détail et les intervenants.</div>
       <div class="day-tabs" id="dayTabs"></div>
       <div id="agenda"></div>
+    </section>
+
+    <!-- SESSION DETAIL -->
+    <section class="view" data-v="session">
+      <button class="btn" onclick="show('program')" style="margin-bottom:10px">‹ <span id="bkProg">Programme</span></button>
+      <div id="sessionDetail"></div>
+    </section>
+
+    <!-- SPEAKER DETAIL -->
+    <section class="view" data-v="speaker">
+      <button class="btn" onclick="show('session')" style="margin-bottom:10px">‹ <span id="bkSes">Séance</span></button>
+      <div id="speakerDetail"></div>
     </section>
 
     <!-- PEOPLE -->
