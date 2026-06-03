@@ -404,6 +404,25 @@ function adSendNotif(){
   if(L()){ OAFAuth.client().from('notifications').insert({event_id:evId(),icon:$('#nIcon').value,title:{fr:m,en:m}}).then(({error})=>{ if(error){adToast(error.message);return;} $('#nMsg').value=''; reloadAndRender(); adToast(a('tNotif')); }); }
   else { OAF.addNotification({icon:$('#nIcon').value,title:{fr:m,en:m}}); $('#nMsg').value=''; renderNotifAdmin(); renderKpis(); adToast(a('tNotif')); }
 }
+async function adSendInvites(){
+  if(!L()){ adToast(lang==='fr'?'Disponible uniquement sur la base réelle.':'Available on the live database only.'); return; }
+  const raw=$('#invEmails').value||'';
+  const emails=raw.split(/[\s,;]+/).map(e=>e.trim().toLowerCase()).filter(e=>e.indexOf('@')>0);
+  if(!emails.length){ adToast(lang==='fr'?'Ajoutez au moins une adresse.':'Add at least one address.'); return; }
+  const ev=OAF.currentEvent&&OAF.currentEvent(); const name=(ev&&ev.name)||'OneAfricaForums';
+  const btn=$('#invBtn'); if(btn){ btn.disabled=true; btn.textContent='…'; }
+  try{
+    const {data,error}=await OAFAuth.client().rpc('send_event_invites',{
+      emails, event_name:name, app_url:($('#invUrl').value||'').trim()||location.origin,
+      event_id:(ev&&typeof ev.id==='number')?ev.id:null, from_email:($('#invFrom').value||'').trim()||undefined
+    });
+    if(error) throw error;
+    const n=(data&&data.sent)||emails.length;
+    $('#invEmails').value='';
+    adToast((lang==='fr'?'Invitations envoyées : ':'Invitations sent: ')+n+' ✉️');
+  }catch(e){ adToast(e.message||String(e)); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='📨 '+(lang==='fr'?'Envoyer les invitations':'Send invitations'); } }
+}
 function adAddSpeaker(){
   const n=$('#spkName').value.trim(); if(!n)return; const r=$('#spkRole').value||'—';
   if(L()){ OAFAuth.client().from('speakers').insert({event_id:evId(),name:n,role:{fr:r,en:r},country:'🌍'}).then(({error})=>{ if(error){adToast(error.message);return;} $('#spkName').value='';$('#spkRole').value=''; reloadAndRender(); adToast(a('tSpk')); }); }

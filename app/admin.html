@@ -13,7 +13,7 @@
   <div class="adbar">
     <div id="adLogo" class="oa" style="width:34px;height:34px;overflow:hidden"><svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" fill="#F2E500"/><text x="200" y="190" text-anchor="middle" fill="#111" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="168">one</text><text x="200" y="272" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">AFRICA</text><text x="200" y="338" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">FORUMS</text></svg></div>
     <div><b>OAF Connect · Admin</b><small id="adEvent">—</small></div>
-    <small style="color:#999;margin-left:8px">build 30</small>
+    <small style="color:#999;margin-left:8px">build 31</small>
     <div class="right">
       <span class="langtog" onclick="adToggleLang()"><b id="lFr">FR</b><b id="lEn">EN</b></span>
       <a class="btn yellow" href="index.html" id="openApp">Voir l'app ↗</a>
@@ -113,6 +113,16 @@
         <div id="attList"></div>
       </div>
       <div class="panel"><h3 id="peSpoT">Partenaires</h3><div class="desc" id="peSpoS">Cliquez « Logo » pour téléverser le logo d'un partenaire.</div><div id="spoList"></div></div>
+      <div class="panel"><h3 id="peInvT">✉️ Inviter par e-mail</h3>
+        <div class="desc" id="peInvS">Collez les adresses (une par ligne, ou séparées par des virgules). Chacun reçoit une invitation avec le lien de l'app.</div>
+        <div class="field"><textarea id="invEmails" rows="6" placeholder="alice@exemple.com&#10;bob@exemple.com" style="width:100%;box-sizing:border-box;padding:11px 13px;border:1px solid var(--line);border-radius:12px;font-size:14px;font-family:inherit"></textarea></div>
+        <div class="grid2">
+          <div class="field"><label id="fInvLink">Lien de l'app</label><input id="invUrl" placeholder="https://oneafricaforums.com" value="https://oneafricaforums.com" /></div>
+          <div class="field"><label id="fInvFrom">Expéditeur</label><input id="invFrom" placeholder="OneAfricaForums &lt;onboarding@resend.dev&gt;" value="OneAfricaForums <onboarding@resend.dev>" /></div>
+        </div>
+        <button class="btn solid" onclick="adSendInvites()" id="invBtn">📨 Envoyer les invitations</button>
+        <div class="desc" id="invHint" style="margin-top:8px">Sans domaine vérifié dans Resend, l'envoi de test ne fonctionne que vers votre propre adresse. Vérifiez <b>oneafricaforums.com</b> dans Resend pour envoyer à tous.</div>
+      </div>
     </div>
 
     <!-- SETTINGS -->
