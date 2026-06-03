@@ -216,39 +216,34 @@ function adEditSession(id){
   $('#sRoom').value=(s.room&&s.room.fr)||''; $('#sRoomEn').value=(s.room&&s.room.en)||'';
   $('#sTrack').value=(s.track&&s.track.fr)||''; $('#sTrackEn').value=(s.track&&s.track.en)||'';
   $('#pAddBtn').textContent=a('pUpdBtn'); $('#pCancelBtn').style.display='';
+  lineupDraft=(s.lineup||[]).map(l=>({id:String(l.id),role:l.role}));
   renderLineupPicker(s);
   const top=$('#pAddT'); if(top&&top.scrollIntoView) top.scrollIntoView({behavior:'smooth',block:'start'});
 }
+let lineupDraft=[], lineupEditing=false;
 function renderLineupPicker(s){
   const box=$('#sLineup'); if(!box) return;
-  if(!s){ box.innerHTML=`<div class="desc">${lang==='fr'?'Enregistrez la séance, puis cliquez ✎ dessus pour affecter les intervenants.':'Save the session, then click ✎ to assign speakers.'}</div>`; return; }
+  if(!s){ lineupEditing=false; lineupDraft=[]; box.innerHTML=`<div class="desc">${lang==='fr'?'Enregistrez la séance, puis cliquez ✎ dessus pour ajouter ses intervenants.':'Save the session, then click ✎ to add its speakers.'}</div>`; return; }
+  lineupEditing=true;
   const spk=OAF.speakers();
   if(!spk.length){ box.innerHTML=`<div class="desc">${lang==='fr'?'Ajoutez d’abord des intervenants (onglet Personnes).':'Add speakers first (People tab).'}</div>`; return; }
-  const lu={}; (s.lineup||[]).forEach(l=>lu[String(l.id)]=l.role);
-  const rows=spk.map(p=>{ const r=lu[String(p.id)]; const on=!!r; const mod=r==='moderator';
-    return `<div class="li luRow" data-row="${p.id}" style="gap:8px;${on?'':'opacity:.45'}">
-      <input type="checkbox" class="luChk" data-id="${p.id}" ${on?'checked':''} onchange="luToggle('${p.id}')" style="width:18px;height:18px;flex:none">
-      <div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div>
-      <button type="button" class="btn ${mod?'solid':''} luMod" data-mod="${p.id}" onclick="luSetMod('${p.id}')" style="padding:5px 9px;font-size:11px;${on?'':'display:none'}">⭐ ${lang==='fr'?'Modérateur':'Moderator'}</button>
-    </div>`;
+  const byId=id=>spk.find(p=>String(p.id)===String(id));
+  const rows=lineupDraft.map(l=>{ const p=byId(l.id); if(!p) return ''; const mod=l.role==='moderator';
+    return `<div class="li" style="gap:8px"><div class="m"><b>${p.name} ${mod?`<span class="tag" style="background:#111;color:#fff;font-size:9px">${lang==='fr'?'Modérateur':'Moderator'}</span>`:''}</b><small>${p.role[lang]} · ${p.country}</small></div>
+      <button type="button" class="btn ${mod?'solid':''}" onclick="luSetMod('${p.id}')" title="${lang==='fr'?'Désigner modérateur':'Set moderator'}" style="padding:5px 10px;font-size:13px">⭐</button>
+      <button type="button" class="btn danger" onclick="luRemove('${p.id}')" style="padding:5px 10px;font-size:13px">✕</button></div>`;
   }).join('');
-  box.innerHTML=`<div class="desc">${lang==='fr'?'① Cochez les intervenants de CETTE séance. ② Touchez ⭐ pour désigner le modérateur (un seul).':'① Check THIS session’s speakers. ② Tap ⭐ to set the moderator (only one).'}</div>${rows}`;
+  const assignedIds=lineupDraft.map(l=>String(l.id));
+  const avail=spk.filter(p=>!assignedIds.includes(String(p.id)));
+  const opts=`<option value="">${lang==='fr'?'＋ Ajouter un intervenant…':'＋ Add a speaker…'}</option>`+avail.map(p=>`<option value="${p.id}">${p.name} — ${p.role[lang]}</option>`).join('');
+  box.innerHTML=`${lineupDraft.length?rows:`<div class="desc">${lang==='fr'?'Aucun intervenant pour cette séance.':'No speakers for this session yet.'}</div>`}
+    <div class="field" style="margin-top:8px"><select id="luAdd" onchange="luAdd(this.value)">${opts}</select></div>
+    <div class="desc">${lang==='fr'?'⭐ = modérateur (un seul) · ✕ = retirer':'⭐ = moderator (one) · ✕ = remove'}</div>`;
 }
-function luToggle(id){
-  const chk=document.querySelector('.luChk[data-id="'+id+'"]');
-  const row=document.querySelector('.luRow[data-row="'+id+'"]');
-  const mod=document.querySelector('.luMod[data-mod="'+id+'"]');
-  const on=chk&&chk.checked;
-  if(row) row.style.opacity=on?'':'0.45';
-  if(mod){ mod.style.display=on?'':'none'; if(!on) mod.classList.remove('solid'); }
-}
-function luSetMod(id){
-  const btn=document.querySelector('.luMod[data-mod="'+id+'"]'); if(!btn) return;
-  const wasMod=btn.classList.contains('solid');
-  document.querySelectorAll('.luMod').forEach(b=>b.classList.remove('solid'));
-  if(!wasMod){ btn.classList.add('solid'); const chk=document.querySelector('.luChk[data-id="'+id+'"]'); if(chk&&!chk.checked){ chk.checked=true; luToggle(id); btn.classList.add('solid'); } }
-}
-function collectLineup(){ const out=[]; document.querySelectorAll('.luChk').forEach(chk=>{ if(chk.checked){ const id=chk.dataset.id; const mb=document.querySelector('.btn[data-mod="'+id+'"]'); out.push({speaker_id:id,role:(mb&&mb.classList.contains('solid'))?'moderator':'speaker'}); } }); return out; }
+function luAdd(id){ if(!id) return; if(!lineupDraft.some(l=>String(l.id)===String(id))) lineupDraft.push({id:String(id),role:'speaker'}); renderLineupPicker(true); }
+function luRemove(id){ lineupDraft=lineupDraft.filter(l=>String(l.id)!==String(id)); renderLineupPicker(true); }
+function luSetMod(id){ const cur=lineupDraft.find(l=>String(l.id)===String(id)); if(!cur) return; const wasMod=cur.role==='moderator'; lineupDraft.forEach(l=>l.role='speaker'); if(!wasMod) cur.role='moderator'; renderLineupPicker(true); }
+function collectLineup(){ return lineupDraft.map(l=>({speaker_id:l.id,role:l.role})); }
 async function saveLineup(sessionId){ if(!L())return; const sb=OAFAuth.client(); await sb.from('session_speakers').delete().eq('session_id',sessionId); const recs=collectLineup().map(x=>({session_id:sessionId,speaker_id:x.speaker_id,role:x.role})); if(recs.length){ const {error}=await sb.from('session_speakers').insert(recs); if(error){adToast(error.message);} } }
 async function adSaveSession(){
   const tfr=$('#sTitle').value.trim(); if(!tfr){adToast(a('needTitle'));return;}
