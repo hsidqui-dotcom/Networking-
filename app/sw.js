@@ -1,11 +1,12 @@
 /* OAF Connect — service worker (network-first: toujours la dernière version en
    ligne, repli sur le cache hors-ligne). Bump CACHE à chaque évolution majeure. */
-const CACHE = 'oaf-connect-v12';
+const CACHE = 'oaf-connect-v13';
 const ASSETS = [
   './', './index.html', './admin.html',
   './style.css', './store.js', './app.js', './admin.js',
   './config.js', './supabase.js',
-  './manifest.webmanifest', './icon.svg'
+  './manifest.webmanifest', './icon.svg',
+  './icon-180.png', './icon-192.png', './icon-512.png'
 ];
 
 self.addEventListener('install', e => {
