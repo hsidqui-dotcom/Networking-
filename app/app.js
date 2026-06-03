@@ -57,6 +57,7 @@ function show(v){
   document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.t === tabFor[v]));
   if (v !== 'thread') $('#scroll').scrollTop = 0;
   if (v !== 'session' && qaChannel){ try{ OAFAuth.client().removeChannel(qaChannel); }catch(_){} qaChannel=null; }
+  if (v === 'home') renderHome();
   if (v === 'program') renderAgenda();
   if (v === 'session') renderSessionDetail();
   if (v === 'speaker') renderSpeaker();
@@ -190,21 +191,24 @@ async function joinEvent(id){
   try{ await sb.from('event_attendees').upsert({event_id:id,profile_id:me.id},{onConflict:'event_id,profile_id',ignoreDuplicates:true}); }catch(_){}
 }
 function enterEvent(id){
-  OAF.setCurrentEvent(id); const e=OAF.currentEvent();
+  OAF.setCurrentEvent(id);
   joinEvent(id);
+  show('home');
+}
+function renderHome(){
+  const e=OAF.currentEvent(); if(!e){ show('events'); return; }
   $('#abTitle').textContent=e.name; $('#abSub').textContent=e.cityShort;
-  $('#hKicker').textContent='📍 '+e.cityShort.toUpperCase()+' · '+e.dates[lang].toUpperCase();
-  $('#hTheme').textContent=e.theme[lang]; $('#hCity').textContent=e.city;
+  $('#hKicker').textContent='📍 '+(e.cityShort||'').toUpperCase()+' · '+((e.dates&&e.dates[lang])||'').toUpperCase();
+  $('#hTheme').textContent=(e.theme&&e.theme[lang])||''; $('#hCity').textContent=e.city||'';
   $('#hTiles').innerHTML = [
     ['🗓️','tiProgram','program'],['🎤','tiSpeakers','people'],['🤝','tiPeople','people'],['📅','tiMeet','meetings'],['⭐','tiPartners','partners'],['ℹ️','tiInfo','info']
   ].map(([ic,k,v])=>`<div class="tile" onclick="show('${v}')"><div class="ic">${ic}</div><b>${t(k)}</b></div>`).join('');
   // live + matches
   const live = OAF.sessions(e.id,0).find(s=>s.track[lang].toLowerCase().includes('invest')||s.title[lang].includes('Keynote'))||OAF.sessions(e.id,0)[0];
-  $('#hLive').innerHTML = live?`<div class="card"><div class="row"><div class="av" style="background:#111;border-radius:12px">🎤</div><div class="m"><b>${live.title[lang]}</b><small>${live.room[lang]} · ${live.time}</small></div><span class="tag live">${t('live')}</span></div></div>`:'';
+  $('#hLive').innerHTML = live?`<div class="card"><div class="row"><div class="av" style="background:#111;border-radius:12px">🎤</div><div class="m"><b>${live.title[lang]}</b><small>${live.room[lang]} · ${live.time}</small></div><span class="tag live">${t('live')}</span></div></div>`:`<div class="card" style="color:var(--muted);font-size:13px">${lang==='fr'?'Le programme en direct s’affichera ici pendant le forum.':'Live sessions will appear here during the forum.'}</div>`;
   const p = OAF.attendees()[0];
   $('#hMatch').innerHTML = p ? `<div class="card"><div class="row">${avBox(p)}<div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div><div style="font-size:11.5px;color:var(--muted);margin-top:9px">🎯 ${(p.why&&p.why[lang])||''}</div><button class="btn solid" style="width:100%;margin-top:11px" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button></div>` : `<div class="card" style="color:var(--muted);font-size:13px">${lang==='fr'?'Les participants apparaîtront ici dès les premières inscriptions.':'Attendees will appear here as people sign up.'}</div>`;
   renderOnboarding();
-  show('home');
 }
 function renderDayTabs(){
   $('#dayTabs').innerHTML = OAF.days().map((d,i)=>`<button class="${i===curDay?'on':''}" onclick="setDay(${i})">${d[lang]}</button>`).join('');
