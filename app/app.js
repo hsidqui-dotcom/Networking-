@@ -554,8 +554,10 @@ function pickSlot(label){
 }
 function loadMeetings(){
   $('#meT').textContent=t('meT'); $('#meS').textContent=t('meS');
-  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ const sb=OAFAuth.client(),me=OAFAuth.user();
-    sb.from('meetings').select('*').or(`organizer.eq.${me.id},guest.eq.${me.id}`).order('created_at',{ascending:false}).then(({data,error})=>{
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ const sb=OAFAuth.client(),me=OAFAuth.user(),ev=OAF.currentEvent();
+    let q=sb.from('meetings').select('*').or(`organizer.eq.${me.id},guest.eq.${me.id}`);
+    if(ev&&ev.id!=null) q=q.eq('event_id',ev.id); // RDV du forum courant uniquement
+    q.order('created_at',{ascending:false}).then(({data,error})=>{
       if(error){ $('#meetList').innerHTML=`<div class="empty">${error.message}</div>`; renderPropose(); return; }
       myMeetings=(data||[]).map(m=>({id:m.id, incoming:String(m.guest)===String(me.id), counterId:String(m.organizer)===String(me.id)?m.guest:m.organizer, label:m.location||'', status:m.status}));
       renderMeetings();
