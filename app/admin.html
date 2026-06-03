@@ -13,7 +13,7 @@
   <div class="adbar">
     <div id="adLogo" class="oa" style="width:34px;height:34px;overflow:hidden"><svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" fill="#F2E500"/><text x="200" y="190" text-anchor="middle" fill="#111" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="168">one</text><text x="200" y="272" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">AFRICA</text><text x="200" y="338" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">FORUMS</text></svg></div>
     <div><b>OAF Connect · Admin</b><small id="adEvent">—</small></div>
-    <small style="color:#999;margin-left:8px">build 31</small>
+    <small style="color:#999;margin-left:8px">build 32</small>
     <div class="right">
       <span class="langtog" onclick="adToggleLang()"><b id="lFr">FR</b><b id="lEn">EN</b></span>
       <a class="btn yellow" href="index.html" id="openApp">Voir l'app ↗</a>
@@ -104,7 +104,7 @@
         <button class="btn" onclick="adAddSpeaker()" id="peSpkBtn">＋ Ajouter</button>
       </div>
       <div class="panel"><h3 id="peAttT">Participants</h3>
-        <div class="desc" id="peImpS">Importez une liste en masse (fichier CSV : nom, fonction, pays, intérêts).</div>
+        <div class="desc" id="peImpS">Importez votre liste en masse (CSV : nom, fonction, pays, intérêts, e-mail). L'e-mail (optionnel) permet le profil pré-rempli : à sa connexion, le participant retrouve sa fiche déjà remplie.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
           <label class="btn solid" id="peImpBtn">📥 Importer un CSV<input type="file" accept=".csv,text/csv" hidden onchange="adImportCsv(event)"></label>
           <button class="btn" onclick="adCsvTemplate()" id="peTplBtn">⬇ Modèle CSV</button>
@@ -127,6 +127,12 @@
 
     <!-- SETTINGS -->
     <div class="adpage" data-p="settings">
+      <div class="panel"><h3 id="setQrT">📱 QR code d'accès</h3>
+        <div class="desc" id="setQrS">Le moyen n°1 d'adoption sur place : affichez/imprimez ce QR (badges, kakémonos, écrans). On le scanne → l'app s'ouvre, aucune installation.</div>
+        <div class="field"><label id="fQrUrl">Lien de l'app</label><input id="qrUrl" placeholder="https://oneafricaforums.com" value="https://oneafricaforums.com" /></div>
+        <button class="btn solid" onclick="adShowQR()" id="qrBtn">Générer le QR code</button>
+        <div id="qrBox" style="text-align:center;margin-top:14px"></div>
+      </div>
       <div class="panel"><h3 id="setBrandT">Identité de l'app</h3><div class="desc" id="setBrandS">Téléversez votre logo — il s'applique partout (app + admin).</div>
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
           <div id="brandPreview" style="width:64px;height:64px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#fff"></div>

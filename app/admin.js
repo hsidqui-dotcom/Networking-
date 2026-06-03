@@ -191,14 +191,14 @@ function parseCsv(text){
   let start=0; if(/name|nom/i.test(lines[0]) && /role|fonction|pays|country/i.test(lines[0])) start=1;
   const out=[];
   for(let i=start;i<lines.length;i++){ const c=splitCsvLine(lines[i]); if(!c[0]||!c[0].trim())continue;
-    out.push({ name:c[0].trim(), role:(c[1]||'').trim(), country:(c[2]||'').trim(), interests:(c[3]||'').trim() }); }
+    out.push({ name:c[0].trim(), role:(c[1]||'').trim(), country:(c[2]||'').trim(), interests:(c[3]||'').trim(), email:(c[4]||'').trim() }); }
   return out;
 }
 function adImportCsv(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader();
   r.onload=async ()=>{ const rows=parseCsv(r.result); if(!rows.length){adToast(a('csvEmpty'));return;}
     if(L()){
       const ev=evId();
-      const recs=rows.map(x=>({event_id:ev,name:x.name,role:{fr:x.role||'',en:x.role||''},country:x.country||'🌍',interests:(x.interests||'').split(',').map(s=>s.trim()).filter(Boolean)}));
+      const recs=rows.map(x=>({event_id:ev,name:x.name,email:(x.email||'').toLowerCase()||null,role:{fr:x.role||'',en:x.role||''},country:x.country||'🌍',interests:(x.interests||'').split(',').map(s=>s.trim()).filter(Boolean)}));
       const {error}=await OAFAuth.client().from('guests').insert(recs);
       if(error){adToast(error.message);return;}
       await reloadAndRender();
@@ -208,7 +208,7 @@ function adImportCsv(e){ const f=e.target.files[0]; if(!f)return; const r=new Fi
 async function adDelGuest(gid){ if(!confirm(a('confirmDel')))return; if(L()){ const {error}=await OAFAuth.client().from('guests').delete().eq('id',gid); if(error){adToast(error.message);return;} await reloadAndRender(); adToast(a('tDel')); } }
 async function adClearGuests(){ if(!confirm(lang==='fr'?'Supprimer tous les participants importés de ce forum ?':'Delete all imported attendees of this forum?'))return; if(L()){ const {error}=await OAFAuth.client().from('guests').delete().eq('event_id',evId()); if(error){adToast(error.message);return;} await reloadAndRender(); adToast(a('tDel')); } }
 function adCsvTemplate(){
-  const csv='name,role,country,interests\nAmadou Diallo,CEO · SolarMali,🇲🇱,"Énergie, Climat"\nGrace Mwangi,Founder · AgriKenya,🇰🇪,"Agritech, Investissement"\nJoseph Banda,Investor · Lusaka Capital,🇿🇲,"Fintech, Seed"\n';
+  const csv='name,role,country,interests,email\nAmadou Diallo,CEO · SolarMali,🇲🇱,"Énergie, Climat",amadou@solarmali.com\nGrace Mwangi,Founder · AgriKenya,🇰🇪,"Agritech, Investissement",grace@agrikenya.co\nJoseph Banda,Investor · Lusaka Capital,🇿🇲,"Fintech, Seed",joseph@lusaka.capital\n';
   const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   const link=document.createElement('a'); link.href=url; link.download='participants_modele.csv'; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
 }
@@ -422,6 +422,17 @@ async function adSendInvites(){
     adToast((lang==='fr'?'Invitations envoyées : ':'Invitations sent: ')+n+' ✉️');
   }catch(e){ adToast(e.message||String(e)); }
   finally{ if(btn){ btn.disabled=false; btn.textContent='📨 '+(lang==='fr'?'Envoyer les invitations':'Send invitations'); } }
+}
+async function adShowQR(){
+  const url=($('#qrUrl').value||'').trim()||location.origin; const box=$('#qrBox'); if(!box)return;
+  box.textContent='…';
+  try{
+    const mod=await import('https://esm.sh/qrcode@1.5.3'); const QR=mod.default||mod;
+    const data=await QR.toDataURL(url,{width:480,margin:2,color:{dark:'#111111',light:'#ffffff'}});
+    box.innerHTML='<img src="'+data+'" alt="QR" style="width:240px;height:240px;border-radius:14px;border:1px solid var(--line);background:#fff"/>'
+      +'<div class="desc" style="margin-top:8px;word-break:break-all">'+url+'</div>'
+      +'<div class="desc">'+(lang==='fr'?'Appui long sur l’image pour l’enregistrer, ou imprimez cette page.':'Long-press the image to save, or print this page.')+'</div>';
+  }catch(e){ box.textContent=(lang==='fr'?'QR indisponible (hors-ligne ?) : ':'QR unavailable (offline?): ')+(e.message||e); }
 }
 function adAddSpeaker(){
   const n=$('#spkName').value.trim(); if(!n)return; const r=$('#spkRole').value||'—';

@@ -26,14 +26,28 @@ create table if not exists profiles (
 
 create or replace function handle_new_user()
 returns trigger language plpgsql security definer as $$
+declare g public.guests%rowtype;
 begin
-  insert into public.profiles (id, name, photo_url)
+  -- Profil pré-chargé correspondant à cet e-mail ? (voir preload-claim.sql)
+  begin
+    select * into g from public.guests
+    where email is not null and lower(email) = lower(new.email)
+    order by created_at limit 1;
+  exception when undefined_column then g := null; end;
+
+  insert into public.profiles (id, name, role, country, interests, looking_for, photo_url)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', split_part(new.email,'@',1)),
+    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', g.name, split_part(new.email,'@',1)),
+    coalesce(g.role, '{"fr":"","en":""}'::jsonb),
+    coalesce(g.country, '🌍'),
+    coalesce(g.interests, '{}'::text[]),
+    coalesce(g.looking_for, '{"fr":"","en":""}'::jsonb),
     coalesce(new.raw_user_meta_data->>'avatar_url', new.raw_user_meta_data->>'picture')
   )
   on conflict (id) do nothing;
+
+  if g.id is not null then delete from public.guests where id = g.id; end if;
   return new;
 end;
 $$;
@@ -203,12 +217,14 @@ create table if not exists guests (
   id uuid primary key default uuid_generate_v4(),
   event_id uuid references events(id) on delete cascade,
   name text not null,
+  email text,
   role jsonb default '{"fr":"","en":""}',
   country text default '🌍',
   interests text[] default '{}',
   looking_for jsonb default '{"fr":"","en":""}',
   created_at timestamptz default now()
 );
+create index if not exists guests_email_idx on guests (lower(email));
 alter table guests enable row level security;
 drop policy if exists "guests_read"  on guests;
 drop policy if exists "guests_admin" on guests;
