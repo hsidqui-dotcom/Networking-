@@ -19,6 +19,9 @@ Sans ça, les codes de connexion n'arrivent pas (limite + spam Supabase par déf
 - [ ] Exécuter les migrations : `add-event-info.sql`, `add-event-timing.sql`, `oauth-profile.sql`.
 - [ ] **Sécurité (obligatoire avant ouverture)** : exécuter `supabase/security-hardening.sql`
       → bloque l'auto-promotion en admin (C1) + masque les e-mails des invités (M1) + fige le search_path (M2).
+- [x] **Renforcement navigateur (P3)** : Content-Security-Policy + anti-clickjacking
+      ajoutés dans `app/index.html` et `app/admin.html` (aucune action requise, déjà en code).
+      À vérifier après déploiement : connexion, annuaire, messagerie, et QR code de la console.
 - [ ] **Contrôle d'accès** : exécuter `supabase/access-control.sql`
       → annuaire cloisonné par forum (H1) + inscription réservée aux invités/importés (H2).
       Pensez à **importer la liste des participants (avec e-mails)** AVANT d'ouvrir : seuls

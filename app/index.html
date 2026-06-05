@@ -2,6 +2,14 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
+<!-- Sécurité (P3) : Content-Security-Policy. script-src garde 'unsafe-inline' car
+     l'app repose sur des gestionnaires onclick en ligne ; la CSP reste efficace :
+     elle interdit tout script externe hors esm.sh et bloque l'exfiltration de
+     données (connect-src limité à Supabase). frame-ancestors étant ignoré en
+     balise meta, l'anti-clickjacking est assuré par le petit script ci-dessous. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' https://esm.sh; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://qxxjsqctkltnjptqdbye.supabase.co wss://qxxjsqctkltnjptqdbye.supabase.co https://esm.sh; worker-src 'self'; manifest-src 'self'; frame-src 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" />
+<meta name="referrer" content="strict-origin-when-cross-origin" />
+<script>if(self!==top){try{top.location=self.location.href}catch(e){document.documentElement.style.display='none'}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
 <title>OAF Connect</title>
 <meta name="description" content="OAF Connect — l'app de networking OneAfricaForums (prototype PWA)." />
