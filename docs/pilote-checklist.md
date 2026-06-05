@@ -17,6 +17,8 @@ Sans ça, les codes de connexion n'arrivent pas (limite + spam Supabase par déf
 ### 2. Base de données à jour
 - [ ] Exécuter `supabase/schema.sql` (si pas déjà fait) dans **SQL Editor**.
 - [ ] Exécuter les migrations : `add-event-info.sql`, `add-event-timing.sql`, `oauth-profile.sql`.
+- [ ] **Sécurité (obligatoire avant ouverture)** : exécuter `supabase/security-hardening.sql`
+      → bloque l'auto-promotion en admin (C1) + masque les e-mails des invités (M1) + fige le search_path (M2).
 - [ ] Vérifier que la sécurité (RLS) est active sur les tables.
 
 ### 3. Compte(s) organisateur

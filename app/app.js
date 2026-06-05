@@ -73,15 +73,15 @@ function renderPartners(){
   $('#prtList').innerHTML = OAF.sponsors().map(s=>`
     <div class="card"><div class="row">
       <div class="av" style="width:50px;height:50px;border-radius:13px;overflow:hidden;background:${s.logo?'#fff':s.color};color:${s.tc}">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div>
-      <div class="m"><b>${s.name}</b><small>${s.tier}</small></div>
-      <span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${s.tier}</span></div></div>`).join('');
+      <div class="m"><b>${escapeHtml(s.name)}</b><small>${escapeHtml(s.tier)}</small></div>
+      <span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${escapeHtml(s.tier)}</span></div></div>`).join('');
 }
 function renderInfo(){
   $('#ifT').textContent=t('ifT'); $('#ifS').textContent=t('ifS'); if($('#bkInfo'))$('#bkInfo').textContent=t('bkPart');
   const e=OAF.currentEvent()||{}; const inf=e.info||{};
   const row=(ic,label,val,href)=>{ if(!val) return ''; const inner=href?`<a href="${href}" style="color:var(--green,#1B998B);text-decoration:none">${escapeHtml(val)}</a>`:escapeHtml(val); return `<div class="row" style="align-items:flex-start;padding:9px 0;border-top:1px solid var(--line,#eee)"><div style="width:26px;font-size:16px">${ic}</div><div class="m"><small style="color:var(--muted)">${label}</small><b style="font-weight:600;font-size:14px">${inner}</b></div></div>`; };
   const notes=inf.notes&&inf.notes[lang];
-  let html=`<div class="card"><div class="row"><div class="m"><b style="font-size:15px">${escapeHtml(e.name||'')}</b><small>${(e.theme&&e.theme[lang])||''}</small></div></div>
+  let html=`<div class="card"><div class="row"><div class="m"><b style="font-size:15px">${escapeHtml(e.name||'')}</b><small>${escapeHtml((e.theme&&e.theme[lang])||'')}</small></div></div>
     <div style="margin-top:4px">${row('📍',t('ifVenue'),inf.venue||e.city)}${row('🗺️',t('ifAddress'),inf.address)}${row('🗓️',t('ifDates'),(e.dates&&e.dates[lang])||'')}${row('🕒',t('ifHours'),inf.hours)}</div></div>`;
   const conn=`${row('📶','Wi-Fi',inf.wifi)}${row('☎️',t('ifContact'),inf.contact,inf.contact?('tel:'+String(inf.contact).replace(/[^+0-9]/g,'')):'')}${row('✉️','Email',inf.email,inf.email?('mailto:'+inf.email):'')}${row('🆘',t('ifEmergency'),inf.emergency)}`;
   if(conn.replace(/\s/g,'')) html+=`<div class="card"><b style="font-size:13px">${t('ifContacts')}</b><div style="margin-top:4px">${conn}</div></div>`;
@@ -204,8 +204,8 @@ function renderEvents(){
   const list = OAF.events().map(e=>({e,st:evStatus(e)})).filter(x=>curFilter==='all'||x.st===curFilter).sort((a,b)=>order[a.st]-order[b.st]);
   $('#evList').innerHTML = list.length ? list.map(({e,st})=>`
     <div class="evc" onclick="enterEvent('${e.id}')">
-      <div class="top" style="background:${e.cover?`#222 url(${e.cover}) center/cover`:(e.top||tops[e.id]||'#222')}"><span class="st ${st}">${stTxt[st]}</span><b>${e.name}</b></div>
-      <div class="bd"><div class="r1">📍 ${e.city} · 🗓️ ${(e.dates&&e.dates[lang])||''}</div><div class="th">${(e.theme&&e.theme[lang])||''}</div></div>
+      <div class="top" style="background:${e.cover?`#222 url(${e.cover}) center/cover`:(e.top||tops[e.id]||'#222')}"><span class="st ${st}">${stTxt[st]}</span><b>${escapeHtml(e.name)}</b></div>
+      <div class="bd"><div class="r1">📍 ${escapeHtml(e.city)} · 🗓️ ${escapeHtml((e.dates&&e.dates[lang])||'')}</div><div class="th">${escapeHtml((e.theme&&e.theme[lang])||'')}</div></div>
     </div>`).join('') : `<div class="empty" style="color:var(--muted);font-size:13px;padding:18px;text-align:center">${lang==='fr'?'Aucun événement dans cette catégorie.':'No event in this category.'}</div>`;
 }
 function setFilter(f, btn){
@@ -234,9 +234,9 @@ function renderHome(){
   ].map(([ic,k,v])=>`<div class="tile" onclick="show('${v}')"><div class="ic">${ic}</div><b>${t(k)}</b></div>`).join('');
   // live + matches
   const live = OAF.sessions(e.id,0).find(s=>s.track[lang].toLowerCase().includes('invest')||s.title[lang].includes('Keynote'))||OAF.sessions(e.id,0)[0];
-  $('#hLive').innerHTML = live?`<div class="card"><div class="row"><div class="av" style="background:#111;border-radius:12px">🎤</div><div class="m"><b>${live.title[lang]}</b><small>${live.room[lang]} · ${live.time}</small></div><span class="tag live">${t('live')}</span></div></div>`:`<div class="card" style="color:var(--muted);font-size:13px">${lang==='fr'?'Le programme en direct s’affichera ici pendant le forum.':'Live sessions will appear here during the forum.'}</div>`;
+  $('#hLive').innerHTML = live?`<div class="card"><div class="row"><div class="av" style="background:#111;border-radius:12px">🎤</div><div class="m"><b>${escapeHtml(live.title[lang])}</b><small>${escapeHtml(live.room[lang])} · ${escapeHtml(live.time)}</small></div><span class="tag live">${t('live')}</span></div></div>`:`<div class="card" style="color:var(--muted);font-size:13px">${lang==='fr'?'Le programme en direct s’affichera ici pendant le forum.':'Live sessions will appear here during the forum.'}</div>`;
   const p = OAF.attendees()[0];
-  $('#hMatch').innerHTML = p ? `<div class="card"><div class="row">${avBox(p)}<div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div><div style="font-size:11.5px;color:var(--muted);margin-top:9px">🎯 ${(p.why&&p.why[lang])||''}</div><button class="btn solid" style="width:100%;margin-top:11px" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button></div>` : `<div class="card" style="color:var(--muted);font-size:13px">${lang==='fr'?'Les participants apparaîtront ici dès les premières inscriptions.':'Attendees will appear here as people sign up.'}</div>`;
+  $('#hMatch').innerHTML = p ? `<div class="card"><div class="row">${avBox(p)}<div class="m"><b>${escapeHtml(p.name)}</b><small>${escapeHtml(p.role[lang])} · ${escapeHtml(p.country)}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div><div style="font-size:11.5px;color:var(--muted);margin-top:9px">🎯 ${escapeHtml((p.why&&p.why[lang])||'')}</div><button class="btn solid" style="width:100%;margin-top:11px" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button></div>` : `<div class="card" style="color:var(--muted);font-size:13px">${lang==='fr'?'Les participants apparaîtront ici dès les premières inscriptions.':'Attendees will appear here as people sign up.'}</div>`;
   renderOnboarding();
 }
 function renderDayTabs(){
@@ -248,7 +248,7 @@ function setAgendaMode(m){ agendaMode=m; const a=$('#pgModeAll'),b=$('#pgModeMin
 function sesRow(s){ return `
     <div class="ses" style="cursor:pointer" onclick="openSession('${s.id}')">
       <div class="t">${s.time}<small>${s.dur}</small></div>
-      <div class="b"><b>${s.title[lang]}</b><small>${s.room[lang]}</small><br><span class="trk" style="background:${s.color}1f;color:${s.color}">${s.track[lang]}</span>${s.lineup&&s.lineup.length?`<span class="trk" style="background:#1113;color:#444">🎤 ${s.lineup.length}</span>`:''}</div>
+      <div class="b"><b>${escapeHtml(s.title[lang])}</b><small>${escapeHtml(s.room[lang])}</small><br><span class="trk" style="background:${s.color}1f;color:${s.color}">${escapeHtml(s.track[lang])}</span>${s.lineup&&s.lineup.length?`<span class="trk" style="background:#1113;color:#444">🎤 ${s.lineup.length}</span>`:''}</div>
       <button class="star ${OAF.isBookmarked(s.id)?'on':''}" onclick="event.stopPropagation();bm('${s.id}',this)">${OAF.isBookmarked(s.id)?'★':'☆'}</button>
     </div>`; }
 function renderAgenda(){
@@ -286,12 +286,12 @@ function renderSessionDetail(){
   const booked=OAF.isBookmarked(s.id);
   const lineup=(s.lineup||[]).map(l=>({sp:speakerById(l.id),role:l.role})).filter(x=>x.sp);
   const mods=lineup.filter(x=>x.role==='moderator'), spks=lineup.filter(x=>x.role!=='moderator');
-  const card=x=>`<div class="card" style="cursor:pointer" onclick="openSpeaker('${x.sp.id}')"><div class="row">${avBox(x.sp)}<div class="m"><b>${x.sp.name} ${x.role==='moderator'?`<span class="tag" style="background:#111;color:#fff;font-size:9px">${lang==='fr'?'Modérateur':'Moderator'}</span>`:''}</b><small>${x.sp.role[lang]} · ${x.sp.country}</small></div><span style="color:var(--muted)">›</span></div></div>`;
+  const card=x=>`<div class="card" style="cursor:pointer" onclick="openSpeaker('${x.sp.id}')"><div class="row">${avBox(x.sp)}<div class="m"><b>${escapeHtml(x.sp.name)} ${x.role==='moderator'?`<span class="tag" style="background:#111;color:#fff;font-size:9px">${lang==='fr'?'Modérateur':'Moderator'}</span>`:''}</b><small>${escapeHtml(x.sp.role[lang])} · ${escapeHtml(x.sp.country)}</small></div><span style="color:var(--muted)">›</span></div></div>`;
   box.innerHTML=`
     <div class="card">
-      <span class="trk" style="background:${s.color}1f;color:${s.color}">${s.track[lang]}</span>
-      <h2 style="margin:8px 0 4px;font-size:19px">${s.title[lang]}</h2>
-      <div style="color:var(--muted);font-size:13px">🕒 ${s.time} · ${s.dur} &nbsp;&nbsp; 📍 ${s.room[lang]}</div>
+      <span class="trk" style="background:${s.color}1f;color:${s.color}">${escapeHtml(s.track[lang])}</span>
+      <h2 style="margin:8px 0 4px;font-size:19px">${escapeHtml(s.title[lang])}</h2>
+      <div style="color:var(--muted);font-size:13px">🕒 ${escapeHtml(s.time)} · ${escapeHtml(s.dur)} &nbsp;&nbsp; 📍 ${escapeHtml(s.room[lang])}</div>
       ${(s.desc&&s.desc[lang])?`<p style="font-size:13.5px;line-height:1.5;margin-top:10px">${escapeHtml(s.desc[lang])}</p>`:''}
       <button class="btn ${booked?'':'solid'}" style="width:100%;margin-top:12px" onclick="bmDetail('${s.id}')">${booked?'★ '+(lang==='fr'?'Dans mon agenda':'In my agenda'):'☆ '+(lang==='fr'?'Ajouter à mon agenda':'Add to my agenda')}</button>
     </div>
@@ -307,7 +307,7 @@ function renderSessionDetail(){
 function renderSpeaker(){
   const sp=speakerById(curSpeaker); const box=$('#speakerDetail'); if(!box) return;
   if(!sp){ box.innerHTML=`<div class="empty">${t('empty')}</div>`; return; }
-  box.innerHTML=`<div class="card"><div class="row">${avBox(sp,'width:64px;height:64px;font-size:22px')}<div class="m"><b style="font-size:17px">${sp.name}</b><small>${sp.role[lang]} · ${sp.country}</small></div></div>${(sp.bio&&sp.bio[lang])?`<p style="font-size:13.5px;line-height:1.55;margin-top:12px">${escapeHtml(sp.bio[lang])}</p>`:`<p style="color:var(--muted);font-size:13px;margin-top:12px">${lang==='fr'?'Biographie à venir.':'Bio coming soon.'}</p>`}</div>`;
+  box.innerHTML=`<div class="card"><div class="row">${avBox(sp,'width:64px;height:64px;font-size:22px')}<div class="m"><b style="font-size:17px">${escapeHtml(sp.name)}</b><small>${escapeHtml(sp.role[lang])} · ${escapeHtml(sp.country)}</small></div></div>${(sp.bio&&sp.bio[lang])?`<p style="font-size:13.5px;line-height:1.55;margin-top:12px">${escapeHtml(sp.bio[lang])}</p>`:`<p style="color:var(--muted);font-size:13px;margin-top:12px">${lang==='fr'?'Biographie à venir.':'Bio coming soon.'}</p>`}</div>`;
 }
 async function loadQA(){
   const box=$('#qaList'); if(!box) return;
@@ -358,7 +358,7 @@ function renderRequests(){
   const box=$('#reqList'); if(!box) return;
   if(!incomingReqs.length){ box.innerHTML=''; return; }
   box.innerHTML = `<div class="sec"><b>${t('reqTitle')}</b></div>` + incomingReqs.map(r=>`
-    <div class="card"><div class="row"><div class="av" style="background:#111">${ini(r.name||'?')}</div><div class="m"><b>${r.name||'—'}</b><small>${r.role||''}</small></div>
+    <div class="card"><div class="row"><div class="av" style="background:#111">${ini(r.name||'?')}</div><div class="m"><b>${escapeHtml(r.name||'—')}</b><small>${escapeHtml(r.role||'')}</small></div>
     <button class="btn solid" style="padding:8px 12px" onclick="acceptReq('${r.id}')">${t('accept')}</button></div></div>`).join('');
 }
 function acceptReq(id){
@@ -375,8 +375,8 @@ function renderPeople(){
     const actions = p.guest
       ? `<div style="font-size:11px;color:var(--muted);margin-top:10px;font-style:italic">${lang==='fr'?'📇 Profil importé — networking dès son inscription':'📇 Imported profile — networking once they sign in'}</div>`
       : `<div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button><button class="btn" onclick="openThread('${p.id}')" style="padding:11px 14px">💬</button><button class="btn" onclick="openPropose('${p.id}')" style="padding:11px 14px">📅</button></div>`;
-    return `<div class="card"><div class="row">${avBox(p)}<div class="m"><b>${p.name}</b><small>${p.role[lang]} · ${p.country}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div>
-    <div style="font-size:11px;color:var(--muted);margin-top:8px">🎯 ${p.why[lang]}</div>
+    return `<div class="card"><div class="row">${avBox(p)}<div class="m"><b>${escapeHtml(p.name)}</b><small>${escapeHtml(p.role[lang])} · ${escapeHtml(p.country)}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px">🎯 ${escapeHtml(p.why[lang])}</div>
     ${actions}</div>`;
   }).join('');
 }
@@ -384,7 +384,7 @@ function doConnect(id,btn){if(String(id).indexOf('g_')===0){toast(lang==='fr'?"C
   if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){const sb=OAFAuth.client(),me=OAFAuth.user();if(me) sb.from('connections').upsert({requester:me.id,addressee:id,status:'pending'}).then(()=>{},()=>{});}}
 function renderNotif(){
   const list = OAF.notifications();
-  $('#ntList').innerHTML = list.length ? list.map(n=>`<div class="notif"><div class="ni">${n.icon||'🔔'}</div><div><b>${n.title[lang]||n.title.en||n.title}</b><small>${timeAgo(n.ts)}</small></div></div>`).join('') : `<div class="empty">${t('empty')}</div>`;
+  $('#ntList').innerHTML = list.length ? list.map(n=>`<div class="notif"><div class="ni">${n.icon||'🔔'}</div><div><b>${escapeHtml(n.title[lang]||n.title.en||n.title)}</b><small>${timeAgo(n.ts)}</small></div></div>`).join('') : `<div class="empty">${t('empty')}</div>`;
 }
 function timeAgo(ts){const m=Math.round((Date.now()-ts)/60000);if(m<1)return lang==='fr'?'à l’instant':'just now';if(m<60)return (lang==='fr'?'il y a ':'')+m+' min'+(lang==='fr'?'':' ago');const h=Math.round(m/60);return (lang==='fr'?'il y a ':'')+h+' h'+(lang==='fr'?'':' ago');}
 
@@ -434,7 +434,7 @@ async function hydrate(){
       sb.from('connections').select('addressee').eq('requester',me.id),
       sb.from('profiles').select('*').eq('is_visible',true),
       sb.from('event_attendees').select('event_id,profile_id'),
-      sb.from('guests').select('*'),
+      sb.from('guests').select('id,event_id,name,role,country,interests,looking_for'),
       sb.from('session_speakers').select('session_id,speaker_id,role')
     ]);
     if(ev.error) throw ev.error;
@@ -544,7 +544,7 @@ function renderConversations(){
     if(error){ box.innerHTML=`<div class="empty">${error.message}</div>`; return; }
     const seen={}, convs=[];
     (data||[]).forEach(m=>{ const other=m.sender===me.id?m.recipient:m.sender; if(!seen[other]){ seen[other]=1; convs.push({id:other,last:m.body}); } });
-    box.innerHTML = convs.length ? convs.map(c=>`<div class="card" onclick="openThread('${c.id}')" style="cursor:pointer"><div class="row"><div class="av" style="background:#111">${ini(nameOf(c.id))}</div><div class="m"><b>${nameOf(c.id)}</b><small>${c.last}</small></div></div></div>`).join('') : `<div class="empty" style="color:var(--muted);font-size:13px;padding:14px">${t('chEmpty')}</div>`;
+    box.innerHTML = convs.length ? convs.map(c=>`<div class="card" onclick="openThread('${c.id}')" style="cursor:pointer"><div class="row"><div class="av" style="background:#111">${ini(nameOf(c.id))}</div><div class="m"><b>${escapeHtml(nameOf(c.id))}</b><small>${escapeHtml(c.last)}</small></div></div></div>`).join('') : `<div class="empty" style="color:var(--muted);font-size:13px;padding:14px">${t('chEmpty')}</div>`;
   });
 }
 function subscribeChat(){
@@ -589,7 +589,7 @@ function openPropose(id){ if(String(id).indexOf('g_')===0){toast(lang==='fr'?"Ce
 function renderPropose(){
   const box=$('#meetPropose'); if(!box) return;
   if(!proposeTarget){ box.innerHTML=''; return; }
-  box.innerHTML=`<div class="card"><b style="font-size:13px">${t('meProposeT')} ${nameOf(proposeTarget)}</b>
+  box.innerHTML=`<div class="card"><b style="font-size:13px">${t('meProposeT')} ${escapeHtml(nameOf(proposeTarget))}</b>
     <div style="font-size:12px;color:var(--muted);margin:6px 0 8px">${t('meSlot')}</div>
     <div style="display:flex;gap:7px;flex-wrap:wrap">${slots().map(s=>`<button class="btn" onclick="pickSlot('${s.replace(/'/g,'')}')">${s}</button>`).join('')}</div></div>`;
 }
@@ -618,9 +618,9 @@ function renderMeetings(){
   renderPropose();
   const inc=myMeetings.filter(m=>m.incoming && m.status==='pending');
   const wrap=$('#meetReqWrap');
-  wrap.innerHTML = inc.length ? `<div class="sec"><b>${t('meReqT')}</b></div>`+inc.map(m=>`<div class="card"><div class="row"><div class="av" style="background:#111">${ini(nameOf(m.counterId))}</div><div class="m"><b>${nameOf(m.counterId)}</b><small>${m.label}</small></div></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="meetAct('${m.id}','confirmed')">${t('accept')}</button><button class="btn" onclick="meetAct('${m.id}','declined')">${t('decline')}</button></div></div>`).join('') : '';
+  wrap.innerHTML = inc.length ? `<div class="sec"><b>${t('meReqT')}</b></div>`+inc.map(m=>`<div class="card"><div class="row"><div class="av" style="background:#111">${ini(nameOf(m.counterId))}</div><div class="m"><b>${escapeHtml(nameOf(m.counterId))}</b><small>${escapeHtml(m.label)}</small></div></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="meetAct('${m.id}','confirmed')">${t('accept')}</button><button class="btn" onclick="meetAct('${m.id}','declined')">${t('decline')}</button></div></div>`).join('') : '';
   const rest=myMeetings.filter(m=>!(m.incoming && m.status==='pending'));
-  $('#meetList').innerHTML = rest.length ? rest.map(m=>`<div class="card"><div class="row"><div class="av" style="background:#1B998B">${ini(nameOf(m.counterId))}</div><div class="m"><b>${nameOf(m.counterId)}</b><small>${m.label}</small></div>${statusTag(m.status)}</div></div>`).join('') : `<div class="empty" style="color:var(--muted);font-size:13px;padding:14px">${t('meEmpty')}</div>`;
+  $('#meetList').innerHTML = rest.length ? rest.map(m=>`<div class="card"><div class="row"><div class="av" style="background:#1B998B">${ini(nameOf(m.counterId))}</div><div class="m"><b>${escapeHtml(nameOf(m.counterId))}</b><small>${escapeHtml(m.label)}</small></div>${statusTag(m.status)}</div></div>`).join('') : `<div class="empty" style="color:var(--muted);font-size:13px;padding:14px">${t('meEmpty')}</div>`;
 }
 function meetAct(id,status){
   if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ OAFAuth.client().from('meetings').update({status}).eq('id',id).then(({error})=>{ if(error){toast(error.message);return;} loadMeetings(); toast(status==='confirmed'?t('tMeetOk'):t('tMeetNo')); }); }

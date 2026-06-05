@@ -3,7 +3,7 @@
    sur le cache uniquement hors-ligne. Mise à jour automatique : le nouveau
    worker prend le contrôle immédiatement et la page se recharge toute seule
    (voir l'enregistrement dans index.html). Bump CACHE à chaque évolution. */
-const CACHE = 'oaf-connect-v34';
+const CACHE = 'oaf-connect-v35';
 const ASSETS = [
   './', './index.html', './admin.html',
   './style.css', './store.js', './app.js', './admin.js',
@@ -32,13 +32,19 @@ self.addEventListener('message', e => { if (e.data === 'skipWaiting') self.skipW
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Réseau d'abord, en CONTOURNANT le cache HTTP du navigateur pour nos propres
-  // fichiers (no-store) : iOS/Safari sert parfois un ancien .js depuis son cache
-  // HTTP même si le HTML est à jour, ce qui mélange ancien et nouveau code. On
-  // force donc une vraie requête réseau, on met notre cache à jour, et on ne sert
-  // le cache que si le réseau est réellement indisponible (hors-ligne).
   const sameOrigin = new URL(e.request.url).origin === self.location.origin;
-  const req = sameOrigin ? new Request(e.request, { cache: 'no-store' }) : e.request;
+  // SÉCURITÉ : on ne met en cache QUE nos propres fichiers (même origine). Les
+  // réponses de l'API (Supabase : profils, messages, RDV…) ne sont JAMAIS mises
+  // en cache, pour éviter qu'une donnée personnelle reste lisible après
+  // déconnexion sur un appareil partagé. Le cross-origin passe directement au
+  // réseau, sans interception.
+  if (!sameOrigin) return;
+  // Réseau d'abord, en CONTOURNANT le cache HTTP du navigateur (no-store) :
+  // iOS/Safari sert parfois un ancien .js même si le HTML est à jour, ce qui
+  // mélange ancien et nouveau code. On force une vraie requête réseau, on met
+  // notre cache à jour, et on ne sert le cache que si le réseau est réellement
+  // indisponible (hors-ligne).
+  const req = new Request(e.request, { cache: 'no-store' });
   e.respondWith(
     fetch(req).then(res => {
       const copy = res.clone();

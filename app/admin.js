@@ -39,6 +39,10 @@ let lang = OAF.lang();
 const a = k => (AL[lang] && AL[lang][k]) || AL.en[k] || k;
 const ini = n => n.replace(/Dr\.\s|Fmr\.\s/,'').split(' ').map(x=>x[0]).slice(0,2).join('');
 const $ = s => document.querySelector(s);
+// Neutralise le HTML des champs saisis par les participants (nom, fonction…)
+// AVANT injection via innerHTML : empêche toute exécution de code (XSS) dans la
+// console organisateur, cible la plus sensible.
+const escapeHtml = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let page = 'dash';
 
 function adToast(m){const el=$('#adToast');el.textContent=m;el.classList.add('on');clearTimeout(adToast._t);adToast._t=setTimeout(()=>el.classList.remove('on'),2200);}
@@ -75,18 +79,18 @@ function renderProgram(){
   let html='';
   days.forEach((d,i)=>{const ss=OAF.sessions(OAF.currentEvent().id,i);if(!ss.length)return;
     html+=`<div style="font-weight:800;font-size:13px;margin:12px 0 8px">${d[lang]}</div>`;
-    html+=ss.map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.color}">🗓️</div><div class="m"><b>${s.time} · ${s.title[lang]}</b><small>${s.room[lang]} · ${s.track[lang]} · ${s.dur}</small></div><button class="btn" onclick="adEditSession('${s.id}')" title="Modifier / Edit">✎</button><button class="btn danger" onclick="adDelSession('${s.id}')">✕</button></div>`).join('');
+    html+=ss.map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.color}">🗓️</div><div class="m"><b>${escapeHtml(s.time)} · ${escapeHtml(s.title[lang])}</b><small>${escapeHtml(s.room[lang])} · ${escapeHtml(s.track[lang])} · ${escapeHtml(s.dur)}</small></div><button class="btn" onclick="adEditSession('${s.id}')" title="Modifier / Edit">✎</button><button class="btn danger" onclick="adDelSession('${s.id}')">✕</button></div>`).join('');
   });
   $('#progList').innerHTML=html||`<div class="empty">${a('empty')}</div>`;
 }
 function renderNotifAdmin(){
   const list=OAF.notifications();
-  $('#notifList').innerHTML=list.length?list.map(n=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:#FFF4BF;color:#111">${n.icon||'🔔'}</div><div class="m"><b>${n.title[lang]||n.title.en||n.title}</b><small>${new Date(n.ts).toLocaleString()}</small></div></div>`).join(''):`<div class="empty">${a('empty')}</div>`;
+  $('#notifList').innerHTML=list.length?list.map(n=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:#FFF4BF;color:#111">${n.icon||'🔔'}</div><div class="m"><b>${escapeHtml(n.title[lang]||n.title.en||n.title)}</b><small>${new Date(n.ts).toLocaleString()}</small></div></div>`).join(''):`<div class="empty">${a('empty')}</div>`;
 }
 function renderPeople(){
-  $('#spkList').innerHTML=OAF.speakers().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${s.color}">${ini(s.name)}</div><div class="m"><b>${s.name}</b><small>${s.role[lang]} · ${s.country}</small></div><button class="btn danger" onclick="adDelSpeaker('${s.id}')">✕</button></div>`).join('');
-  $('#attList').innerHTML=OAF.attendees().map(p=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${p.color}">${ini(p.name)}</div><div class="m"><b>${p.name}${p.guest?' <span class="tag" style="font-size:9px">importé</span>':''}</b><small>${p.role[lang]} · ${p.country}</small></div><span class="tag match">${p.score}</span>${p.guest?`<button class="btn danger" onclick="adDelGuest('${p.gid}')">✕</button>`:''}</div>`).join('');
-  $('#spoList').innerHTML=OAF.sponsors().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.logo?'#fff':s.color};color:${s.tc};overflow:hidden">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div><div class="m"><b>${s.name}</b></div><label class="btn" style="padding:6px 10px;font-size:12px;margin-right:6px">${a('sponsorLogoBtn')}<input type="file" accept="image/*" hidden onchange="adSponsorLogo(event,${s.id})"></label><span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${s.tier}</span></div>`).join('');
+  $('#spkList').innerHTML=OAF.speakers().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${s.color}">${ini(s.name)}</div><div class="m"><b>${escapeHtml(s.name)}</b><small>${escapeHtml(s.role[lang])} · ${escapeHtml(s.country)}</small></div><button class="btn danger" onclick="adDelSpeaker('${s.id}')">✕</button></div>`).join('');
+  $('#attList').innerHTML=OAF.attendees().map(p=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${p.color}">${ini(p.name)}</div><div class="m"><b>${escapeHtml(p.name)}${p.guest?' <span class="tag" style="font-size:9px">importé</span>':''}</b><small>${escapeHtml(p.role[lang])} · ${escapeHtml(p.country)}</small></div><span class="tag match">${p.score}</span>${p.guest?`<button class="btn danger" onclick="adDelGuest('${p.gid}')">✕</button>`:''}</div>`).join('');
+  $('#spoList').innerHTML=OAF.sponsors().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.logo?'#fff':s.color};color:${s.tc};overflow:hidden">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div><div class="m"><b>${escapeHtml(s.name)}</b></div><label class="btn" style="padding:6px 10px;font-size:12px;margin-right:6px">${a('sponsorLogoBtn')}<input type="file" accept="image/*" hidden onchange="adSponsorLogo(event,${s.id})"></label><span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${escapeHtml(s.tier)}</span></div>`).join('');
 }
 const DEFAULT_LOGO='<svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" fill="#F2E500"/><text x="200" y="190" text-anchor="middle" fill="#111" font-family="\'Arial Black\',Arial,sans-serif" font-weight="900" font-size="168">one</text><text x="200" y="272" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">AFRICA</text><text x="200" y="338" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">FORUMS</text></svg>';
 const logoMarkup=d=>d?`<img src="${d}" style="width:100%;height:100%;object-fit:cover">`:DEFAULT_LOGO;
@@ -247,13 +251,13 @@ function renderLineupPicker(s){
   if(!spk.length){ box.innerHTML=`<div class="desc">${lang==='fr'?'Ajoutez d’abord des intervenants (onglet Personnes).':'Add speakers first (People tab).'}</div>`; return; }
   const byId=id=>spk.find(p=>String(p.id)===String(id));
   const rows=lineupDraft.map(l=>{ const p=byId(l.id); if(!p) return ''; const mod=l.role==='moderator';
-    return `<div class="li" style="gap:8px"><div class="m"><b>${p.name} ${mod?`<span class="tag" style="background:#111;color:#fff;font-size:9px">${lang==='fr'?'Modérateur':'Moderator'}</span>`:''}</b><small>${p.role[lang]} · ${p.country}</small></div>
+    return `<div class="li" style="gap:8px"><div class="m"><b>${escapeHtml(p.name)} ${mod?`<span class="tag" style="background:#111;color:#fff;font-size:9px">${lang==='fr'?'Modérateur':'Moderator'}</span>`:''}</b><small>${escapeHtml(p.role[lang])} · ${escapeHtml(p.country)}</small></div>
       <button type="button" class="btn ${mod?'solid':''}" onclick="luSetMod('${p.id}')" title="${lang==='fr'?'Désigner modérateur':'Set moderator'}" style="padding:5px 10px;font-size:13px">⭐</button>
       <button type="button" class="btn danger" onclick="luRemove('${p.id}')" style="padding:5px 10px;font-size:13px">✕</button></div>`;
   }).join('');
   const assignedIds=lineupDraft.map(l=>String(l.id));
   const avail=spk.filter(p=>!assignedIds.includes(String(p.id)));
-  const opts=`<option value="">${lang==='fr'?'＋ Ajouter un intervenant…':'＋ Add a speaker…'}</option>`+avail.map(p=>`<option value="${p.id}">${p.name} — ${p.role[lang]}</option>`).join('');
+  const opts=`<option value="">${lang==='fr'?'＋ Ajouter un intervenant…':'＋ Add a speaker…'}</option>`+avail.map(p=>`<option value="${p.id}">${escapeHtml(p.name)} — ${escapeHtml(p.role[lang])}</option>`).join('');
   box.innerHTML=`${lineupDraft.length?rows:`<div class="desc">${lang==='fr'?'Aucun intervenant pour cette séance.':'No speakers for this session yet.'}</div>`}
     <div class="field" style="margin-top:8px"><select id="luAdd" onchange="luAdd(this.value)">${opts}</select></div>
     <div class="desc">${lang==='fr'?'⭐ = modérateur (un seul) · ✕ = retirer':'⭐ = moderator (one) · ✕ = remove'}</div>`;
@@ -478,7 +482,7 @@ async function adminHydrate(){
       sb.from('notifications').select('*').order('created_at',{ascending:false}),
       sb.from('profiles').select('*'),
       sb.from('event_attendees').select('event_id,profile_id'),
-      sb.from('guests').select('*'),
+      sb.from('guests').select('id,event_id,name,role,country,interests,looking_for'),
       sb.from('session_speakers').select('session_id,speaker_id,role')
     ]);
     const eaMap={}; ((ea&&ea.data)||[]).forEach(r=>{ (eaMap[r.profile_id]=eaMap[r.profile_id]||[]).push(r.event_id); });
