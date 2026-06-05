@@ -45,17 +45,30 @@ create policy "guests_read" on public.guests for select using (
 --   (1) le refus des e-mails non invités ;
 --   (2) le rattachement automatique de l'invité à son forum (event_attendees).
 -- ----------------------------------------------------------------------------
+-- NB : on lit NEW via to_jsonb() et on sélectionne les colonnes invité dans des
+-- variables, pour éviter tout motif « new.id / new.email » qu'un clavier iPad
+-- transforme en lien (.id, .email, .name sont des extensions de domaine).
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
 declare
-  g         public.guests%rowtype;
-  v_allowed boolean := false;
+  j          jsonb := to_jsonb(new);
+  v_email    text  := j->>'email';
+  v_uid      uuid  := (j->>'id')::uuid;
+  v_meta     jsonb := coalesce(j->'raw_user_meta_data', '{}'::jsonb);
+  v_allowed  boolean := false;
+  v_found    boolean := false;
+  v_gname    text;
+  v_grole    jsonb;
+  v_gcountry text;
+  v_gint     text[];
+  v_glook    jsonb;
+  v_gevent   uuid;
 begin
   -- (1) Allowlist : e-mail présent dans la liste importée (guests) ?
   begin
     select exists (
       select 1 from public.guests
-      where email is not null and lower(email) = lower(new.email)
+      where email is not null and lower(email) = lower(v_email)
     ) into v_allowed;
   exception when undefined_table or undefined_column then v_allowed := false; end;
 
@@ -63,42 +76,44 @@ begin
   if not v_allowed then
     begin
       select exists (
-        select 1 from public.invites where lower(email) = lower(new.email)
+        select 1 from public.invites where lower(email) = lower(v_email)
       ) into v_allowed;
     exception when undefined_table or undefined_column then null; end;
   end if;
 
   if not v_allowed then
-    raise exception 'OAF_NOT_INVITED'
-      using hint = 'Cet e-mail n''est pas sur la liste des invités. Contactez l''organisateur.';
+    raise exception 'OAF_NOT_INVITED';
   end if;
 
   -- (2) Fiche pré-chargée correspondant à cet e-mail ?
   begin
-    select * into g from public.guests
-    where email is not null and lower(email) = lower(new.email)
+    select name, role, country, interests, looking_for, event_id
+      into v_gname, v_grole, v_gcountry, v_gint, v_glook, v_gevent
+    from public.guests
+    where email is not null and lower(email) = lower(v_email)
     order by created_at limit 1;
-  exception when undefined_column then g := null; end;
+    v_found := found;
+  exception when undefined_column then v_found := false; end;
 
   insert into public.profiles (id, name, role, country, interests, looking_for, photo_url)
   values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', g.name, split_part(new.email,'@',1)),
-    coalesce(g.role, '{"fr":"","en":""}'::jsonb),
-    coalesce(g.country, '🌍'),
-    coalesce(g.interests, '{}'::text[]),
-    coalesce(g.looking_for, '{"fr":"","en":""}'::jsonb),
-    coalesce(new.raw_user_meta_data->>'avatar_url', new.raw_user_meta_data->>'picture')
+    v_uid,
+    coalesce(v_meta->>'full_name', v_meta->>'name', v_gname, split_part(v_email, '@', 1)),
+    coalesce(v_grole, jsonb_build_object('fr','','en','')),
+    coalesce(v_gcountry, '🌍'),
+    coalesce(v_gint, array[]::text[]),
+    coalesce(v_glook, jsonb_build_object('fr','','en','')),
+    coalesce(v_meta->>'avatar_url', v_meta->>'picture')
   )
   on conflict (id) do nothing;
 
   -- Rattachement automatique au forum de l'invité + retrait du doublon.
-  if g.id is not null then
-    if g.event_id is not null then
+  if v_found then
+    if v_gevent is not null then
       insert into public.event_attendees (event_id, profile_id)
-      values (g.event_id, new.id) on conflict do nothing;
+      values (v_gevent, v_uid) on conflict do nothing;
     end if;
-    delete from public.guests where id = g.id;
+    delete from public.guests where email is not null and lower(email) = lower(v_email);
   end if;
 
   return new;
@@ -115,9 +130,13 @@ create trigger on_auth_user_created
 -- pour qu'ils se voient immédiatement dans l'annuaire cloisonné. Décommentez :
 --
 -- insert into public.event_attendees (event_id, profile_id)
--- select e.id, p.id
--- from public.profiles p
--- cross join (select id from public.events where status = 'live' order by created_at limit 1) e
+-- select ev_id, prof_id
+-- from (
+--   select
+--     (select id from public.events where status = 'live' order by created_at limit 1) as ev_id,
+--     id as prof_id
+--   from public.profiles
+-- ) s
 -- on conflict do nothing;
 
 -- ----------------------------------------------------------------------------
