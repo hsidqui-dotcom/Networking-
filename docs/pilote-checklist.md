@@ -23,6 +23,8 @@ Sans ça, les codes de connexion n'arrivent pas (limite + spam Supabase par déf
       → annuaire cloisonné par forum (H1) + inscription réservée aux invités/importés (H2).
       Pensez à **importer la liste des participants (avec e-mails)** AVANT d'ouvrir : seuls
       ces e-mails (ou ceux invités) pourront créer un compte.
+- [ ] **Messagerie sûre** : exécuter `supabase/messaging-safety.sql`
+      → blocage + anti-spam + signalements (visibles dans Console → Participants → Modération).
 - [ ] Vérifier que la sécurité (RLS) est active sur les tables.
 
 ### 3. Compte(s) organisateur

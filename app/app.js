@@ -49,6 +49,7 @@ const ini = n => n.replace(/Dr\.\s|Fmr\.\s/,'').split(' ').map(x=>x[0]).slice(0,
 const $ = s => document.querySelector(s);
 let curView = 'events', curDay = 0, curFilter = 'all', incomingReqs = [], chatWith = null, chatSubscribed = false;
 let curSession = null, curSpeaker = null, qaChannel = null, qaList = [], nameMap = {};
+let blockedIds = new Set(); // ids des contacts bloqués (dans un sens ou l'autre)
 
 function show(v){
   curView = v;
@@ -424,7 +425,7 @@ async function hydrate(){
   try{
     const palette=['#5b8def','#1B998B','#b5559a','#9a6b00','#E2622C','#13476b'];
     const tops=['linear-gradient(135deg,#1c1c1c,#000)','linear-gradient(135deg,#0f6e4f,#1B998B)','linear-gradient(135deg,#13476b,#2f7bb0)','linear-gradient(135deg,#7a3b12,#c2691e)','linear-gradient(135deg,#5a4a8a,#8a6fb5)'];
-    const [ev,se,sp,po,no,bk,cn,prof,ea,gu,ss] = await Promise.all([
+    const [ev,se,sp,po,no,bk,cn,prof,ea,gu,ss,bl] = await Promise.all([
       sb.from('events').select('*'),
       sb.from('sessions').select('*'),
       sb.from('speakers').select('*'),
@@ -435,9 +436,11 @@ async function hydrate(){
       sb.from('profiles').select('*').eq('is_visible',true),
       sb.from('event_attendees').select('event_id,profile_id'),
       sb.from('guests').select('id,event_id,name,role,country,interests,looking_for'),
-      sb.from('session_speakers').select('session_id,speaker_id,role')
+      sb.from('session_speakers').select('session_id,speaker_id,role'),
+      sb.from('blocks').select('blocker,blocked')
     ]);
     if(ev.error) throw ev.error;
+    blockedIds=new Set(); ((bl&&bl.data)||[]).forEach(b=>{ if(String(b.blocker)===String(me.id)) blockedIds.add(String(b.blocked)); if(String(b.blocked)===String(me.id)) blockedIds.add(String(b.blocker)); });
     const eaMap={}; ((ea&&ea.data)||[]).forEach(r=>{ (eaMap[r.profile_id]=eaMap[r.profile_id]||[]).push(r.event_id); });
     const ssMap={}; ((ss&&ss.data)||[]).forEach(r=>{ (ssMap[r.session_id]=ssMap[r.session_id]||[]).push({id:r.speaker_id,role:r.role}); });
     const order={live:0,upcoming:1,past:2};
@@ -472,7 +475,7 @@ async function hydrate(){
     }catch(e){ incomingReqs=[]; }
     OAF.loadServer({
       events: events.length?events:undefined,
-      sessions, speakers, sponsors, attendees, notifications,
+      sessions, speakers, sponsors, attendees: attendees.filter(a=>!blockedIds.has(String(a.id))), notifications,
       bookmarks:(bk.data||[]).map(b=>String(b.session_id)),
       connections:(cn.data||[]).map(c=>String(c.addressee)),
       currentEvent: (function(){ const c=(OAF.currentEvent()||{}).id; return (c!=null)?c:(events.length?events[0].id:undefined); })(),
@@ -546,7 +549,30 @@ function sendMsg(){
   const i=$('#msgIn'); const txt=i.value.trim(); if(!txt||!chatWith) return; i.value='';
   if($('#thread').querySelector('.empty')) $('#thread').innerHTML='';
   appendBubble('me',txt);
-  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ const sb=OAFAuth.client(),me=OAFAuth.user(); sb.from('messages').insert({sender:me.id,recipient:chatWith.id,body:txt}).then(({error})=>{ if(error) toast(error.message); }); }
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ const sb=OAFAuth.client(),me=OAFAuth.user(); sb.from('messages').insert({sender:me.id,recipient:chatWith.id,body:txt}).then(({error})=>{ if(error) toast(chatErr(error)); }); }
+}
+/* Traduit les erreurs des garde-fous messagerie (trigger serveur) en clair. */
+function chatErr(error){
+  const m=String((error&&error.message)||error||'');
+  if(/OAF_BLOCKED/i.test(m)) return lang==='fr'?'Échange indisponible avec ce contact.':'Messaging unavailable with this contact.';
+  if(/OAF_RATE/i.test(m))    return lang==='fr'?'Trop de messages — patientez un instant.':'Too many messages — please wait a moment.';
+  return m;
+}
+/* Bloquer / signaler le contact du fil ouvert (anti-abus, P2 de l'audit). */
+function blockChat(){
+  if(!chatWith) return;
+  if(!confirm(lang==='fr'?('Bloquer '+chatWith.name+' ? Vous ne recevrez plus ses messages.'):('Block '+chatWith.name+'? You will no longer receive their messages.'))) return;
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ const sb=OAFAuth.client(),me=OAFAuth.user();
+    sb.from('blocks').insert({blocker:me.id,blocked:chatWith.id}).then(({error})=>{ if(error){toast(chatErr(error));return;} blockedIds.add(String(chatWith.id)); toast(lang==='fr'?'Contact bloqué 🚫':'Contact blocked 🚫'); chatWith=null; show('chat'); hydrate(); }); }
+  else { toast(lang==='fr'?'(démo) Blocage indisponible':'(demo) Blocking unavailable'); }
+}
+function reportChat(){
+  if(!chatWith) return;
+  const reason=prompt(lang==='fr'?"Décrivez le problème (transmis à l'organisateur) :":'Describe the issue (sent to the organizer):','');
+  if(reason===null) return;
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ const sb=OAFAuth.client(),me=OAFAuth.user();
+    sb.from('reports').insert({reporter:me.id,reported:chatWith.id,reason:String(reason).slice(0,500)}).then(({error})=>{ if(error){toast(chatErr(error));return;} toast(lang==='fr'?'Signalement envoyé ✓':'Report sent ✓'); }); }
+  else { toast(lang==='fr'?'(démo) Signalement indisponible':'(demo) Reporting unavailable'); }
 }
 function renderConversations(){
   const box=$('#convList'); if(!box) return;
@@ -556,7 +582,7 @@ function renderConversations(){
   sb.from('messages').select('*').or(`sender.eq.${me.id},recipient.eq.${me.id}`).order('created_at',{ascending:false}).then(({data,error})=>{
     if(error){ box.innerHTML=`<div class="empty">${error.message}</div>`; return; }
     const seen={}, convs=[];
-    (data||[]).forEach(m=>{ const other=m.sender===me.id?m.recipient:m.sender; if(!seen[other]){ seen[other]=1; convs.push({id:other,last:m.body}); } });
+    (data||[]).forEach(m=>{ const other=m.sender===me.id?m.recipient:m.sender; if(blockedIds.has(String(other))) return; if(!seen[other]){ seen[other]=1; convs.push({id:other,last:m.body}); } });
     box.innerHTML = convs.length ? convs.map(c=>`<div class="card" onclick="openThread('${c.id}')" style="cursor:pointer"><div class="row"><div class="av" style="background:#111">${ini(nameOf(c.id))}</div><div class="m"><b>${escapeHtml(nameOf(c.id))}</b><small>${escapeHtml(c.last)}</small></div></div></div>`).join('') : `<div class="empty" style="color:var(--muted);font-size:13px;padding:14px">${t('chEmpty')}</div>`;
   });
 }

@@ -91,6 +91,30 @@ function renderPeople(){
   $('#spkList').innerHTML=OAF.speakers().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${s.color}">${ini(s.name)}</div><div class="m"><b>${escapeHtml(s.name)}</b><small>${escapeHtml(s.role[lang])} · ${escapeHtml(s.country)}</small></div><button class="btn danger" onclick="adDelSpeaker('${s.id}')">✕</button></div>`).join('');
   $('#attList').innerHTML=OAF.attendees().map(p=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${p.color}">${ini(p.name)}</div><div class="m"><b>${escapeHtml(p.name)}${p.guest?' <span class="tag" style="font-size:9px">importé</span>':''}</b><small>${escapeHtml(p.role[lang])} · ${escapeHtml(p.country)}</small></div><span class="tag match">${p.score}</span>${p.guest?`<button class="btn danger" onclick="adDelGuest('${p.gid}')">✕</button>`:''}</div>`).join('');
   $('#spoList').innerHTML=OAF.sponsors().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.logo?'#fff':s.color};color:${s.tc};overflow:hidden">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div><div class="m"><b>${escapeHtml(s.name)}</b></div><label class="btn" style="padding:6px 10px;font-size:12px;margin-right:6px">${a('sponsorLogoBtn')}<input type="file" accept="image/*" hidden onchange="adSponsorLogo(event,${s.id})"></label><span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${escapeHtml(s.tier)}</span></div>`).join('');
+  renderReports();
+}
+let adReports=[], adNames={};
+function renderReports(){
+  const box=$('#reportList'); if(!box) return;
+  const open=adReports.filter(r=>r.status==='open');
+  const list=open.length?open:adReports.slice(0,20);
+  if(!list.length){ box.innerHTML=`<div class="desc">${lang==='fr'?'Aucun signalement. 🎉':'No reports. 🎉'}</div>`; return; }
+  box.innerHTML=list.map(r=>{
+    const who=escapeHtml(adNames[r.reported]||'—'), by=escapeHtml(adNames[r.reporter]||'—');
+    const when=new Date(r.created_at).toLocaleString();
+    const done=r.status!=='open';
+    return `<div class="li" style="align-items:flex-start"><div class="m"><b>⚠️ ${who}</b>`
+      +`<small>${lang==='fr'?'signalé par':'reported by'} ${by} · ${when}${done?` · ✓ ${escapeHtml(r.status)}`:''}</small>`
+      +(r.reason?`<div style="font-size:13px;margin-top:4px;white-space:pre-line">${escapeHtml(r.reason)}</div>`:'')+`</div>`
+      +(done?'':`<button class="btn" onclick="adReportStatus('${r.id}','reviewed')">${lang==='fr'?'Traité':'Done'}</button><button class="btn" onclick="adReportStatus('${r.id}','dismissed')">${lang==='fr'?'Ignorer':'Dismiss'}</button>`)
+      +`</div>`;
+  }).join('');
+}
+async function adReportStatus(id,status){
+  if(!L())return; const {error}=await OAFAuth.client().from('reports').update({status}).eq('id',id);
+  if(error){adToast(error.message);return;}
+  const r=adReports.find(x=>String(x.id)===String(id)); if(r)r.status=status;
+  renderReports(); adToast(lang==='fr'?'Mis à jour ✓':'Updated ✓');
 }
 const DEFAULT_LOGO='<svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" fill="#F2E500"/><text x="200" y="190" text-anchor="middle" fill="#111" font-family="\'Arial Black\',Arial,sans-serif" font-weight="900" font-size="168">one</text><text x="200" y="272" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">AFRICA</text><text x="200" y="338" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">FORUMS</text></svg>';
 const logoMarkup=d=>d?`<img src="${d}" style="width:100%;height:100%;object-fit:cover">`:DEFAULT_LOGO;
@@ -474,7 +498,7 @@ async function adminHydrate(){
   try{
     const palette=['#5b8def','#1B998B','#b5559a','#9a6b00','#E2622C','#13476b'];
     const tops=['linear-gradient(135deg,#1c1c1c,#000)','linear-gradient(135deg,#0f6e4f,#1B998B)','linear-gradient(135deg,#13476b,#2f7bb0)','linear-gradient(135deg,#7a3b12,#c2691e)'];
-    const [ev,se,sp,po,no,prof,ea,gu,ss]=await Promise.all([
+    const [ev,se,sp,po,no,prof,ea,gu,ss,rep]=await Promise.all([
       sb.from('events').select('*'),
       sb.from('sessions').select('*'),
       sb.from('speakers').select('*'),
@@ -483,8 +507,11 @@ async function adminHydrate(){
       sb.from('profiles').select('*'),
       sb.from('event_attendees').select('event_id,profile_id'),
       sb.from('guests').select('id,event_id,name,role,country,interests,looking_for'),
-      sb.from('session_speakers').select('session_id,speaker_id,role')
+      sb.from('session_speakers').select('session_id,speaker_id,role'),
+      sb.from('reports').select('*').order('created_at',{ascending:false})
     ]);
+    adNames={}; ((prof&&prof.data)||[]).forEach(p=>{ adNames[p.id]=p.name||'—'; });
+    adReports=(rep&&!rep.error&&rep.data)||[];
     const eaMap={}; ((ea&&ea.data)||[]).forEach(r=>{ (eaMap[r.profile_id]=eaMap[r.profile_id]||[]).push(r.event_id); });
     const ssMap={}; ((ss&&ss.data)||[]).forEach(r=>{ (ssMap[r.session_id]=ssMap[r.session_id]||[]).push({id:r.speaker_id,role:r.role}); });
     const order={live:0,upcoming:1,past:2};

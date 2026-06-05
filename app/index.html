@@ -112,7 +112,9 @@
     </section>
     <section class="view" data-v="thread">
       <button class="back" onclick="show('chat')" id="bkChat">‹ Messagerie</button>
-      <div class="row" style="margin-bottom:10px"><div class="av" id="thAv" style="background:#111;width:40px;height:40px"></div><div class="m"><b id="thName"></b></div></div>
+      <div class="row" style="margin-bottom:10px"><div class="av" id="thAv" style="background:#111;width:40px;height:40px"></div><div class="m"><b id="thName"></b></div>
+        <button class="btn" id="thReport" onclick="reportChat()" style="padding:7px 10px;font-size:12px" title="Signaler">⚠️</button>
+        <button class="btn" id="thBlock" onclick="blockChat()" style="padding:7px 10px;font-size:12px" title="Bloquer">🚫</button></div>
       <div id="thread" style="min-height:220px;padding-bottom:8px"></div>
       <div class="chatbar"><input id="msgIn" placeholder="Message…" onkeydown="if(event.key==='Enter')sendMsg()" /><button onclick="sendMsg()">➤</button></div>
     </section>
