@@ -95,6 +95,20 @@ function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('on');c
 /* ---- renders ---- */
 const DEFAULT_LOGO='<svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" fill="#F2E500"/><text x="200" y="190" text-anchor="middle" fill="#111" font-family="\'Arial Black\',Arial,sans-serif" font-weight="900" font-size="168">one</text><text x="200" y="272" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">AFRICA</text><text x="200" y="338" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">FORUMS</text></svg>';
 function paintLogo(){ const d=OAF.appLogo(); const el=$('#abLogo'); if(el) el.innerHTML = d?`<img src="${d}" style="width:100%;height:100%;object-fit:cover">`:DEFAULT_LOGO; }
+/* Statut administrateur (organisateur) en mode réel — défaut : simple participant. */
+let isAdmin = false;
+/* Affiche/masque les outils réservés à l'organisateur selon le mode et les droits.
+   - Mode démo : on garde tout (ce sont des outils de démonstration).
+   - Mode réel : « Réinitialiser la démo » masqué pour tous ; « Espace organisateur »
+     visible UNIQUEMENT pour les administrateurs, et sans la mention « (démo) ». */
+function applyModeUI(){
+  const live = !!(OAFAuth && OAFAuth.live && OAFAuth.live());
+  const banner=$('#pfAdminBanner'), resetCard=$('#pfResetCard'), adminLbl=$('#pfAdmin');
+  if(!live){ if(banner) banner.style.display=''; if(resetCard) resetCard.style.display=''; return; }
+  if(resetCard) resetCard.style.display='none';
+  if(banner) banner.style.display = isAdmin ? '' : 'none';
+  if(adminLbl) adminLbl.textContent = (lang==='fr' ? 'Espace organisateur' : 'Organizer space');
+}
 function renderChrome(){
   document.documentElement.lang = lang;
   paintLogo();
@@ -105,6 +119,7 @@ function renderChrome(){
   if($('#plSearch')) $('#plSearch').placeholder=t('plSearchPh');
   const seg=$('#evSeg').children; seg[0].textContent=t('segAll');seg[1].textContent=t('segLive');seg[2].textContent=t('segUp');seg[3].textContent=t('segPast');
   $('#pfLangBtn').textContent = lang==='fr'?'EN':'FR';
+  applyModeUI();
   const me=OAF.me();
   if($('#pfName')) $('#pfName').textContent = me.name||'';
   if($('#pfAvatar')) $('#pfAvatar').innerHTML = me.photo?`<img src="${me.photo}" alt="" style="width:100%;height:100%;object-fit:cover">`:ini(me.name||'· ·');
@@ -396,7 +411,7 @@ async function bootstrapAuth(){
   if(!OAFAuth || !OAFAuth.live()){ setAuthBadge(); return; }
   await OAFAuth.ready();
   const gate=$('#authGate');
-  const refresh=async ()=>{ const u=OAFAuth.user(); gate.classList.toggle('on', !u); setAuthBadge(); if(u) await hydrate(); };
+  const refresh=async ()=>{ const u=OAFAuth.user(); if(!u) isAdmin=false; gate.classList.toggle('on', !u); setAuthBadge(); if(u) await hydrate(); };
   OAFAuth.onChange(refresh); refresh();
   // Si Google/Supabase a renvoyé une erreur dans l'URL et qu'on n'est pas
   // connecté, on l'affiche sur l'écran de connexion (aide au diagnostic).
@@ -439,6 +454,7 @@ async function hydrate(){
     const notifications=(no.data||[]).map(n=>({id:n.id,icon:n.icon||'🔔',ts:new Date(n.created_at).getTime(),title:n.title||{fr:'',en:''}}));
     const profById={}; (prof.data||[]).forEach(p=>profById[p.id]=p);
     const myProf=profById[me.id] || {};
+    isAdmin = !!myProf.is_admin;   // réservé à l'organisateur (droits is_admin)
     // Récupère automatiquement nom + photo depuis Google/LinkedIn (comme Whova),
     // une seule fois : on ne touche pas un nom/une photo déjà personnalisés.
     try{
