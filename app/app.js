@@ -492,15 +492,28 @@ function authSend(){
   const email=$('#authEmail').value.trim(); if(!email)return;
   $('#authMsg').textContent='…';
   OAFAuth.sendCode(email).then(({error})=>{
-    if(error){ $('#authMsg').textContent=error.message; return; }
+    if(error){ $('#authMsg').textContent=authErrMsg(error); return; }
     $('#authStep2').style.display='block';
     $('#authMsg').textContent = lang==='fr'?'Code envoyé ✉️ — vérifiez vos e-mails.':'Code sent ✉️ — check your email.';
   });
 }
+/* Traduit une erreur d'authentification en message clair. Le serveur refuse la
+   création d'un compte non invité (trigger handle_new_user) : Supabase renvoie
+   alors une erreur générique « Database error… » qu'on remplace par un message
+   explicite « accès sur invitation ». */
+function authErrMsg(error){
+  const m=String((error&&error.message)||error||'');
+  if(/OAF_NOT_INVITED|Database error|not allowed|Signups? not allowed/i.test(m)){
+    return lang==='fr'
+      ? "Cet e-mail n'est pas sur la liste des invités. Contactez l'organisateur."
+      : 'This email is not on the guest list. Please contact the organizer.';
+  }
+  return m;
+}
 function authVerify(){
   const email=$('#authEmail').value.trim(), code=$('#authCode').value.trim();
   if(!code)return; $('#authMsg').textContent='…';
-  OAFAuth.verify(email,code).then(({error})=>{ if(error) $('#authMsg').textContent=error.message; });
+  OAFAuth.verify(email,code).then(({error})=>{ if(error) $('#authMsg').textContent=authErrMsg(error); });
 }
 function authSignOut(){ if(OAFAuth&&OAFAuth.signOut) OAFAuth.signOut(); }
 
