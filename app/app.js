@@ -398,6 +398,9 @@ async function bootstrapAuth(){
   const gate=$('#authGate');
   const refresh=async ()=>{ const u=OAFAuth.user(); gate.classList.toggle('on', !u); setAuthBadge(); if(u) await hydrate(); };
   OAFAuth.onChange(refresh); refresh();
+  // Si Google/Supabase a renvoyé une erreur dans l'URL et qu'on n'est pas
+  // connecté, on l'affiche sur l'écran de connexion (aide au diagnostic).
+  try{ const m=$('#authMsg'), err=OAFAuth.error&&OAFAuth.error(); if(err&&!OAFAuth.user()&&m) m.textContent=err; }catch(_){}
 }
 
 /* Charge le contenu réel depuis la base (mode réel). Repli silencieux sur la démo si échec. */

@@ -8,8 +8,11 @@
   <meta http-equiv="refresh" content="0; url=app/">
   <link rel="canonical" href="app/">
   <script>
-    // Redirection JS (plus rapide que le meta-refresh sur la plupart des navigateurs)
-    window.location.replace('app/');
+    // Redirection JS (plus rapide que le meta-refresh sur la plupart des navigateurs).
+    // On PRÉSERVE la query (?...) et le hash (#...) : si Google/Supabase renvoie
+    // le jeton de connexion sur la racine du site, il doit être transmis tel quel
+    // à /app/ — sinon la session serait perdue et l'utilisateur resterait déconnecté.
+    window.location.replace('app/' + window.location.search + window.location.hash);
   </script>
   <style>
     body {
