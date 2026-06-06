@@ -366,13 +366,19 @@ function acceptReq(id){
   if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ OAFAuth.client().from('connections').update({status:'accepted'}).eq('id',id).then(({error})=>{ if(error){toast(error.message);return;} incomingReqs=incomingReqs.filter(r=>String(r.id)!==String(id)); renderRequests(); toast(t('tAccepted')); }); }
   else { incomingReqs=incomingReqs.filter(r=>String(r.id)!==String(id)); renderRequests(); toast(t('tAccepted')); }
 }
+let peopleShown=60, _lastPeopleQ=null;
 function renderPeople(){
   renderRequests();
   const q=_norm(($('#plSearch')&&$('#plSearch').value)||'');
+  // Nouvelle recherche → on repart du premier paquet.
+  if(q!==_lastPeopleQ){ peopleShown=60; _lastPeopleQ=q; }
   let list=OAF.attendees();
   if(q) list=list.filter(p=>_norm(p.name+' '+((p.role&&p.role[lang])||'')+' '+(p.country||'')+' '+((p.tags||[]).join(' '))+' '+((p.look&&p.look[lang])||'')).indexOf(q)>=0);
   if(!list.length){ $('#plList').innerHTML=`<div class="empty">${t('plNone')}</div>`; return; }
-  $('#plList').innerHTML = list.map(p=>{
+  // Rendu par paquets : on ne peint que les `peopleShown` premières fiches pour
+  // éviter de figer l'écran avec des centaines/milliers de profils.
+  const slice=list.slice(0, peopleShown);
+  let html = slice.map(p=>{
     const actions = p.guest
       ? `<div style="font-size:11px;color:var(--muted);margin-top:10px;font-style:italic">${lang==='fr'?'📇 Profil importé — networking dès son inscription':'📇 Imported profile — networking once they sign in'}</div>`
       : `<div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button><button class="btn" onclick="openThread('${p.id}')" style="padding:11px 14px">💬</button><button class="btn" onclick="openPropose('${p.id}')" style="padding:11px 14px">📅</button></div>`;
@@ -380,7 +386,12 @@ function renderPeople(){
     <div style="font-size:11px;color:var(--muted);margin-top:8px">🎯 ${escapeHtml(p.why[lang])}</div>
     ${actions}</div>`;
   }).join('');
+  if(list.length>peopleShown){
+    html += `<button class="btn" style="width:100%;margin-top:6px" onclick="showMorePeople()">${lang==='fr'?'Voir plus':'Show more'} (${list.length-peopleShown})</button>`;
+  }
+  $('#plList').innerHTML = html;
 }
+function showMorePeople(){ peopleShown+=60; renderPeople(); }
 function doConnect(id,btn){if(String(id).indexOf('g_')===0){toast(lang==='fr'?"Ce participant pourra échanger dès son inscription.":'This attendee can connect once they sign in.');return;}OAF.addConnection(id);btn.textContent=t('connected');btn.disabled=true;btn.style.opacity=.7;const a=OAF.attendees().find(x=>String(x.id)===String(id));toast(t('tConnect')+(a?a.name.split(' ')[0]:''));renderChrome();
   if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){const sb=OAFAuth.client(),me=OAFAuth.user();if(me) sb.from('connections').upsert({requester:me.id,addressee:id,status:'pending'}).then(()=>{},()=>{});}}
 function renderNotif(){
