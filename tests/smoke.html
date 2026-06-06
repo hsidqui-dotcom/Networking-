@@ -9,7 +9,7 @@
   body{font-family:-apple-system,system-ui,Arial,sans-serif;margin:0;background:#111;color:#eee;padding:18px;line-height:1.5}
   h1{font-size:18px;margin:0 0 4px} .sub{color:#999;font-size:13px;margin-bottom:16px}
   .row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;border:1px solid #2a2a2a;border-radius:12px;margin-bottom:8px;background:#191919}
-  .row b{font-size:14px} .ms{font-variant-numeric:tabular-nums;font-weight:700}
+  .row b{font-size:14px} .ms{font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
   .ok{color:#36d399} .warn{color:#fbbd23} .bad{color:#f87272}
   .note{color:#888;font-size:12px;margin-top:14px}
   button{background:#F2E500;color:#111;border:0;border-radius:10px;padding:11px 16px;font-weight:800;font-size:14px;margin-top:6px}
@@ -18,55 +18,60 @@
 </head>
 <body>
 <h1>OAF Connect · Smoke test 🔎</h1>
-<div class="sub">Mesure la vitesse réelle depuis cet appareil (lecture seule). Ne teste PAS la charge — ça, c'est le vrai stress test sur ordinateur.</div>
-<div id="login">⚠️ Tu n'es pas connecté. Ouvre d'abord l'<b>app</b> (app.oneafricaforums.com), connecte-toi, puis reviens sur cette page et appuie sur « Relancer ».</div>
+<div class="sub">Mesure la vitesse réelle depuis cet appareil (lecture seule). Ne teste PAS la charge.</div>
+<div id="login">⚠️ Tu n'es pas connecté. Ouvre d'abord l'<b>app</b>, connecte-toi, puis reviens et « Relancer ».</div>
 <div id="results"></div>
 <button onclick="location.reload()">↻ Relancer</button>
-<div class="note">Vert &lt; 300 ms · Orange &lt; 800 ms · Rouge &gt; 800 ms. Les index P0 doivent rendre l'annuaire et le chat « verts ».</div>
+<div class="note">Vert &lt; 300 ms · Orange &lt; 800 ms · Rouge &gt; 800 ms.</div>
 
 <script src="../app/config.js"></script>
 <script type="module">
 const R = document.getElementById('results');
-function row(label, ms, status){
+function addPending(label){
+  const div=document.createElement('div'); div.className='row';
+  div.innerHTML=`<b>${label}</b><span class="ms warn">⏳ en cours…</span>`; R.appendChild(div); return div;
+}
+function setRow(div, ms, status){
   const cls = ms==null ? 'bad' : (ms<300?'ok':(ms<800?'warn':'bad'));
   const val = ms==null ? '—' : Math.round(ms)+' ms';
-  const div = document.createElement('div'); div.className='row';
-  div.innerHTML = `<b>${label}</b><span class="ms ${cls}">${val}${status?` · ${status}`:''}</span>`;
-  R.appendChild(div);
+  const s=div.querySelector('.ms'); s.className='ms '+cls; s.textContent=`${val}${status?` · ${status}`:''}`;
 }
-async function timed(label, promise){
-  const t0 = performance.now();
-  try { const { error } = await promise; row(label, performance.now()-t0, error?('⚠️ '+error.message):''); }
-  catch(e){ row(label, null, '❌ '+(e.message||e)); }
+function withTimeout(p, ms){
+  return Promise.race([ p, new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout '+ms+'ms')), ms)) ]);
+}
+async function timed(label, build){
+  const div=addPending(label); const t0=performance.now();
+  try { const r = await withTimeout(build, 7000); setRow(div, performance.now()-t0, r&&r.error?('⚠️ '+r.error.message):'✅'); }
+  catch(e){ setRow(div, null, '❌ '+(e.message||e)); }
 }
 (async () => {
+  let sb, me;
   try {
     const cfg = window.OAF_CONFIG || {};
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-    const sb = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY,
+    sb = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY,
       { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:false, storageKey:'oaf-auth' } });
     const { data } = await sb.auth.getSession();
-    const me = data && data.session ? data.session.user : null;
-    if (!me) { document.getElementById('login').style.display='block'; return; }
+    me = data && data.session ? data.session.user : null;
+  } catch(e){ const d=addPending('Initialisation'); setRow(d,null,'❌ '+(e.message||e)); return; }
 
-    row('Session', 0, '✅ connecté');
-    // Lectures clés (les mêmes que l'app, c'est ce qui compte pour la vitesse perçue)
-    await timed('Annuaire (profiles, 200)', sb.from('profiles').select('id,name,role,country,interests,looking_for,photo_url').eq('is_visible',true).limit(200));
-    await timed('Mes inscriptions (event_attendees)', sb.from('event_attendees').select('event_id,profile_id').eq('profile_id', me.id));
-    await timed('Mes messages (50)', sb.from('messages').select('*').or(`sender.eq.${me.id},recipient.eq.${me.id}`).order('created_at',{ascending:false}).limit(50));
-    await timed('Notifications (30)', sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(30));
+  if (!me) { document.getElementById('login').style.display='block'; return; }
+  setRow(addPending('Session'), 0, '✅ connecté');
 
-    // Temps réel : on mesure le délai jusqu'à l'état « abonné »
-    const t0 = performance.now();
-    const ch = sb.channel('smoke-'+Date.now());
-    let done=false;
-    ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`recipient=eq.${me.id}`},()=>{})
-      .subscribe((st)=>{ if(done) return;
-        if(st==='SUBSCRIBED'){ done=true; row('Temps réel (connexion)', performance.now()-t0, '✅'); sb.removeChannel(ch); }
-        else if(st==='CHANNEL_ERROR' || st==='TIMED_OUT'){ done=true; row('Temps réel (connexion)', null, '❌ '+st); }
-      });
-    setTimeout(()=>{ if(!done){ row('Temps réel (connexion)', null, '❌ timeout'); } }, 8000);
-  } catch(e){ row('Erreur', null, e.message||String(e)); }
+  await timed('Annuaire (profiles, 200)', sb.from('profiles').select('id,name,role,country,interests,looking_for,photo_url').eq('is_visible',true).limit(200));
+  await timed('Mes inscriptions (event_attendees)', sb.from('event_attendees').select('event_id,profile_id').eq('profile_id', me.id));
+  await timed('Mes messages (50)', sb.from('messages').select('*').or(`sender.eq.${me.id},recipient.eq.${me.id}`).order('created_at',{ascending:false}).limit(50));
+  await timed('Notifications (30)', sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(30));
+
+  // Temps réel : délai jusqu'à l'état « abonné »
+  const div=addPending('Temps réel (connexion)'); const t0=performance.now(); let done=false;
+  const ch = sb.channel('smoke-'+Date.now());
+  ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`recipient=eq.${me.id}`},()=>{})
+    .subscribe((st)=>{ if(done) return;
+      if(st==='SUBSCRIBED'){ done=true; setRow(div, performance.now()-t0, '✅'); sb.removeChannel(ch); }
+      else if(st==='CHANNEL_ERROR' || st==='TIMED_OUT'){ done=true; setRow(div, null, '❌ '+st); }
+    });
+  setTimeout(()=>{ if(!done){ done=true; setRow(div, null, '❌ timeout 8s'); } }, 8000);
 })();
 </script>
 </body>
