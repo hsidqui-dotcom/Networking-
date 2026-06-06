@@ -1,0 +1,13 @@
+{
+  "name": "oaf-stress",
+  "private": true,
+  "type": "module",
+  "description": "Harnais de stress test OAF Connect (staging uniquement).",
+  "scripts": {
+    "setup": "node setup-staging.mjs",
+    "teardown": "node teardown-staging.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}
