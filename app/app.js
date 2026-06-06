@@ -62,7 +62,7 @@ function show(v){
   if (v === 'program') renderAgenda();
   if (v === 'session') renderSessionDetail();
   if (v === 'speaker') renderSpeaker();
-  if (v === 'people') renderPeople();
+  if (v === 'people'){ renderPeople(); maybeRefreshDirectory(); }
   if (v === 'partners') renderPartners();
   if (v === 'info') renderInfo();
   if (v === 'notif') renderNotif();
@@ -482,6 +482,7 @@ async function hydrate(){
       me: { name: myProf.name||me.email, role: myProf.role||{fr:'Participant',en:'Attendee'}, country: myProf.country||'🌍', look: myProf.looking_for||{fr:'',en:''}, interests: myProf.interests||[], visible: myProf.is_visible!==false, photo: myProf.photo_url||null }
     });
     renderAll();
+    lastHydrate=Date.now();
     subscribeChat();
     subscribeContent();
   }catch(e){ console.warn('Hydratation Supabase échouée — données démo conservées', e); }
@@ -518,7 +519,13 @@ function authVerify(){
   if(!code)return; $('#authMsg').textContent='…';
   OAFAuth.verify(email,code).then(({error})=>{ if(error) $('#authMsg').textContent=authErrMsg(error); });
 }
-function authSignOut(){ if(OAFAuth&&OAFAuth.signOut) OAFAuth.signOut(); }
+function authSignOut(){
+  // Ferme proprement les canaux temps réel + réinitialise l'état, sinon une
+  // reconnexion laisse des abonnements fantômes (fuite de connexions Realtime).
+  try{ if(OAFAuth&&OAFAuth.client&&OAFAuth.client()) OAFAuth.client().removeAllChannels(); }catch(_){}
+  chatSubscribed=false; contentSubscribed=false; qaChannel=null; chatWith=null;
+  if(OAFAuth&&OAFAuth.signOut) OAFAuth.signOut();
+}
 
 /* ============ CHAT 1:1 ============ */
 function nameOf(id){ const a=OAF.attendees().find(x=>String(x.id)===String(id)); if(a) return a.name; return nameMap[id]||'—'; }
@@ -599,26 +606,50 @@ function subscribeChat(){
     chatSubscribed=true;
   }catch(e){ console.warn('realtime chat', e); }
 }
-let contentSubscribed=false, contentTimer=null;
+let contentSubscribed=false, contentTimer=null, lastHydrate=0;
 function subscribeContent(){
   if(contentSubscribed || !(OAFAuth&&OAFAuth.live()&&OAFAuth.client())) return;
   try{
     const sb=OAFAuth.client();
-    // Rafraîchit le contenu (programme, intervenants, partenaires, bannière, notifs,
-    // participants) dès qu'une modif admin survient — débounce pour grouper les rafales.
-    const refresh=()=>{ clearTimeout(contentTimer); contentTimer=setTimeout(()=>{ hydrate(); }, 400); };
+    // Rechargement COMPLET réservé aux modifs admin RARES (programme, intervenants,
+    // partenaires, bannière) — débounce pour grouper les rafales (ex. import CSV).
+    const refresh=()=>{ clearTimeout(contentTimer); contentTimer=setTimeout(()=>{ hydrate(); }, 1200); };
     sb.channel('content')
       .on('postgres_changes',{event:'*',schema:'public',table:'events'},refresh)
       .on('postgres_changes',{event:'*',schema:'public',table:'sessions'},refresh)
       .on('postgres_changes',{event:'*',schema:'public',table:'speakers'},refresh)
       .on('postgres_changes',{event:'*',schema:'public',table:'sponsors'},refresh)
-      .on('postgres_changes',{event:'*',schema:'public',table:'notifications'},p=>{ if(p.eventType==='INSERT'&&p.new){ const ev=OAF.currentEvent(); if(!p.new.event_id||!ev||String(p.new.event_id)===String(ev.id)){ const ti=(p.new.title&&(p.new.title[lang]||p.new.title.fr||p.new.title.en))||''; if(ti) toast('🔔 '+ti); } } refresh(); })
-      .on('postgres_changes',{event:'*',schema:'public',table:'event_attendees'},refresh)
-      .on('postgres_changes',{event:'*',schema:'public',table:'guests'},refresh)
       .on('postgres_changes',{event:'*',schema:'public',table:'session_speakers'},refresh)
+      // Notifications : mise à jour INCRÉMENTALE (on ajoute juste la ligne reçue),
+      // JAMAIS de rechargement global — c'était le principal risque de saturation
+      // quand l'admin diffuse une notif à des centaines de connectés en même temps.
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications'},addIncomingNotif)
       .subscribe();
     contentSubscribed=true;
   }catch(e){ console.warn('realtime content', e); }
+}
+// NB : event_attendees et guests ne déclenchent PLUS de rechargement temps réel
+// (cela créait une tempête de requêtes quand beaucoup rejoignaient en même temps).
+// L'annuaire se rafraîchit à la connexion et à l'ouverture de l'onglet Participants
+// (maybeRefreshDirectory), ce qui borne la charge à l'usage réel, pas aux arrivées.
+function addIncomingNotif(payload){
+  const r=payload&&payload.new; if(!r) return;
+  const notif={id:r.id, icon:r.icon||'🔔', ts:r.created_at?new Date(r.created_at).getTime():Date.now(), title:r.title||{fr:'',en:''}};
+  const arr=OAF.get().notifications;
+  if(!arr.some(n=>String(n.id)===String(notif.id))) arr.push(notif);
+  if(curView==='notif') renderNotif();
+  const ev=OAF.currentEvent();
+  if(!r.event_id || !ev || String(r.event_id)===String(ev.id)){
+    const ti=(notif.title&&(notif.title[lang]||notif.title.fr||notif.title.en))||'';
+    if(ti) toast('🔔 '+ti);
+  }
+}
+// Rafraîchit l'annuaire à la demande (ouverture de l'onglet Participants), au plus
+// une fois toutes les 20 s — évite la tempête tout en montrant les nouveaux arrivés.
+function maybeRefreshDirectory(){
+  if(!(OAFAuth&&OAFAuth.live&&OAFAuth.live()&&OAFAuth.client())) return;
+  if(Date.now()-lastHydrate < 20000) return;
+  hydrate();
 }
 
 /* ============ RENDEZ-VOUS (RDV) ============ */
