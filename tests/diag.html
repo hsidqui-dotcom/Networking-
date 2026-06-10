@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh; style-src 'self' 'unsafe-inline'; connect-src 'self' https://qxxjsqctkltnjptqdbye.supabase.co wss://qxxjsqctkltnjptqdbye.supabase.co https://esm.sh; frame-ancestors 'none'" />
+<title>OAF Connect — Diagnostic</title>
+<style>
+  body{font-family:-apple-system,system-ui,Arial,sans-serif;margin:0;background:#0c0c0c;color:#eee;padding:18px;line-height:1.6}
+  h1{font-size:17px} pre{background:#171717;border:1px solid #2a2a2a;border-radius:12px;padding:14px;font-size:14px;white-space:pre-wrap}
+  button{background:#F2E500;color:#111;border:0;border-radius:10px;padding:11px 16px;font-weight:800;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>OAF Connect · Diagnostic moteur de connexion 🔧</h1>
+<pre id="out">…</pre>
+<button onclick="location.reload()">↻ Relancer</button>
+
+<!-- On charge EXACTEMENT la même pile que l'app -->
+<script src="../app/config.js"></script>
+<script src="../app/supabase.js"></script>
+<script>
+const lines=[];
+const out=document.getElementById('out');
+function add(k,v){ lines.push(k+': '+v); out.textContent=lines.join('\n'); }
+add('1. OAF_LIVE', String(window.OAF_LIVE));
+add('2. OAF_CONFIG', window.OAF_CONFIG ? (window.OAF_CONFIG.SUPABASE_URL||'(URL vide)') : 'ABSENT ❌');
+add('3. typeof OAFAuth', typeof window.OAFAuth);
+if(window.OAFAuth){
+  add('4. OAFAuth.live()', String(OAFAuth.live && OAFAuth.live()));
+  Promise.race([
+    Promise.resolve(OAFAuth.ready && OAFAuth.ready()),
+    new Promise(r=>setTimeout(()=>r('__timeout__'),10000))
+  ]).then(c=>{
+    add('5. ready()', c==='__timeout__' ? '❌ TIMEOUT (supabase-js pas chargé)' : '✅ résolu');
+    add('6. client', (OAFAuth.client && OAFAuth.client()) ? '✅ créé' : '❌ null');
+    add('7. session', (OAFAuth.user && OAFAuth.user()) ? ('✅ '+(OAFAuth.user().email||'connecté')) : 'aucune (déconnecté)');
+    add('8. error', (OAFAuth.error && OAFAuth.error())||'(aucune)');
+    add('—', (window.OAF_LIVE && typeof OAFAuth!=='undefined' && c!=='__timeout__') ? '✅ moteur OK → l’app devrait montrer Google/LinkedIn' : '❌ moteur KO → cause ci-dessus');
+  });
+} else {
+  add('4.', 'OAFAuth ABSENT → supabase.js ne s’est pas chargé/exécuté ❌');
+}
+</script>
+</body>
+</html>
