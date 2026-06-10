@@ -504,13 +504,16 @@ function authOAuth(provider){
   OAFAuth.signInWith(provider).then(({error})=>{ if(error&&m) m.textContent=error.message; }).catch(e=>{ if(m) m.textContent=String(e&&e.message||e); });
 }
 function authSend(){
-  const email=$('#authEmail').value.trim(); if(!email)return;
-  $('#authMsg').textContent='…';
-  OAFAuth.sendCode(email).then(({error})=>{
-    if(error){ $('#authMsg').textContent=authErrMsg(error); return; }
+  const email=$('#authEmail').value.trim(); const msg=$('#authMsg');
+  if(!email){ if(msg) msg.textContent=lang==='fr'?'Entrez votre e-mail.':'Enter your email.'; return; }
+  if(msg) msg.textContent='…';
+  // Promise.resolve + .catch : aucune erreur ne doit échouer en SILENCE
+  // (sinon le bouton « semble » ne rien faire).
+  Promise.resolve(OAFAuth.sendCode(email)).then(({error})=>{
+    if(error){ if(msg) msg.textContent=authErrMsg(error); return; }
     $('#authStep2').style.display='block';
-    $('#authMsg').textContent = lang==='fr'?'Code envoyé ✉️ — vérifiez vos e-mails.':'Code sent ✉️ — check your email.';
-  });
+    if(msg) msg.textContent = lang==='fr'?'Code envoyé ✉️ — vérifiez vos e-mails.':'Code sent ✉️ — check your email.';
+  }).catch(e=>{ if(msg) msg.textContent=(lang==='fr'?'Erreur : ':'Error: ')+String((e&&e.message)||e); });
 }
 /* Traduit une erreur d'authentification en message clair. Le serveur refuse la
    création d'un compte non invité (trigger handle_new_user) : Supabase renvoie
@@ -526,9 +529,10 @@ function authErrMsg(error){
   return m;
 }
 function authVerify(){
-  const email=$('#authEmail').value.trim(), code=$('#authCode').value.trim();
-  if(!code)return; $('#authMsg').textContent='…';
-  OAFAuth.verify(email,code).then(({error})=>{ if(error) $('#authMsg').textContent=authErrMsg(error); });
+  const email=$('#authEmail').value.trim(), code=$('#authCode').value.trim(); const msg=$('#authMsg');
+  if(!code)return; if(msg) msg.textContent='…';
+  Promise.resolve(OAFAuth.verify(email,code)).then(({error})=>{ if(error && msg) msg.textContent=authErrMsg(error); })
+    .catch(e=>{ if(msg) msg.textContent=(lang==='fr'?'Erreur : ':'Error: ')+String((e&&e.message)||e); });
 }
 function authSignOut(){
   // Ferme proprement les canaux temps réel + réinitialise l'état, sinon une
