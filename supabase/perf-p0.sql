@@ -34,23 +34,16 @@ do $$ begin
 exception when undefined_table or undefined_column then null; end $$;
 
 -- ----------------------------------------------------------------------------
--- 3) SÉCURITÉ — event_attendees lisible seulement pour SES forums (S1)
---    is_my_event() est SECURITY DEFINER => contourne la RLS de event_attendees
---    et évite la récursion de politique.
+-- 3) event_attendees : lecture par tout utilisateur connecté.
+--    NB : on N'utilise PAS de politique qui relit event_attendees (ex. via une
+--    fonction is_my_event), car SECURITY DEFINER ne contourne PAS la RLS dans ce
+--    projet => récursion infinie (« stack depth limit exceeded ») qui cassait
+--    profiles/event_attendees/guests. Le cloisonnement de l'annuaire (H1) reste
+--    assuré par les politiques de profiles et guests.
 -- ----------------------------------------------------------------------------
-create or replace function public.is_my_event(eid uuid)
-returns boolean
-language sql stable security definer set search_path = public, pg_temp as $$
-  select exists (
-    select 1 from public.event_attendees
-    where profile_id = auth.uid() and event_id = eid
-  );
-$$;
-
 drop policy if exists "ea_read" on public.event_attendees;
-create policy ea_read on public.event_attendees for select using (
-  profile_id = auth.uid() or public.is_admin() or public.is_my_event(event_id)
-);
+drop function if exists public.is_my_event(uuid);
+create policy ea_read on public.event_attendees for select using (auth.role() = 'authenticated');
 
 -- ----------------------------------------------------------------------------
 -- Vérifications
