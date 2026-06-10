@@ -145,9 +145,12 @@ alter table meetings        enable row level security;
 alter table bookmarks       enable row level security;
 alter table notifications   enable row level security;
 
+-- SECURITY DEFINER : indispensable pour éviter la récursion RLS quand is_admin()
+-- est appelée DANS une politique de la table profiles (sinon « stack depth limit
+-- exceeded »). set search_path fige le chemin (sécurité).
 create or replace function is_admin()
-returns boolean language sql stable as $$
-  select coalesce((select is_admin from profiles where id = auth.uid()), false);
+returns boolean language sql stable security definer set search_path = public, pg_temp as $$
+  select coalesce((select is_admin from public.profiles where id = auth.uid()), false);
 $$;
 
 drop policy if exists "profiles_read"   on profiles;
