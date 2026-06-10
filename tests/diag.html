@@ -7,40 +7,62 @@
 <title>OAF Connect — Diagnostic</title>
 <style>
   body{font-family:-apple-system,system-ui,Arial,sans-serif;margin:0;background:#0c0c0c;color:#eee;padding:18px;line-height:1.6}
-  h1{font-size:17px} pre{background:#171717;border:1px solid #2a2a2a;border-radius:12px;padding:14px;font-size:14px;white-space:pre-wrap}
+  h1{font-size:17px} h2{font-size:14px;color:#fbbd23;margin:18px 0 6px}
+  pre{background:#171717;border:1px solid #2a2a2a;border-radius:12px;padding:14px;font-size:13.5px;white-space:pre-wrap}
   button{background:#F2E500;color:#111;border:0;border-radius:10px;padding:11px 16px;font-weight:800;margin-top:8px}
 </style>
 </head>
 <body>
-<h1>OAF Connect · Diagnostic moteur de connexion 🔧</h1>
-<pre id="out">…</pre>
+<h1>OAF Connect · Diagnostic 🔧</h1>
+<pre id="eng">…</pre>
+<h2>Test des 12 requêtes de chargement (hydrate)</h2>
+<pre id="q">en attente de la connexion…</pre>
 <button onclick="location.reload()">↻ Relancer</button>
 
-<!-- On charge EXACTEMENT la même pile que l'app -->
 <script src="../app/config.js"></script>
 <script src="../app/supabase.js"></script>
 <script>
-const lines=[];
-const out=document.getElementById('out');
-function add(k,v){ lines.push(k+': '+v); out.textContent=lines.join('\n'); }
-add('1. OAF_LIVE', String(window.OAF_LIVE));
-add('2. OAF_CONFIG', window.OAF_CONFIG ? (window.OAF_CONFIG.SUPABASE_URL||'(URL vide)') : 'ABSENT ❌');
-add('3. typeof OAFAuth', typeof window.OAFAuth);
-if(window.OAFAuth){
-  add('4. OAFAuth.live()', String(OAFAuth.live && OAFAuth.live()));
-  Promise.race([
-    Promise.resolve(OAFAuth.ready && OAFAuth.ready()),
-    new Promise(r=>setTimeout(()=>r('__timeout__'),10000))
-  ]).then(c=>{
-    add('5. ready()', c==='__timeout__' ? '❌ TIMEOUT (supabase-js pas chargé)' : '✅ résolu');
-    add('6. client', (OAFAuth.client && OAFAuth.client()) ? '✅ créé' : '❌ null');
-    add('7. session', (OAFAuth.user && OAFAuth.user()) ? ('✅ '+(OAFAuth.user().email||'connecté')) : 'aucune (déconnecté)');
-    add('8. error', (OAFAuth.error && OAFAuth.error())||'(aucune)');
-    add('—', (window.OAF_LIVE && typeof OAFAuth!=='undefined' && c!=='__timeout__') ? '✅ moteur OK → l’app devrait montrer Google/LinkedIn' : '❌ moteur KO → cause ci-dessus');
-  });
-} else {
-  add('4.', 'OAFAuth ABSENT → supabase.js ne s’est pas chargé/exécuté ❌');
-}
+const eng=document.getElementById('eng'), qbox=document.getElementById('q');
+const el=[]; function E(k,v){ el.push(k+': '+v); eng.textContent=el.join('\n'); }
+E('1. OAF_LIVE', String(window.OAF_LIVE));
+E('2. OAFAuth', typeof window.OAFAuth);
+E('3. live()', String(window.OAFAuth&&OAFAuth.live&&OAFAuth.live()));
+
+function withTimeout(p,ms){ return Promise.race([p, new Promise(r=>setTimeout(()=>r({__t:true}),ms))]); }
+const ql=[]; function Q(line){ ql.push(line); qbox.textContent=ql.join('\n'); }
+
+(async ()=>{
+  try{ await (OAFAuth.ready&&OAFAuth.ready()); }catch(e){}
+  const sb=OAFAuth.client&&OAFAuth.client(); const u=OAFAuth.user&&OAFAuth.user();
+  E('4. client', sb?'✅':'❌ null'); E('5. session', u?('✅ '+(u.email||'ok')):'❌ aucune');
+  if(!sb||!u){ qbox.textContent='❌ Pas de session → ouvre l’app, connecte-toi, reviens.'; return; }
+  const id=u.id;
+  const tests=[
+    ['events', ()=>sb.from('events').select('*')],
+    ['sessions', ()=>sb.from('sessions').select('*')],
+    ['speakers', ()=>sb.from('speakers').select('*')],
+    ['sponsors', ()=>sb.from('sponsors').select('*')],
+    ['notifications', ()=>sb.from('notifications').select('*').order('created_at',{ascending:false})],
+    ['bookmarks', ()=>sb.from('bookmarks').select('session_id').eq('profile_id',id)],
+    ['connections', ()=>sb.from('connections').select('addressee').eq('requester',id)],
+    ['profiles', ()=>sb.from('profiles').select('*').eq('is_visible',true)],
+    ['event_attendees', ()=>sb.from('event_attendees').select('event_id,profile_id')],
+    ['guests', ()=>sb.from('guests').select('id,event_id,name,role,country,interests,looking_for')],
+    ['session_speakers', ()=>sb.from('session_speakers').select('session_id,speaker_id,role')],
+    ['blocks', ()=>sb.from('blocks').select('blocker,blocked')],
+  ];
+  qbox.textContent='';
+  for(const [name,fn] of tests){
+    const t0=performance.now();
+    try{
+      const r=await withTimeout(fn(),8000);
+      if(r&&r.__t) Q('❌ '+name+' : TIMEOUT 8s');
+      else if(r&&r.error) Q('❌ '+name+' : '+r.error.message);
+      else Q('✅ '+name+' : '+((r&&r.data&&r.data.length)||0)+' lignes · '+Math.round(performance.now()-t0)+' ms');
+    }catch(e){ Q('❌ '+name+' : '+(e.message||e)); }
+  }
+  Q('—'); Q('La/les ligne(s) ❌ = la cause du retour en démo.');
+})();
 </script>
 </body>
 </html>
