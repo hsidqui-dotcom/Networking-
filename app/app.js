@@ -54,7 +54,7 @@ let blockedIds = new Set(); // ids des contacts bloqués (dans un sens ou l'autr
 function show(v){
   curView = v;
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.dataset.v === v));
-  const tabFor = { home:'home', program:'program', session:'program', speaker:'program', people:'people', notif:'chat', chat:'chat', thread:'chat', profile:'profile', events:'home', partners:'home', meetings:'home', info:'home' };
+  const tabFor = { home:'home', program:'program', session:'program', speaker:'program', people:'people', notif:'chat', chat:'chat', thread:'chat', profile:'profile', events:'home', partners:'home', partner:'home', meetings:'home', info:'home' };
   document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.t === tabFor[v]));
   if (v !== 'thread') $('#scroll').scrollTop = 0;
   if (v !== 'session' && qaChannel){ try{ OAFAuth.client().removeChannel(qaChannel); }catch(_){} qaChannel=null; }
@@ -64,18 +64,61 @@ function show(v){
   if (v === 'speaker') renderSpeaker();
   if (v === 'people'){ renderPeople(); maybeRefreshDirectory(); }
   if (v === 'partners') renderPartners();
+  if (v === 'partner') renderPartnerDetail();
   if (v === 'info') renderInfo();
   if (v === 'notif') renderNotif();
   if (v === 'chat') renderConversations();
   if (v === 'meetings') loadMeetings();
 }
+const TIER_RANK={'Platinum Partner':0,'Gold Partner':1,'Silver Partner':2,'Institutional Partner':3,'Strategic Partner':4,'Sponsor':5,'Exhibitor':6};
+function tierClass(tr){ return /platinum/i.test(tr||'')?'p':/gold/i.test(tr||'')?'gold':''; }
+function isPremium(s){ return s.featured || /platinum|gold/i.test(s.tier||''); }
 function renderPartners(){
   $('#prtT').textContent=t('prtT'); $('#prtS').textContent=t('prtS'); $('#bkPart').textContent=t('bkPart');
-  $('#prtList').innerHTML = OAF.sponsors().map(s=>`
-    <div class="card"><div class="row">
-      <div class="av" style="width:50px;height:50px;border-radius:13px;overflow:hidden;background:${s.logo?'#fff':s.color};color:${s.tc}">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div>
-      <div class="m"><b>${escapeHtml(s.name)}</b><small>${escapeHtml(s.tier)}</small></div>
-      <span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${escapeHtml(s.tier)}</span></div></div>`).join('');
+  const list=OAF.sponsors().slice().sort((a,b)=>((TIER_RANK[a.tier]??9)-(TIER_RANK[b.tier]??9))||((a.sort||0)-(b.sort||0))||String(a.name).localeCompare(String(b.name)));
+  if(!list.length){ $('#prtList').innerHTML=`<div class="empty">${t('empty')}</div>`; return; }
+  const groups=[], seen={};
+  list.forEach(s=>{ const k=s.tier||'Sponsor'; if(!seen[k]){seen[k]={tier:k,items:[]};groups.push(seen[k]);} seen[k].items.push(s); });
+  $('#prtList').innerHTML = groups.map(g=>`<div class="sec" style="margin-top:14px"><b>${escapeHtml(g.tier)}</b></div>`+
+    g.items.map(s=>{ const prem=isPremium(s); const sub=(s.desc&&s.desc[lang])||s.tier;
+      return `<div class="card" onclick="openPartner('${s.id}')" style="cursor:pointer;${prem?'border:1.5px solid var(--yellow,#F2E500);background:linear-gradient(180deg,#fffdf3,#fff)':''}"><div class="row">
+        <div class="av" style="width:${prem?'58px':'48px'};height:${prem?'58px':'48px'};border-radius:13px;overflow:hidden;background:${s.logo?'#fff':s.color};color:${s.tc}">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div>
+        <div class="m"><b>${escapeHtml(s.name)}${prem?' ⭐':''}</b><small>${escapeHtml(sub)}</small></div>
+        <span class="tag ${tierClass(s.tier)}">${escapeHtml(s.tier)}</span></div></div>`; }).join('')
+  ).join('');
+}
+let curPartner=null;
+function openPartner(id){ curPartner=String(id); show('partner'); }
+function renderPartnerDetail(){
+  const box=$('#partnerDetail'); if(!box) return;
+  if($('#bkPartDet')) $('#bkPartDet').textContent = lang==='fr'?'‹ Partenaires':'‹ Partners';
+  const s=OAF.sponsors().find(x=>String(x.id)===String(curPartner));
+  if(!s){ box.innerHTML=`<div class="empty">—</div>`; return; }
+  const desc=(s.desc&&(s.desc[lang]||s.desc.fr||s.desc.en))||'';
+  const link=(href,label,icon)=>href?`<a class="btn" href="${escapeHtml(href)}" target="_blank" rel="noopener" style="margin:4px 6px 0 0;display:inline-flex">${icon} ${label}</a>`:'';
+  const contacts=(s.contacts||[]).filter(c=>c&&c.name);
+  box.innerHTML=`
+    <div class="card" style="text-align:center">
+      <div class="av" style="width:84px;height:84px;border-radius:18px;overflow:hidden;margin:4px auto 10px;background:${s.logo?'#fff':s.color};color:${s.tc}">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div>
+      <h2 style="margin:0;font-size:20px">${escapeHtml(s.name)}</h2>
+      <span class="tag ${tierClass(s.tier)}" style="margin-top:6px;display:inline-block">${escapeHtml(s.tier)}</span>
+      ${desc?`<p style="color:var(--muted);font-size:13.5px;margin-top:12px;text-align:left;white-space:pre-line">${escapeHtml(desc)}</p>`:''}
+      <div style="text-align:left;margin-top:6px">
+        ${link(s.website,lang==='fr'?'Site web':'Website','🌐')}
+        ${link(s.linkedin,'LinkedIn','💼')}
+        ${link(s.brochure,'Brochure','📄')}
+        ${link(s.video,lang==='fr'?'Vidéo':'Video','🎬')}
+      </div>
+    </div>
+    ${contacts.length?`<div class="sec"><b>${lang==='fr'?'Contacts clés':'Key contacts'}</b></div>`+contacts.map(c=>`<div class="card"><div class="row">
+        <div class="av" style="width:46px;height:46px;border-radius:50%;overflow:hidden;background:${c.photo?'#fff':'#111'}">${c.photo?`<img src="${c.photo}" style="width:100%;height:100%;object-fit:cover">`:ini(c.name)}</div>
+        <div class="m"><b>${escapeHtml(c.name)}</b><small>${escapeHtml(c.role||'')}</small></div></div>
+        <div style="margin-top:8px">
+          ${c.email?`<a class="btn" href="mailto:${escapeHtml(c.email)}" style="margin:3px 6px 0 0">✉️ ${lang==='fr'?'E-mail':'Email'}</a>`:''}
+          ${c.phone?`<a class="btn" href="tel:${escapeHtml(c.phone)}" style="margin:3px 6px 0 0">📞 ${escapeHtml(c.phone)}</a>`:''}
+          ${c.linkedin?`<a class="btn" href="${escapeHtml(c.linkedin)}" target="_blank" rel="noopener" style="margin:3px 6px 0 0">💼 LinkedIn</a>`:''}
+        </div></div>`).join(''):''}
+  `;
 }
 function renderInfo(){
   $('#ifT').textContent=t('ifT'); $('#ifS').textContent=t('ifS'); if($('#bkInfo'))$('#bkInfo').textContent=t('bkPart');
@@ -436,7 +479,7 @@ async function hydrate(){
   try{
     const palette=['#5b8def','#1B998B','#b5559a','#9a6b00','#E2622C','#13476b'];
     const tops=['linear-gradient(135deg,#1c1c1c,#000)','linear-gradient(135deg,#0f6e4f,#1B998B)','linear-gradient(135deg,#13476b,#2f7bb0)','linear-gradient(135deg,#7a3b12,#c2691e)','linear-gradient(135deg,#5a4a8a,#8a6fb5)'];
-    const [ev,se,sp,po,no,bk,cn,prof,ea,gu,ss,bl] = await Promise.all([
+    const [ev,se,sp,po,no,bk,cn,prof,ea,gu,ss,bl,sc] = await Promise.all([
       sb.from('events').select('*'),
       sb.from('sessions').select('*'),
       sb.from('speakers').select('*'),
@@ -448,7 +491,8 @@ async function hydrate(){
       sb.from('event_attendees').select('event_id,profile_id'),
       sb.from('guests').select('id,event_id,name,role,country,interests,looking_for'),
       sb.from('session_speakers').select('session_id,speaker_id,role'),
-      sb.from('blocks').select('blocker,blocked')
+      sb.from('blocks').select('blocker,blocked'),
+      sb.from('sponsor_contacts').select('*')
     ]);
     if(ev.error) throw ev.error;
     blockedIds=new Set(); ((bl&&bl.data)||[]).forEach(b=>{ if(String(b.blocker)===String(me.id)) blockedIds.add(String(b.blocked)); if(String(b.blocked)===String(me.id)) blockedIds.add(String(b.blocker)); });
@@ -459,7 +503,9 @@ async function hydrate(){
       .sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
     const sessions=(se.data||[]).map(s=>({id:s.id,ev:s.event_id,day:s.day||0,time:s.time||'',dur:s.dur||'',title:s.title||{fr:'',en:''},room:s.room||{fr:'',en:''},track:s.track||{fr:'',en:''},desc:s.description||{fr:'',en:''},color:s.color||'#5b8def',star:false,sp:[],lineup:ssMap[s.id]||[]}));
     const speakers=(sp.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,role:s.role||{fr:'',en:''},country:s.country||'🌍',color:s.color||palette[i%palette.length],photo:s.photo_url||null,bio:s.bio||{fr:'',en:''},tags:s.tags||[],ses:{fr:[],en:[]}}));
-    const sponsors=(po.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,tier:s.tier||'SILVER',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null}));
+    const scMap={}; ((sc&&sc.data)||[]).forEach(c=>{ (scMap[c.sponsor_id]=scMap[c.sponsor_id]||[]).push(c); });
+    Object.values(scMap).forEach(arr=>arr.sort((x,y)=>(x.sort_order||0)-(y.sort_order||0)));
+    const sponsors=(po.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,tier:s.tier||'Sponsor',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null,website:s.website||'',linkedin:s.linkedin||'',brochure:s.brochure_url||'',video:s.video_url||'',featured:!!s.featured,sort:s.sort_order||0,contacts:(scMap[s.id]||[]).map(c=>({id:c.id,name:c.name,role:c.role||'',email:c.email||'',phone:c.phone||'',linkedin:c.linkedin||'',photo:c.photo_url||null}))}));
     const _myP=(prof.data||[]).find(p=>p.id===me.id)||{};
     const _myTags=_myP.interests||[]; const _myLook=_myP.looking_for||{fr:'',en:''};
     const attendees=(prof.data||[]).filter(p=>p.id!==me.id).map((p,i)=>{ const a={id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],photo:p.photo_url||null,look:p.looking_for||{fr:'',en:''},tags:p.interests||[],evs:eaMap[p.id]||[]}; const m=buildMatch(_myTags,_myLook,a); a.score=m.score; a.why=m.why; return a; });
