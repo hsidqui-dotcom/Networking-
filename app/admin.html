@@ -116,7 +116,34 @@
         </div>
         <div id="attList"></div>
       </div>
-      <div class="panel"><h3 id="peSpoT">Partenaires</h3><div class="desc" id="peSpoS">Cliquez « Logo » pour téléverser le logo d'un partenaire.</div><div id="spoList"></div></div>
+      <div class="panel"><h3 id="peSpoT">Partenaires</h3>
+        <div class="desc">Créez une fiche complète (logo, niveau, descriptif, liens, contacts). Affichage premium côté participant.</div>
+        <input type="hidden" id="spEditId" value="" />
+        <div class="grid2">
+          <div class="field"><label>Nom *</label><input id="spName" placeholder="Ex. AfriBank Group" /></div>
+          <div class="field"><label>Niveau</label><select id="spTier"></select></div>
+          <div class="field" style="grid-column:1/-1"><label>Descriptif (FR)</label><textarea id="spDescFr" rows="2" placeholder="Présentation du partenaire…"></textarea></div>
+          <div class="field" style="grid-column:1/-1"><label>Descriptif (EN)</label><textarea id="spDescEn" rows="2" placeholder="Partner description…"></textarea></div>
+          <div class="field"><label>Site web</label><input id="spWebsite" placeholder="https://…" /></div>
+          <div class="field"><label>LinkedIn</label><input id="spLinkedin" placeholder="https://linkedin.com/company/…" /></div>
+          <div class="field"><label>Brochure (lien PDF)</label><input id="spBrochure" placeholder="https://…/brochure.pdf" /></div>
+          <div class="field"><label>Vidéo (lien)</label><input id="spVideo" placeholder="https://youtube.com/…" /></div>
+        </div>
+        <label class="checkrow" style="display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13px;cursor:pointer"><input type="checkbox" id="spFeatured" /> Partenaire majeur (mise en avant premium)</label>
+        <div class="field"><label>Logo</label><div style="display:flex;align-items:center;gap:10px">
+          <div id="spLogoPrev" class="av" style="width:46px;height:46px;border-radius:11px;background:#eee;overflow:hidden"></div>
+          <label class="btn" style="cursor:pointer">🖼️ Choisir un logo<input type="file" accept="image/*" hidden onchange="spPickLogo(event)" /></label>
+          <button class="btn" type="button" onclick="spClearLogo()">Retirer</button>
+        </div></div>
+        <div class="field"><label>Contacts</label><div id="spContacts"></div>
+          <button class="btn" type="button" onclick="spAddContact()">＋ Ajouter un contact</button></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn solid" onclick="adSaveSponsor()" id="spSaveBtn">Enregistrer le partenaire</button>
+          <button class="btn" type="button" onclick="adResetSponsorForm()">Annuler</button>
+        </div>
+        <div class="desc" style="margin-top:14px">Partenaires de ce forum</div>
+        <div id="spoList"></div>
+      </div>
       <div class="panel"><h3 id="peInvT">✉️ Inviter par e-mail</h3>
         <div class="desc" id="peInvS">Collez les adresses (une par ligne, ou séparées par des virgules). Chacun reçoit une invitation avec le lien de l'app.</div>
         <div class="field"><textarea id="invEmails" rows="6" placeholder="alice@exemple.com&#10;bob@exemple.com" style="width:100%;box-sizing:border-box;padding:11px 13px;border:1px solid var(--line);border-radius:12px;font-size:14px;font-family:inherit"></textarea></div>

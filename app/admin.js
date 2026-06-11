@@ -90,7 +90,9 @@ function renderNotifAdmin(){
 function renderPeople(){
   $('#spkList').innerHTML=OAF.speakers().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${s.color}">${ini(s.name)}</div><div class="m"><b>${escapeHtml(s.name)}</b><small>${escapeHtml(s.role[lang])} · ${escapeHtml(s.country)}</small></div><button class="btn danger" onclick="adDelSpeaker('${s.id}')">✕</button></div>`).join('');
   $('#attList').innerHTML=OAF.attendees().map(p=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${p.color}">${ini(p.name)}</div><div class="m"><b>${escapeHtml(p.name)}${p.guest?' <span class="tag" style="font-size:9px">importé</span>':''}</b><small>${escapeHtml(p.role[lang])} · ${escapeHtml(p.country)}</small></div><span class="tag match">${p.score}</span>${p.guest?`<button class="btn danger" onclick="adDelGuest('${p.gid}')">✕</button>`:''}</div>`).join('');
-  $('#spoList').innerHTML=OAF.sponsors().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.logo?'#fff':s.color};color:${s.tc};overflow:hidden">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div><div class="m"><b>${escapeHtml(s.name)}</b></div><label class="btn" style="padding:6px 10px;font-size:12px;margin-right:6px">${a('sponsorLogoBtn')}<input type="file" accept="image/*" hidden onchange="adSponsorLogo(event,${s.id})"></label><span class="tag ${s.tier==='PLATINUM'?'p':s.tier==='GOLD'?'gold':''}">${escapeHtml(s.tier)}</span></div>`).join('');
+  ensureTierOptions();
+  const spo=OAF.sponsors().slice().sort((a,b)=>(a.sort||0)-(b.sort||0));
+  $('#spoList').innerHTML=spo.map((s,idx)=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.logo?'#fff':s.color};color:${s.tc};overflow:hidden">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div><div class="m"><b>${escapeHtml(s.name)}${s.featured?' ⭐':''}</b><small>${escapeHtml(s.tier)}${s.contacts&&s.contacts.length?(' · '+s.contacts.length+' contact(s)'):''}</small></div><button class="btn" title="Monter" onclick="adMoveSponsor('${s.id}',-1)" ${idx===0?'disabled':''}>↑</button><button class="btn" title="Descendre" onclick="adMoveSponsor('${s.id}',1)" ${idx===spo.length-1?'disabled':''}>↓</button><button class="btn" title="Dupliquer vers un autre forum" onclick="adDupSponsor('${s.id}')">⧉</button><button class="btn" onclick="adEditSponsor('${s.id}')">✏️</button><button class="btn danger" onclick="adDelSponsor('${s.id}')">✕</button></div>`).join('');
   renderReports();
 }
 let adReports=[], adNames={};
@@ -210,6 +212,68 @@ function adClearLogo(){ OAF.setAppLogo(null); renderSettings(); adToast(a('tLogo
 function adSetCover(e){ const f=e.target.files[0]; if(!f)return; const id=$('#coverEvent').value; processImg(f,async d=>{ OAF.setEventCover(id,d); if(L()){ const {error}=await OAFAuth.client().from('events').update({cover_url:d}).eq('id',id); if(error){adToast(error.message);return;} } renderSettings(); adToast(a('tCover')); },560); e.target.value=''; }
 async function adClearCover(){ const id=$('#coverEvent').value; OAF.setEventCover(id,null); if(L()){ const {error}=await OAFAuth.client().from('events').update({cover_url:null}).eq('id',id); if(error){adToast(error.message);return;} } renderSettings(); adToast(a('tCover')); }
 function adSponsorLogo(e,id){ const f=e.target.files[0]; if(!f)return; processImg(f,d=>{OAF.setSponsorLogo(id,d);renderPeople();adToast(a('tSponsorLogo'));},160); e.target.value=''; }
+
+/* ===================== PARTENAIRES (console premium) ===================== */
+const SP_TIERS=['Platinum Partner','Gold Partner','Silver Partner','Institutional Partner','Strategic Partner','Sponsor','Exhibitor'];
+let spLogoData=null, spContactsState=[];
+function ensureTierOptions(){ const sel=$('#spTier'); if(sel && !sel.options.length){ sel.innerHTML=SP_TIERS.map(t=>`<option value="${t}">${t}</option>`).join(''); } }
+function spLogoPreview(){ const b=$('#spLogoPrev'); if(!b)return; b.innerHTML=spLogoData?`<img src="${spLogoData}" style="width:100%;height:100%;object-fit:cover">`:''; b.style.background=spLogoData?'#fff':'#eee'; }
+function spPickLogo(e){ const f=e.target.files&&e.target.files[0]; e.target.value=''; if(!f)return; processImg(f,d=>{ spLogoData=d; spLogoPreview(); },200); }
+function spClearLogo(){ spLogoData=null; spLogoPreview(); }
+function spRenderContacts(){ const box=$('#spContacts'); if(!box)return;
+  box.innerHTML=spContactsState.map((c,i)=>`<div class="li" style="flex-wrap:wrap;gap:6px;align-items:center;border:1px solid var(--line,#e3e3e3);border-radius:10px;padding:8px;margin-bottom:8px">
+    <div class="av" style="width:34px;height:34px;border-radius:50%;overflow:hidden;background:#eee">${c.photo?`<img src="${c.photo}" style="width:100%;height:100%;object-fit:cover">`:''}</div>
+    <label class="btn" style="padding:5px 8px;font-size:11px;cursor:pointer">📷<input type="file" accept="image/*" hidden onchange="spContactPhoto(event,${i})"></label>
+    <input placeholder="Nom & prénom" value="${escapeHtml(c.name)}" oninput="spContactsState[${i}].name=this.value" style="flex:1;min-width:130px" />
+    <input placeholder="Fonction" value="${escapeHtml(c.role)}" oninput="spContactsState[${i}].role=this.value" style="flex:1;min-width:120px" />
+    <input placeholder="E-mail" value="${escapeHtml(c.email)}" oninput="spContactsState[${i}].email=this.value" style="flex:1;min-width:130px" />
+    <input placeholder="Téléphone" value="${escapeHtml(c.phone)}" oninput="spContactsState[${i}].phone=this.value" style="flex:1;min-width:110px" />
+    <input placeholder="LinkedIn" value="${escapeHtml(c.linkedin)}" oninput="spContactsState[${i}].linkedin=this.value" style="flex:1;min-width:130px" />
+    <button class="btn danger" type="button" onclick="spDelContact(${i})">✕</button></div>`).join('');
+}
+function spAddContact(data){ spContactsState.push(Object.assign({name:'',role:'',email:'',phone:'',linkedin:'',photo:null},data||{})); spRenderContacts(); }
+function spDelContact(i){ spContactsState.splice(i,1); spRenderContacts(); }
+function spContactPhoto(e,i){ const f=e.target.files&&e.target.files[0]; e.target.value=''; if(!f)return; processImg(f,d=>{ if(spContactsState[i]){ spContactsState[i].photo=d; spRenderContacts(); } },160); }
+function adResetSponsorForm(){ ensureTierOptions();
+  $('#spEditId').value=''; $('#spName').value=''; if($('#spTier'))$('#spTier').selectedIndex=0;
+  $('#spDescFr').value=''; $('#spDescEn').value=''; $('#spWebsite').value=''; $('#spLinkedin').value=''; $('#spBrochure').value=''; $('#spVideo').value='';
+  if($('#spFeatured'))$('#spFeatured').checked=false; spLogoData=null; spLogoPreview(); spContactsState=[]; spRenderContacts();
+  if($('#spSaveBtn'))$('#spSaveBtn').textContent=lang==='fr'?'Enregistrer le partenaire':'Save partner'; }
+function adEditSponsor(id){ const s=OAF.sponsors().find(x=>String(x.id)===String(id)); if(!s)return; ensureTierOptions();
+  $('#spEditId').value=s.id; $('#spName').value=s.name||''; if($('#spTier'))$('#spTier').value=s.tier||SP_TIERS[5];
+  $('#spDescFr').value=(s.desc&&s.desc.fr)||''; $('#spDescEn').value=(s.desc&&s.desc.en)||'';
+  $('#spWebsite').value=s.website||''; $('#spLinkedin').value=s.linkedin||''; $('#spBrochure').value=s.brochure||''; $('#spVideo').value=s.video||'';
+  if($('#spFeatured'))$('#spFeatured').checked=!!s.featured; spLogoData=s.logo||null; spLogoPreview();
+  spContactsState=(s.contacts||[]).map(c=>Object.assign({},c)); spRenderContacts();
+  if($('#spSaveBtn'))$('#spSaveBtn').textContent=lang==='fr'?'Mettre à jour':'Update';
+  try{ $('#spName').scrollIntoView({behavior:'smooth',block:'center'}); }catch(_){} }
+async function adSaveSponsor(){
+  const name=$('#spName').value.trim(); if(!name){ adToast(lang==='fr'?'Le nom du partenaire est obligatoire.':'Partner name is required.'); return; }
+  if(!L()){ adToast(lang==='fr'?'(démo) Connexion requise.':'(demo) Sign in required.'); return; }
+  const sb=OAFAuth.client(), ev=evId();
+  const rec={ event_id:ev, name, tier:$('#spTier').value,
+    description:{fr:$('#spDescFr').value.trim(),en:($('#spDescEn').value.trim()||$('#spDescFr').value.trim())},
+    website:$('#spWebsite').value.trim(), linkedin:$('#spLinkedin').value.trim(),
+    brochure_url:$('#spBrochure').value.trim(), video_url:$('#spVideo').value.trim(),
+    featured:$('#spFeatured').checked, logo_url:spLogoData||null };
+  const editId=$('#spEditId').value; let sid=editId;
+  if(editId){ const {error}=await sb.from('sponsors').update(rec).eq('id',editId); if(error){adToast(error.message);return;} }
+  else { rec.sort_order=(OAF.sponsors().reduce((m,s)=>Math.max(m,s.sort||0),0))+1; const {data,error}=await sb.from('sponsors').insert(rec).select('id').single(); if(error){adToast(error.message);return;} sid=data.id; }
+  await sb.from('sponsor_contacts').delete().eq('sponsor_id',sid);
+  const cr=spContactsState.filter(c=>(c.name||'').trim()).map((c,i)=>({sponsor_id:sid,name:c.name.trim(),role:c.role||'',email:c.email||'',phone:c.phone||'',linkedin:c.linkedin||'',photo_url:c.photo||null,sort_order:i}));
+  if(cr.length){ const {error:ce}=await sb.from('sponsor_contacts').insert(cr); if(ce){adToast(ce.message);} }
+  await reloadAndRender(); adResetSponsorForm(); adToast(lang==='fr'?'Partenaire enregistré ✓':'Partner saved ✓');
+}
+async function adDelSponsor(id){ if(!confirm(lang==='fr'?'Supprimer ce partenaire et ses contacts ?':'Delete this partner and its contacts?'))return; if(!L())return; const {error}=await OAFAuth.client().from('sponsors').delete().eq('id',id); if(error){adToast(error.message);return;} await reloadAndRender(); adToast(lang==='fr'?'Supprimé ✓':'Deleted ✓'); }
+async function adMoveSponsor(id,dir){ if(!L())return; const list=OAF.sponsors().slice().sort((a,b)=>(a.sort||0)-(b.sort||0)); const i=list.findIndex(s=>String(s.id)===String(id)); const j=i+dir; if(i<0||j<0||j>=list.length)return; const sb=OAFAuth.client(); const A=list[i],B=list[j]; await sb.from('sponsors').update({sort_order:(B.sort||0)}).eq('id',A.id); await sb.from('sponsors').update({sort_order:(A.sort||0)}).eq('id',B.id); await reloadAndRender(); }
+async function adDupSponsor(id){ const evs=OAF.events().filter(e=>String(e.id)!==String(evId())); if(!evs.length){ adToast(lang==='fr'?'Aucun autre forum.':'No other event.'); return; }
+  const menu=evs.map((e,i)=>`${i+1}) ${e.name}${e.cityShort?(' · '+e.cityShort):''}`).join('\n');
+  const pick=prompt((lang==='fr'?'Dupliquer ce partenaire vers :\n':'Duplicate this partner to:\n')+menu); const n=parseInt(pick,10);
+  if(isNaN(n)||n<1||n>evs.length)return; const target=evs[n-1].id; const s=OAF.sponsors().find(x=>String(x.id)===String(id)); if(!s||!L())return; const sb=OAFAuth.client();
+  const rec={event_id:target,name:s.name,tier:s.tier,description:s.desc,website:s.website||'',linkedin:s.linkedin||'',brochure_url:s.brochure||'',video_url:s.video||'',featured:!!s.featured,logo_url:s.logo||null,sort_order:s.sort||0};
+  const {data,error}=await sb.from('sponsors').insert(rec).select('id').single(); if(error){adToast(error.message);return;}
+  if(s.contacts&&s.contacts.length){ await sb.from('sponsor_contacts').insert(s.contacts.map((c,i)=>({sponsor_id:data.id,name:c.name,role:c.role||'',email:c.email||'',phone:c.phone||'',linkedin:c.linkedin||'',photo_url:c.photo||null,sort_order:i}))); }
+  adToast(lang==='fr'?'Partenaire dupliqué ✓':'Partner duplicated ✓'); }
 
 /* ---- CSV import ---- */
 function splitCsvLine(line){ const r=[]; let cur='',q=false; for(let i=0;i<line.length;i++){const ch=line[i]; if(ch==='"'){ if(q&&line[i+1]==='"'){cur+='"';i++;} else q=!q; } else if(ch===','&&!q){r.push(cur);cur='';} else cur+=ch;} r.push(cur); return r; }
@@ -554,7 +618,7 @@ async function adminHydrate(){
   try{
     const palette=['#5b8def','#1B998B','#b5559a','#9a6b00','#E2622C','#13476b'];
     const tops=['linear-gradient(135deg,#1c1c1c,#000)','linear-gradient(135deg,#0f6e4f,#1B998B)','linear-gradient(135deg,#13476b,#2f7bb0)','linear-gradient(135deg,#7a3b12,#c2691e)'];
-    const [ev,se,sp,po,no,prof,ea,gu,ss,rep]=await Promise.all([
+    const [ev,se,sp,po,no,prof,ea,gu,ss,rep,sc]=await Promise.all([
       sb.from('events').select('*'),
       sb.from('sessions').select('*'),
       sb.from('speakers').select('*'),
@@ -564,7 +628,8 @@ async function adminHydrate(){
       sb.from('event_attendees').select('event_id,profile_id'),
       sb.from('guests').select('id,event_id,name,role,country,interests,looking_for'),
       sb.from('session_speakers').select('session_id,speaker_id,role'),
-      sb.from('reports').select('*').order('created_at',{ascending:false})
+      sb.from('reports').select('*').order('created_at',{ascending:false}),
+      sb.from('sponsor_contacts').select('*')
     ]);
     adNames={}; ((prof&&prof.data)||[]).forEach(p=>{ adNames[p.id]=p.name||'—'; });
     adReports=(rep&&!rep.error&&rep.data)||[];
@@ -574,7 +639,9 @@ async function adminHydrate(){
     const events=(ev.data||[]).map((e,i)=>({id:e.id,name:e.name,city:e.city||'',cityShort:e.city_short||'',status:e.status||'upcoming',starts:e.starts_at||null,ends:e.ends_at||null,auto:!!e.auto_status,dates:e.dates||{fr:'',en:''},theme:e.theme||{fr:'',en:''},cover:e.cover_url||null,info:e.info||{},top:tops[i%tops.length]})).sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
     const sessions=(se.data||[]).map(s=>({id:s.id,ev:s.event_id,day:s.day||0,time:s.time||'',dur:s.dur||'',title:s.title||{fr:'',en:''},room:s.room||{fr:'',en:''},track:s.track||{fr:'',en:''},desc:s.description||{fr:'',en:''},color:s.color||'#5b8def',star:false,sp:[],lineup:ssMap[s.id]||[]}));
     const speakers=(sp.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,role:s.role||{fr:'',en:''},country:s.country||'🌍',color:palette[i%palette.length],bio:s.bio||{fr:'',en:''},tags:s.tags||[],ses:{fr:[],en:[]}}));
-    const sponsors=(po.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,tier:s.tier||'SILVER',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null}));
+    const scMap={}; ((sc&&sc.data)||[]).forEach(c=>{ (scMap[c.sponsor_id]=scMap[c.sponsor_id]||[]).push(c); });
+    Object.values(scMap).forEach(arr=>arr.sort((x,y)=>(x.sort_order||0)-(y.sort_order||0)));
+    const sponsors=(po.data||[]).map((s,i)=>({id:s.id,ev:s.event_id,name:s.name,tier:s.tier||'Sponsor',color:s.color||palette[i%palette.length],tc:'#fff',role:s.role||{fr:'',en:''},desc:s.description||{fr:'',en:''},booth:s.booth||{fr:'',en:''},reps:{fr:[],en:[]},logo:s.logo_url||null,website:s.website||'',linkedin:s.linkedin||'',brochure:s.brochure_url||'',video:s.video_url||'',featured:!!s.featured,sort:s.sort_order||0,contacts:(scMap[s.id]||[]).map(c=>({id:c.id,name:c.name,role:c.role||'',email:c.email||'',phone:c.phone||'',linkedin:c.linkedin||'',photo:c.photo_url||null}))})).sort((a,b)=>(a.sort||0)-(b.sort||0));
     const attendees=(prof.data||[]).map((p,i)=>({id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],score:80,why:p.looking_for||{fr:'',en:''},look:p.looking_for||{fr:'',en:''},tags:p.interests||[],evs:eaMap[p.id]||[]}));
     ((gu&&gu.data)||[]).forEach((g,i)=>{ attendees.push({id:'g_'+g.id,gid:g.id,guest:true,name:g.name||'—',role:g.role||{fr:'',en:''},country:g.country||'🌍',color:palette[(attendees.length+i)%palette.length],score:75,why:g.looking_for||{fr:'',en:''},look:g.looking_for||{fr:'',en:''},tags:g.interests||[],evs:[g.event_id]}); });
     const notifications=(no.data||[]).map(n=>({id:n.id,icon:n.icon||'🔔',ts:new Date(n.created_at).getTime(),title:n.title||{fr:'',en:''}}));
