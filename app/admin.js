@@ -222,17 +222,73 @@ function parseCsv(text){
     out.push({ name:c[0].trim(), role:(c[1]||'').trim(), country:(c[2]||'').trim(), interests:(c[3]||'').trim(), email:(c[4]||'').trim() }); }
   return out;
 }
-function adImportCsv(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader();
-  r.onload=async ()=>{ const rows=parseCsv(r.result); if(!rows.length){adToast(a('csvEmpty'));return;}
-    if(L()){
-      const ev=evId();
-      const recs=rows.map(x=>({event_id:ev,name:x.name,email:(x.email||'').toLowerCase()||null,role:{fr:x.role||'',en:x.role||''},country:x.country||'🌍',interests:(x.interests||'').split(',').map(s=>s.trim()).filter(Boolean)}));
-      const {error}=await OAFAuth.client().from('guests').insert(recs);
-      if(error){adToast(error.message);return;}
-      await reloadAndRender();
-    } else { OAF.importAttendees(rows); renderPeople(); renderKpis(); }
-    adToast(a('tImport').replace('{n}',rows.length)); };
-  r.readAsText(f); e.target.value=''; }
+/* ---- Import participants ROBUSTE : mapping par en-tête + validation e-mail + déduplication ---- */
+function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function splitCsvLineDelim(line, delim){ const r=[]; let cur='',q=false;
+  for(let i=0;i<line.length;i++){ const ch=line[i];
+    if(ch==='"'){ if(q&&line[i+1]==='"'){cur+='"';i++;} else q=!q; }
+    else if(ch===delim&&!q){ r.push(cur); cur=''; } else cur+=ch; }
+  r.push(cur); return r.map(x=>x.trim()); }
+function parseParticipantsCsv(text){
+  text=String(text||'').replace(/^﻿/,''); // retire le BOM
+  const lines=text.split(/\r?\n/).filter(l=>l.trim().length);
+  if(!lines.length) return {rows:[],invalid:0,dupInFile:0};
+  const head=lines[0];
+  const delim=(head.split(';').length>head.split(',').length)?';':',';
+  const norm=s=>s.toLowerCase().replace(/[^a-z]/g,'');
+  const H=splitCsvLineDelim(head,delim).map(norm);
+  const col=(...names)=>{ for(const n of names){ const i=H.indexOf(n); if(i>=0) return i; } return -1; };
+  const ix={ name:col('name','nom','nomprenom','prenomnom'),
+    role:col('role','fonction','titre','poste','fonctionsociete'),
+    country:col('country','pays'),
+    interests:col('interests','interets','centresdinteret','tags','secteur'),
+    email:col('email','courriel','mail','adresseemail','emailaddress') };
+  const hasHeader = ix.name>=0;              // en-tête reconnu ?
+  const start = hasHeader ? 1 : 0;            // sinon, repli en mode positionnel (compat)
+  const get=(c,arr)=>(c>=0&&c<arr.length)?arr[c]:'';
+  const seen=new Set(); let invalid=0, dupInFile=0; const rows=[];
+  for(let li=start; li<lines.length; li++){
+    const c=splitCsvLineDelim(lines[li],delim);
+    let name,role,country,interests,email;
+    if(hasHeader){ name=get(ix.name,c); role=get(ix.role,c); country=get(ix.country,c); interests=get(ix.interests,c); email=get(ix.email,c); }
+    else { name=c[0]||''; role=c[1]||''; country=c[2]||''; interests=c[3]||''; email=c[4]||''; }
+    name=(name||'').trim(); if(!name) continue;        // sans nom → ignoré
+    email=(email||'').trim().toLowerCase();
+    if(email && !isValidEmail(email)){ invalid++; email=''; } // e-mail cassé → ignoré (fiche gardée)
+    if(email){ if(seen.has(email)){ dupInFile++; continue; } seen.add(email); } // doublon dans le fichier
+    rows.push({ name, role:(role||'').trim(), country:(country||'').trim(),
+      interests:(interests||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean), email:email||null });
+  }
+  return {rows,invalid,dupInFile};
+}
+function adImportReport(imported, dups, invalid){
+  const fr = imported+' importé(s)' + (dups?' · '+dups+' doublon(s) ignoré(s)':'') + (invalid?' · '+invalid+' e-mail(s) invalide(s)':'');
+  const en = imported+' imported' + (dups?' · '+dups+' duplicate(s) skipped':'') + (invalid?' · '+invalid+' invalid email(s)':'');
+  adToast(lang==='fr'?fr:en);
+}
+async function adImportCsv(e){
+  const f=e.target.files[0]; if(!f)return;
+  let text=''; try{ text=await f.text(); }catch(_){ text=await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsText(f);}); }
+  e.target.value='';
+  const {rows,invalid,dupInFile}=parseParticipantsCsv(text);
+  if(!rows.length){ adToast(a('csvEmpty')); return; }
+  if(L()){
+    const sb=OAFAuth.client(), ev=evId();
+    // Déduplication contre les invités DÉJÀ importés sur CE forum (par e-mail).
+    const existing=new Set();
+    try{ const {data}=await sb.from('guests').select('email').eq('event_id',ev); (data||[]).forEach(g=>{ if(g.email) existing.add(String(g.email).toLowerCase()); }); }catch(_){}
+    let dupDb=0; const recs=[];
+    for(const x of rows){
+      if(x.email && existing.has(x.email)){ dupDb++; continue; }
+      recs.push({event_id:ev,name:x.name,email:x.email,role:{fr:x.role||'',en:x.role||''},country:x.country||'🌍',interests:x.interests});
+    }
+    if(recs.length){ const {error}=await sb.from('guests').insert(recs); if(error){adToast(error.message);return;} await reloadAndRender(); }
+    adImportReport(recs.length, dupInFile+dupDb, invalid);
+  } else {
+    OAF.importAttendees(rows); renderPeople(); renderKpis();
+    adImportReport(rows.length, dupInFile, invalid);
+  }
+}
 async function adDelGuest(gid){ if(!confirm(a('confirmDel')))return; if(L()){ const {error}=await OAFAuth.client().from('guests').delete().eq('id',gid); if(error){adToast(error.message);return;} await reloadAndRender(); adToast(a('tDel')); } }
 async function adClearGuests(){ if(!confirm(lang==='fr'?'Supprimer tous les participants importés de ce forum ?':'Delete all imported attendees of this forum?'))return; if(L()){ const {error}=await OAFAuth.client().from('guests').delete().eq('event_id',evId()); if(error){adToast(error.message);return;} await reloadAndRender(); adToast(a('tDel')); } }
 function adCsvTemplate(){
