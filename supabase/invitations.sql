@@ -36,7 +36,7 @@ create or replace function public.send_event_invites(
   event_name text default 'OneAfricaForums',
   app_url    text default 'https://oneafricaforums.com',
   event_id   bigint default null,
-  from_email text default 'OneAfricaForums <onboarding@resend.dev>'
+  from_email text default 'One Africa Forums <no-reply@send.oneafricaforums.com>'
 ) returns json
 language plpgsql
 security definer
@@ -64,17 +64,20 @@ begin
     continue when v_email = '' or v_email !~ '@';
 
     v_html := format(
-      '<div style="font-family:Arial,Helvetica,sans-serif;max-width:540px;margin:auto;color:#111">'
-      '<h2 style="margin:0 0 6px">Vous êtes invité·e à %1$s 🌍</h2>'
-      '<p style="font-size:15px;line-height:1.5">Rejoignez l''application de networking '
-      '<b>OneAfricaForums</b> : découvrez le programme, repérez les bons contacts grâce aux '
-      'correspondances, et organisez vos rendez-vous 1:1.</p>'
-      '<p style="margin:26px 0"><a href="%2$s" style="background:#F2E500;color:#111;'
-      'padding:13px 24px;border-radius:10px;text-decoration:none;font-weight:700;'
+      '<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:auto;color:#111">'
+      '<h2 style="margin:0 0 8px">Votre accès à l''app de networking — %1$s</h2>'
+      '<p style="font-size:15px;line-height:1.55">Bonjour,<br>Vous êtes convié·e à utiliser '
+      '<b>OAF Connect</b>, l''application de networking de One Africa Forums pour <b>%1$s</b> : '
+      'programme et intervenants, annuaire des participants avec correspondances, messagerie et '
+      'rendez-vous 1:1, partenaires.</p>'
+      '<p style="margin:24px 0"><a href="%2$s" style="background:#F2E500;color:#111;'
+      'padding:13px 26px;border-radius:10px;text-decoration:none;font-weight:700;'
       'display:inline-block">Ouvrir l''application</a></p>'
-      '<p style="color:#777;font-size:12px">Connectez-vous avec cette adresse e-mail '
-      '(code à usage unique) ou via Google / LinkedIn.</p>'
-      '<p style="color:#aaa;font-size:11px">OneAfricaForums — « Empowering South-South cooperation »</p>'
+      '<p style="font-size:14px;line-height:1.55"><b>Connexion en 30 secondes</b>, avec '
+      '<b>cette adresse e-mail</b> :<br>• « Continuer avec Google », ou<br>'
+      '• « Recevoir un code » → un code arrive par e-mail → vous le saisissez.</p>'
+      '<p style="color:#777;font-size:12px">Lien : <a href="%2$s">%2$s</a></p>'
+      '<p style="color:#aaa;font-size:11px">One Africa Forums — « Empowering South-South cooperation »</p>'
       '</div>', event_name, app_url);
 
     perform net.http_post(
@@ -85,7 +88,7 @@ begin
       body    := jsonb_build_object(
                    'from',    from_email,
                    'to',      v_email,
-                   'subject', 'Invitation — ' || event_name,
+                   'subject', 'Votre accès — ' || event_name,
                    'html',    v_html)
     );
 
