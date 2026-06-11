@@ -3,7 +3,7 @@
    sur le cache uniquement hors-ligne. Mise à jour automatique : le nouveau
    worker prend le contrôle immédiatement et la page se recharge toute seule
    (voir l'enregistrement dans index.html). Bump CACHE à chaque évolution. */
-const CACHE = 'oaf-connect-v42';
+const CACHE = 'oaf-connect-v43';
 const ASSETS = [
   './', './index.html', './admin.html',
   './style.css', './store.js', './app.js', './admin.js',
