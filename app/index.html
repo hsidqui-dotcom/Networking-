@@ -24,6 +24,21 @@
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<!-- ONBOARDING OBLIGATOIRE (1re connexion) : Nom + Fonction/Société requis -->
+<div id="onboardGate" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,15,30,.55);overflow:auto;padding:20px 14px">
+  <div style="max-width:440px;margin:5vh auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.3)">
+    <div style="text-align:center"><div style="width:54px;height:54px;border-radius:14px;background:#F2E500;margin:0 auto 10px;line-height:54px;font-size:26px">👋</div></div>
+    <h2 id="obgT" style="text-align:center;margin:0 0 4px;font-size:19px">Bienvenue ! Complétez votre profil</h2>
+    <p id="obgS" style="text-align:center;color:#777;font-size:13px;margin:0 0 16px">Pour que les autres participants vous identifient et vous contactent.</p>
+    <div class="field"><label id="obgLName">Nom & prénom *</label><input id="obgName" placeholder="Ex. Amina Keïta" /></div>
+    <div class="field"><label id="obgLRole">Fonction & société *</label><input id="obgRole" placeholder="Ex. Directrice Innovation · BankX" /></div>
+    <div class="field"><label id="obgLCountry">Pays</label><input id="obgCountry" placeholder="Ex. 🇨🇮 ou Côte d'Ivoire" /></div>
+    <div class="field"><label id="obgLInt">Centres d'intérêt (optionnel)</label><input id="obgInterests" placeholder="Fintech, Cybersécurité" /></div>
+    <div class="field"><label id="obgLLook">Je recherche (optionnel)</label><input id="obgLook" placeholder="Investisseurs, partenaires…" /></div>
+    <div id="obgMsg" style="color:#c0392b;font-size:12.5px;min-height:16px"></div>
+    <button class="btn solid" style="width:100%" onclick="onboardSave()" id="obgBtn">Continuer</button>
+  </div>
+</div>
 <div class="app">
   <div class="appbar">
     <div class="oa" id="abLogo" style="width:36px;height:36px;overflow:hidden"><svg class="oa" viewBox="0 0 400 400"><rect width="400" height="400" fill="#F2E500"/><text x="200" y="190" text-anchor="middle" fill="#111" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="168">one</text><text x="200" y="272" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">AFRICA</text><text x="200" y="338" text-anchor="middle" fill="#111" font-family="Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="9">FORUMS</text></svg></div>
@@ -198,10 +213,10 @@
   </div>
 </div>
 
-<script src="config.js?v=50"></script>
-<script src="supabase.js?v=50"></script>
-<script src="store.js?v=50"></script>
-<script src="app.js?v=50"></script>
+<script src="config.js?v=51"></script>
+<script src="supabase.js?v=51"></script>
+<script src="store.js?v=51"></script>
+<script src="app.js?v=51"></script>
 <script>
 if ('serviceWorker' in navigator) {
   // Recharge la page une seule fois quand un nouveau service worker prend le

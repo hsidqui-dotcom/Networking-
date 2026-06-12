@@ -184,6 +184,46 @@ function fillProfileInputs(){
   set('#pfInInterests', (me.interests||[]).join(', '));
   const vis=$('#pfInVisible'); if(vis) vis.checked = me.visible!==false;
 }
+/* ===== Onboarding OBLIGATOIRE : Nom + Fonction/Société requis (1re connexion) ===== */
+function profileMissingRequired(){ const me=OAF.me(); if(!me) return false;
+  const noName=!me.name || String(me.name).indexOf('@')>=0 || me.name==='—';
+  const noRole=!(me.role&&(me.role.fr||me.role.en));
+  return noName||noRole; }
+function maybeOnboard(){ if(OAFAuth&&OAFAuth.live&&OAFAuth.live() && profileMissingRequired()) showOnboardGate(); }
+function showOnboardGate(){
+  const me=OAF.me(); const g=$('#onboardGate'); if(!g) return;
+  const set=(id,v)=>{const el=$(id); if(el) el.value=v;};
+  const cleanName=(me.name && String(me.name).indexOf('@')<0 && me.name!=='—')?me.name:'';
+  set('#obgName', cleanName);
+  set('#obgRole', (me.role&&(me.role[lang]||me.role.fr))||'');
+  set('#obgCountry', (me.country&&me.country!=='🌍')?me.country:'');
+  set('#obgInterests', (me.interests||[]).join(', '));
+  set('#obgLook', (me.look&&(me.look[lang]||me.look.fr))||'');
+  const fr=lang==='fr';
+  $('#obgT').textContent=fr?'Bienvenue ! Complétez votre profil':'Welcome! Complete your profile';
+  $('#obgS').textContent=fr?'Pour que les autres participants vous identifient et vous contactent.':'So other attendees can identify and contact you.';
+  $('#obgLName').textContent=fr?'Nom & prénom *':'Full name *';
+  $('#obgLRole').textContent=fr?'Fonction & société *':'Role & company *';
+  $('#obgLCountry').textContent='Pays / Country';
+  $('#obgLInt').textContent=fr?"Centres d'intérêt (optionnel)":'Interests (optional)';
+  $('#obgLLook').textContent=fr?'Je recherche (optionnel)':'Looking for (optional)';
+  $('#obgBtn').textContent=fr?'Continuer':'Continue';
+  $('#obgMsg').textContent='';
+  g.style.display='block';
+}
+function hideOnboardGate(){ const g=$('#onboardGate'); if(g) g.style.display='none'; }
+function onboardSave(){
+  const name=($('#obgName').value||'').trim();
+  const role=($('#obgRole').value||'').trim();
+  const country=($('#obgCountry').value||'').trim()||'🌍';
+  const look=($('#obgLook').value||'').trim();
+  const interests=($('#obgInterests').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if(!name || !role){ $('#obgMsg').textContent=lang==='fr'?'Le nom et la fonction/société sont obligatoires.':'Name and role/company are required.'; return; }
+  OAF.updateMe({name, role:{fr:role,en:role}, country, look:{fr:look,en:look}, interests, visible:true});
+  if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ const sb=OAFAuth.client(),u=OAFAuth.user();
+    if(u) sb.from('profiles').update({name, role:{fr:role,en:role}, country, looking_for:{fr:look,en:look}, interests, is_visible:true}).eq('id',u.id).then(({error})=>{ if(error) toast(error.message); }); }
+  hideOnboardGate(); renderChrome(); renderAll(); toast(lang==='fr'?'Profil enregistré ✓ Bienvenue 🎉':'Profile saved ✓ Welcome 🎉');
+}
 function saveProfile(){
   const name=$('#pfInName').value.trim()||'—';
   const role=$('#pfInRole').value.trim();
@@ -548,6 +588,7 @@ async function hydrate(){
     });
     renderAll();
     lastHydrate=Date.now();
+    maybeOnboard();
     subscribeChat();
     subscribeContent();
   }catch(e){ console.warn('Hydratation Supabase échouée — données démo conservées', e); }
