@@ -115,6 +115,19 @@
           <button class="btn danger" onclick="adClearGuests()" id="peClrBtn">🗑️ Vider l'annuaire importé</button>
         </div>
         <div id="attList"></div>
+        <div class="desc" style="margin-top:14px"><b>➕ Ajouter / modifier un participant</b> (ajout last-minute, correction)</div>
+        <input type="hidden" id="gEditId" value="" />
+        <div class="grid2">
+          <div class="field"><input id="gName" placeholder="Nom du participant *" /></div>
+          <div class="field"><input id="gEmail" placeholder="E-mail (profil pré-rempli + invitation)" /></div>
+          <div class="field"><input id="gRole" placeholder="Fonction · Société" /></div>
+          <div class="field"><input id="gCountry" placeholder="Pays (ex. 🇨🇮)" /></div>
+          <div class="field" style="grid-column:1/-1"><input id="gInterests" placeholder="Centres d'intérêt (séparés par des virgules)" /></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn solid" onclick="adSaveGuest()" id="gSaveBtn">➕ Ajouter le participant</button>
+          <button class="btn" onclick="adResetGuest()" id="gCancelBtn" style="display:none">Annuler</button>
+        </div>
       </div>
       <div class="panel"><h3 id="peSpoT">Partenaires</h3>
         <div class="desc">Créez une fiche complète (logo, niveau, descriptif, liens, contacts). Affichage premium côté participant.</div>
@@ -244,9 +257,9 @@
   </div>
 </div>
 
-<script src="config.js?v=48"></script>
-<script src="supabase.js?v=48"></script>
-<script src="store.js?v=48"></script>
-<script src="admin.js?v=48"></script>
+<script src="config.js?v=49"></script>
+<script src="supabase.js?v=49"></script>
+<script src="store.js?v=49"></script>
+<script src="admin.js?v=49"></script>
 </body>
 </html>

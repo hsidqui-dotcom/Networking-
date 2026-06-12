@@ -89,7 +89,7 @@ function renderNotifAdmin(){
 }
 function renderPeople(){
   $('#spkList').innerHTML=OAF.speakers().map(s=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${s.color}">${ini(s.name)}</div><div class="m"><b>${escapeHtml(s.name)}</b><small>${escapeHtml(s.role[lang])} · ${escapeHtml(s.country)}</small></div><button class="btn danger" onclick="adDelSpeaker('${s.id}')">✕</button></div>`).join('');
-  $('#attList').innerHTML=OAF.attendees().map(p=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${p.color}">${ini(p.name)}</div><div class="m"><b>${escapeHtml(p.name)}${p.guest?' <span class="tag" style="font-size:9px">importé</span>':''}</b><small>${escapeHtml(p.role[lang])} · ${escapeHtml(p.country)}</small></div><span class="tag match">${p.score}</span>${p.guest?`<button class="btn danger" onclick="adDelGuest('${p.gid}')">✕</button>`:''}</div>`).join('');
+  $('#attList').innerHTML=OAF.attendees().map(p=>`<div class="li"><div class="av" style="width:38px;height:38px;background:${p.color}">${ini(p.name)}</div><div class="m"><b>${escapeHtml(p.name)}${p.guest?' <span class="tag" style="font-size:9px">importé</span>':''}</b><small>${escapeHtml(p.role[lang])} · ${escapeHtml(p.country)}</small></div><span class="tag match">${p.score}</span>${p.guest?`<button class="btn" onclick="adGuestEdit('${p.gid}')" title="Modifier">✏️</button><button class="btn danger" onclick="adDelGuest('${p.gid}')">✕</button>`:''}</div>`).join('');
   ensureTierOptions();
   const spo=OAF.sponsors().slice().sort((a,b)=>(a.sort||0)-(b.sort||0));
   $('#spoList').innerHTML=spo.map((s,idx)=>`<div class="li"><div class="av" style="width:38px;height:38px;border-radius:10px;background:${s.logo?'#fff':s.color};color:${s.tc};overflow:hidden">${s.logo?`<img src="${s.logo}" style="width:100%;height:100%;object-fit:cover">`:ini(s.name)}</div><div class="m"><b>${escapeHtml(s.name)}${s.featured?' ⭐':''}</b><small>${escapeHtml(s.tier)}${s.contacts&&s.contacts.length?(' · '+s.contacts.length+' contact(s)'):''}</small></div><button class="btn" title="Monter" onclick="adMoveSponsor('${s.id}',-1)" ${idx===0?'disabled':''}>↑</button><button class="btn" title="Descendre" onclick="adMoveSponsor('${s.id}',1)" ${idx===spo.length-1?'disabled':''}>↓</button><button class="btn" title="Dupliquer vers un autre forum" onclick="adDupSponsor('${s.id}')">⧉</button><button class="btn" onclick="adEditSponsor('${s.id}')">✏️</button><button class="btn danger" onclick="adDelSponsor('${s.id}')">✕</button></div>`).join('');
@@ -354,6 +354,37 @@ async function adImportCsv(e){
   }
 }
 async function adDelGuest(gid){ if(!confirm(a('confirmDel')))return; if(L()){ const {error}=await OAFAuth.client().from('guests').delete().eq('id',gid); if(error){adToast(error.message);return;} await reloadAndRender(); adToast(a('tDel')); } }
+/* Ajout / modification d'UN participant importé (last-minute, correction). */
+function adResetGuest(){ if($('#gEditId'))$('#gEditId').value=''; ['gName','gEmail','gRole','gCountry','gInterests'].forEach(id=>{ if($('#'+id)){ $('#'+id).value=''; } }); if($('#gEmail'))$('#gEmail').placeholder=lang==='fr'?'E-mail (profil pré-rempli + invitation)':'Email (prefilled profile + invite)'; if($('#gSaveBtn'))$('#gSaveBtn').textContent=lang==='fr'?'➕ Ajouter le participant':'➕ Add participant'; if($('#gCancelBtn'))$('#gCancelBtn').style.display='none'; }
+function adGuestEdit(gid){ const g=OAF.attendees().find(x=>String(x.gid)===String(gid)); if(!g)return;
+  if($('#gEditId'))$('#gEditId').value=gid;
+  $('#gName').value=g.name||''; $('#gRole').value=(g.role&&(g.role[lang]||g.role.fr))||''; $('#gCountry').value=g.country||''; $('#gInterests').value=(g.tags||[]).join(', ');
+  $('#gEmail').value=''; $('#gEmail').placeholder=lang==='fr'?'E-mail — laisser vide = inchangé':'Email — leave blank = unchanged';
+  if($('#gSaveBtn'))$('#gSaveBtn').textContent=lang==='fr'?'Enregistrer':'Save'; if($('#gCancelBtn'))$('#gCancelBtn').style.display='';
+  try{ $('#gName').scrollIntoView({behavior:'smooth',block:'center'}); }catch(_){}
+}
+async function adSaveGuest(){
+  if(!L()){ adToast(lang==='fr'?'Base réelle uniquement.':'Live database only.'); return; }
+  const name=($('#gName').value||'').trim(); if(!name){ adToast(lang==='fr'?'Le nom est obligatoire.':'Name is required.'); return; }
+  const email=($('#gEmail').value||'').trim().toLowerCase();
+  const role=($('#gRole').value||'').trim();
+  const country=($('#gCountry').value||'').trim()||'🌍';
+  const interests=($('#gInterests').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const sb=OAFAuth.client(), ev=evId(), editId=$('#gEditId').value;
+  try{
+    if(editId){
+      const patch={ name, role:{fr:role,en:role}, country, interests };
+      if(email) patch.email=email;            // si vide on ne touche pas à l'e-mail
+      const {error}=await sb.from('guests').update(patch).eq('id',editId); if(error) throw error;
+    } else {
+      const rec={ event_id:ev, name, role:{fr:role,en:role}, country, interests };
+      if(email) rec.email=email;
+      const {error}=await sb.from('guests').insert(rec); if(error) throw error;
+    }
+    await reloadAndRender(); adResetGuest();
+    adToast(lang==='fr'?'Participant enregistré ✓':'Participant saved ✓');
+  }catch(e){ adToast(e.message||String(e)); }
+}
 async function adClearGuests(){ if(!confirm(lang==='fr'?'Supprimer tous les participants importés de ce forum ?':'Delete all imported attendees of this forum?'))return; if(L()){ const {error}=await OAFAuth.client().from('guests').delete().eq('event_id',evId()); if(error){adToast(error.message);return;} await reloadAndRender(); adToast(a('tDel')); } }
 function adCsvTemplate(){
   const csv='name,role,country,interests,email\nAmadou Diallo,CEO · SolarMali,🇲🇱,"Énergie, Climat",amadou@solarmali.com\nGrace Mwangi,Founder · AgriKenya,🇰🇪,"Agritech, Investissement",grace@agrikenya.co\nJoseph Banda,Investor · Lusaka Capital,🇿🇲,"Fintech, Seed",joseph@lusaka.capital\n';
