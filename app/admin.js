@@ -580,10 +580,8 @@ async function adEmailTest(){
   const btn=$('#emTestBtn'); if(btn){ btn.disabled=true; btn.textContent=lang==='fr'?'Envoi…':'Sending…'; }
   try{
     const sb=OAFAuth.client();
-    const ev=OAF.currentEvent&&OAF.currentEvent(); const name=(ev&&ev.name)||'One Africa Forums';
-    const {error}=await sb.rpc('send_event_invites',{ emails:[email], event_name:name,
-      app_url:($('#invUrl').value||'').trim()||'https://app.oneafricaforums.com/app/',
-      from_email:($('#invFrom').value||'').trim()||undefined });
+    const {error}=await sb.rpc('invite_event_guests',{ p_event: evId(), p_only: email,
+      app_url:($('#invUrl').value||'').trim()||'https://app.oneafricaforums.com/app/' });
     if(error) throw error;
     if(btn) btn.textContent=lang==='fr'?'Vérification…':'Checking…';
     await new Promise(r=>setTimeout(r,4500)); // laisse pg_net traiter la requête
