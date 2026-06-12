@@ -151,7 +151,8 @@
           <div class="field"><label id="fInvLink">Lien de l'app</label><input id="invUrl" placeholder="https://app.oneafricaforums.com/app/" value="https://app.oneafricaforums.com/app/" /></div>
           <div class="field"><label id="fInvFrom">Expéditeur</label><input id="invFrom" placeholder="One Africa Forums &lt;no-reply@send.oneafricaforums.com&gt;" value="One Africa Forums <no-reply@send.oneafricaforums.com>" /></div>
         </div>
-        <button class="btn solid" onclick="adSendInvites()" id="invBtn">📨 Envoyer les invitations</button>
+        <button class="btn" onclick="adEmailTest()" id="emTestBtn">🩺 Tester l'e-mail (Resend)</button>
+        <button class="btn solid" onclick="adSendInvites()" id="invBtn" style="margin-left:8px">📨 Envoyer les invitations</button>
         <button class="btn" onclick="adInviteAllGuests()" id="invAllBtn" style="margin-left:8px">👥 Inviter tous les participants importés</button>
         <div class="desc" id="invHint" style="margin-top:8px">« Inviter tous les participants importés » envoie en 1 clic à toutes les adresses du forum actif (liste importée). Expéditeur : votre domaine vérifié dans Resend.</div>
       </div>

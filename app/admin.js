@@ -571,6 +571,31 @@ async function adSendInvites(){
   }catch(e){ adToast(e.message||String(e)); }
   finally{ if(btn){ btn.disabled=false; btn.textContent='📨 '+(lang==='fr'?'Envoyer les invitations':'Send invitations'); } }
 }
+/* Santé e-mail : envoie 1 test à sa propre adresse + lit le VRAI statut Resend
+   (200 = OK, 401 = clé invalide…). Rend tout échec immédiatement visible. */
+async function adEmailTest(){
+  if(!L()){ adToast(lang==='fr'?'Base réelle uniquement.':'Live database only.'); return; }
+  const u=OAFAuth.user&&OAFAuth.user(); const email=u&&u.email;
+  if(!email){ adToast(lang==='fr'?'Connexion requise.':'Sign in required.'); return; }
+  const btn=$('#emTestBtn'); if(btn){ btn.disabled=true; btn.textContent=lang==='fr'?'Envoi…':'Sending…'; }
+  try{
+    const sb=OAFAuth.client();
+    const ev=OAF.currentEvent&&OAF.currentEvent(); const name=(ev&&ev.name)||'One Africa Forums';
+    const {error}=await sb.rpc('send_event_invites',{ emails:[email], event_name:name,
+      app_url:($('#invUrl').value||'').trim()||'https://app.oneafricaforums.com/app/',
+      from_email:($('#invFrom').value||'').trim()||undefined });
+    if(error) throw error;
+    if(btn) btn.textContent=lang==='fr'?'Vérification…':'Checking…';
+    await new Promise(r=>setTimeout(r,4500)); // laisse pg_net traiter la requête
+    const {data,error:e2}=await sb.rpc('email_last_status');
+    if(e2) throw e2;
+    const row=(data&&data[0])||null;
+    if(!row){ adToast(lang==='fr'?'Envoyé. Statut pas encore prêt — réessaie dans 5 s.':'Sent. Status not ready — retry in 5s.'); }
+    else if(row.status_code>=200 && row.status_code<300){ adToast('✅ Resend OK ('+row.status_code+') — e-mail envoyé à '+email); }
+    else { adToast('❌ Resend '+row.status_code+' : '+String(row.reponse||'').slice(0,90)); }
+  }catch(e){ adToast(e.message||String(e)); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='🩺 '+(lang==='fr'?"Tester l'e-mail (Resend)":'Test email (Resend)'); } }
+}
 /* 1 clic : invite TOUS les participants importés (guests) du forum actif.
    Les e-mails sont lus côté serveur (fonction SECURITY DEFINER) — l'admin n'a
    pas à les coller, et ils restent masqués dans la console. */
