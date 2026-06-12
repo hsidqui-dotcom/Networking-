@@ -608,12 +608,10 @@ async function adInviteAllGuests(){
     if(e1) throw e1;
     const list=(emails||[]).filter(Boolean);
     if(!list.length){ adToast(lang==='fr'?'Aucun e-mail importé sur ce forum.':'No imported emails for this event.'); return; }
-    if(!confirm((lang==='fr'?'Envoyer une invitation à ':'Send an invitation to ')+list.length+(lang==='fr'?' participants importés ?':' imported attendees?'))) { if(btn){btn.disabled=false;btn.textContent=lang==='fr'?'👥 Inviter tous les participants importés':'👥 Invite all imported attendees';} return; }
-    const ev=OAF.currentEvent&&OAF.currentEvent(); const name=(ev&&ev.name)||'One Africa Forums';
-    const {data,error}=await sb.rpc('send_event_invites',{
-      emails:list, event_name:name,
-      app_url:($('#invUrl').value||'').trim()||'https://app.oneafricaforums.com/app/',
-      from_email:($('#invFrom').value||'').trim()||undefined
+    if(!confirm((lang==='fr'?'Envoyer une invitation NOMINATIVE à ':'Send a personalized invitation to ')+list.length+(lang==='fr'?' participants importés ?':' imported attendees?'))) { if(btn){btn.disabled=false;btn.textContent=lang==='fr'?'👥 Inviter tous les participants importés':'👥 Invite all imported attendees';} return; }
+    const {data,error}=await sb.rpc('invite_event_guests',{
+      p_event: evId(),
+      app_url:($('#invUrl').value||'').trim()||'https://app.oneafricaforums.com/app/'
     });
     if(error) throw error;
     adToast((lang==='fr'?'Invitations envoyées : ':'Invitations sent: ')+((data&&data.sent)||list.length)+' ✉️');
