@@ -229,7 +229,7 @@ function buildMatch(myTags, myLook, p){
 }
 
 /* ===== Incitation à compléter le profil (1er lancement) ===== */
-function profileIncomplete(){ const me=OAF.me(); if(!me) return false; const noTags=!(me.interests&&me.interests.length); const noLook=!(me.look&&(me.look.fr||me.look.en)); const noName=!me.name || String(me.name).indexOf('@')>=0; return noTags||noLook||noName; }
+function profileIncomplete(){ const me=OAF.me(); if(!me) return false; const noRole=!(me.role&&(me.role.fr||me.role.en)); const noTags=!(me.interests&&me.interests.length); const noLook=!(me.look&&(me.look.fr||me.look.en)); const noName=!me.name || String(me.name).indexOf('@')>=0; return noRole||noTags||noLook||noName; }
 function renderOnboarding(){ const box=$('#hOnboard'); if(!box) return; const live=OAFAuth&&OAFAuth.live&&OAFAuth.live(); if(live && profileIncomplete()){ box.innerHTML=`<div class="card" style="border:1.5px solid var(--yellow);background:linear-gradient(180deg,#fffdf3,#fff)"><b style="font-size:13.5px">${t('obT')}</b><p style="font-size:12.5px;color:var(--muted);margin:6px 0 10px">${t('obS')}</p><button class="btn solid" style="width:100%" onclick="show('profile')">${t('obBtn')}</button></div>`; } else { box.innerHTML=''; } }
 
 /* Statut effectif d'un événement : calculé d'après les dates réelles si le mode
@@ -417,7 +417,15 @@ function renderPeople(){
   if(q!==_lastPeopleQ){ peopleShown=60; _lastPeopleQ=q; }
   let list=OAF.attendees();
   if(q) list=list.filter(p=>_norm(p.name+' '+((p.role&&p.role[lang])||'')+' '+(p.country||'')+' '+((p.tags||[]).join(' '))+' '+((p.look&&p.look[lang])||'')).indexOf(q)>=0);
-  if(!list.length){ $('#plList').innerHTML=`<div class="empty">${t('plNone')}</div>`; return; }
+  // Bandeau « complétez votre profil » tant qu'il manque des infos clés (fonction/intérêts…).
+  let banner='';
+  if((OAFAuth&&OAFAuth.live&&OAFAuth.live()) && profileIncomplete()){
+    banner=`<div class="card" style="border:1.5px solid var(--yellow,#F2E500);background:linear-gradient(180deg,#fffdf3,#fff);cursor:pointer" onclick="show('profile')">
+      <b style="font-size:13.5px">📝 ${lang==='fr'?'Complétez votre profil':'Complete your profile'}</b>
+      <p style="font-size:12.5px;color:var(--muted);margin:6px 0 10px">${lang==='fr'?"Ajoutez votre fonction, société et centres d'intérêt pour apparaître avec vos infos et obtenir de meilleures correspondances.":'Add your role, company and interests to appear with your details and get better matches.'}</p>
+      <button class="btn solid" style="width:100%" onclick="event.stopPropagation();show('profile')">${lang==='fr'?'Compléter maintenant':'Complete now'}</button></div>`;
+  }
+  if(!list.length){ $('#plList').innerHTML=banner+`<div class="empty">${t('plNone')}</div>`; return; }
   // Rendu par paquets : on ne peint que les `peopleShown` premières fiches pour
   // éviter de figer l'écran avec des centaines/milliers de profils.
   const slice=list.slice(0, peopleShown);
@@ -432,7 +440,7 @@ function renderPeople(){
   if(list.length>peopleShown){
     html += `<button class="btn" style="width:100%;margin-top:6px" onclick="showMorePeople()">${lang==='fr'?'Voir plus':'Show more'} (${list.length-peopleShown})</button>`;
   }
-  $('#plList').innerHTML = html;
+  $('#plList').innerHTML = banner + html;
 }
 function showMorePeople(){ peopleShown+=60; renderPeople(); }
 function doConnect(id,btn){if(String(id).indexOf('g_')===0){toast(lang==='fr'?"Ce participant pourra échanger dès son inscription.":'This attendee can connect once they sign in.');return;}OAF.addConnection(id);btn.textContent=t('connected');btn.disabled=true;btn.style.opacity=.7;const a=OAF.attendees().find(x=>String(x.id)===String(id));toast(t('tConnect')+(a?a.name.split(' ')[0]:''));renderChrome();
