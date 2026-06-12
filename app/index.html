@@ -200,7 +200,9 @@
     <h2 id="authT">Connexion</h2>
     <p id="authP">Connectez-vous pour rejoindre l'événement.</p>
     <button class="btn" id="authGoogle" onclick="authOAuth('google')" style="width:100%;background:#fff;color:#111;border:1px solid #dadce0;font-weight:600;margin-bottom:8px">Continuer avec Google</button>
-    <button class="btn" id="authLinkedin" onclick="authOAuth('linkedin_oidc')" style="width:100%;background:#0a66c2;color:#fff;font-weight:600;border:0">Continuer avec LinkedIn</button>
+    <!-- LinkedIn masqué tant que le provider n'est pas configuré dans Supabase.
+         Pour le réactiver : retirer display:none ci-dessous. -->
+    <button class="btn" id="authLinkedin" onclick="authOAuth('linkedin_oidc')" style="display:none;width:100%;background:#0a66c2;color:#fff;font-weight:600;border:0">Continuer avec LinkedIn</button>
     <div class="authsep" style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:14px 0"><span style="flex:1;height:1px;background:var(--line,#e3e3e3)"></span><span id="authOr">ou par e-mail</span><span style="flex:1;height:1px;background:var(--line,#e3e3e3)"></span></div>
     <input id="authEmail" type="email" placeholder="vous@exemple.com" autocomplete="email" />
     <button class="btn solid" id="authSend" onclick="authSend()">Recevoir un code</button>
@@ -213,10 +215,10 @@
   </div>
 </div>
 
-<script src="config.js?v=51"></script>
-<script src="supabase.js?v=51"></script>
-<script src="store.js?v=51"></script>
-<script src="app.js?v=51"></script>
+<script src="config.js?v=52"></script>
+<script src="supabase.js?v=52"></script>
+<script src="store.js?v=52"></script>
+<script src="app.js?v=52"></script>
 <script>
 if ('serviceWorker' in navigator) {
   // Recharge la page une seule fois quand un nouveau service worker prend le
