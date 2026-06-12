@@ -571,6 +571,22 @@ async function adSendInvites(){
   }catch(e){ adToast(e.message||String(e)); }
   finally{ if(btn){ btn.disabled=false; btn.textContent='📨 '+(lang==='fr'?'Envoyer les invitations':'Send invitations'); } }
 }
+/* 1 clic : invite TOUS les participants importés (guests) du forum actif.
+   Les e-mails sont lus côté serveur (fonction SECURITY DEFINER) — l'admin n'a
+   pas à les coller, et ils restent masqués dans la console. */
+async function adInviteAllGuests(){
+  if(!L()){ adToast(lang==='fr'?'Disponible sur la base réelle uniquement.':'Live database only.'); return; }
+  if(!confirm(lang==='fr'?'Envoyer une invitation à TOUS les participants importés de ce forum ?':'Send an invitation to ALL imported attendees of this forum?')) return;
+  const btn=$('#invAllBtn'); if(btn){ btn.disabled=true; btn.textContent='…'; }
+  try{
+    const {data,error}=await OAFAuth.client().rpc('invite_all_guests',{
+      p_event: evId(), app_url:($('#invUrl').value||'').trim()||'https://app.oneafricaforums.com/app/'
+    });
+    if(error) throw error;
+    adToast((lang==='fr'?'Invitations envoyées : ':'Invitations sent: ')+((data&&data.sent)||0)+' ✉️');
+  }catch(e){ adToast(e.message||String(e)); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent=lang==='fr'?'👥 Inviter tous les participants importés':'👥 Invite all imported attendees'; } }
+}
 async function adShowQR(){
   const url=($('#qrUrl').value||'').trim()||location.origin; const box=$('#qrBox'); if(!box)return;
   box.textContent='…';

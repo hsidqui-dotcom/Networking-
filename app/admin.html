@@ -152,7 +152,8 @@
           <div class="field"><label id="fInvFrom">Expéditeur</label><input id="invFrom" placeholder="One Africa Forums &lt;no-reply@send.oneafricaforums.com&gt;" value="One Africa Forums <no-reply@send.oneafricaforums.com>" /></div>
         </div>
         <button class="btn solid" onclick="adSendInvites()" id="invBtn">📨 Envoyer les invitations</button>
-        <div class="desc" id="invHint" style="margin-top:8px">Sans domaine vérifié dans Resend, l'envoi de test ne fonctionne que vers votre propre adresse. Vérifiez <b>oneafricaforums.com</b> dans Resend pour envoyer à tous.</div>
+        <button class="btn" onclick="adInviteAllGuests()" id="invAllBtn" style="margin-left:8px">👥 Inviter tous les participants importés</button>
+        <div class="desc" id="invHint" style="margin-top:8px">« Inviter tous les participants importés » envoie en 1 clic à toutes les adresses du forum actif (liste importée). Expéditeur : votre domaine vérifié dans Resend.</div>
       </div>
       <div class="panel"><h3 id="peModT">⚠️ Modération — signalements</h3>
         <div class="desc" id="peModS">Signalements envoyés par les participants. Marquez-les « traité » une fois pris en charge.</div>
