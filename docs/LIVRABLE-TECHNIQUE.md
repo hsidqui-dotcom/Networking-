@@ -5,6 +5,30 @@
 
 ---
 
+## 0) STATUT AU 13 JUIN 2026 (état réel vérifié)
+
+> Légende : ✅ confirmé / ⚠️ à confirmer dans le tableau de bord concerné (info non visible depuis le code).
+
+| Élément | Statut | Détail |
+|---|---|---|
+| **Supabase — plan** | ✅ **Pro** | Backups quotidiens + PITR 7 jours **actifs**. Capacité temps réel relevée. |
+| **Supabase — organisation** | ✅ **OneAfricaForums** | Projet `Oaf-project-prod` (ref `qxxjsqctkltnjptqdbye`). |
+| **Domaine d'envoi e-mail (Resend)** | ✅ **Vérifié** | `send.oneafricaforums.com` — SPF + DKIM valides (juin 2026). |
+| **Connexion Google (OAuth)** | ✅ Publiée et fonctionnelle | — |
+| **Onboarding obligatoire** (nom + fonction/société) | ✅ En production | — |
+| **Module Partenaires premium** | ✅ En production | logos, niveaux, contacts, liens. |
+| **Programmes APIDE (Abidjan + Lomé) + intervenants + participants test** | ✅ Importés | CSV dans `docs/programmes/`. |
+| **Bouton LinkedIn** | ✅ Masqué proprement | provider non configuré (réaffichable en 1 ligne). |
+| **Service Worker (cache)** | ✅ `oaf-connect-v52` | à incrémenter à chaque évolution frontend. |
+| **Kit de diffusion** (QR, affiche, textes, DMARC, IT) | ✅ Livré | `docs/diffusion/`. |
+| **GitHub — propriété** | ⚠️ **À confirmer** | Le dépôt pointe encore vers `github.com/hsidqui-dotcom/Networking-`. Vérifier s'il a été **transféré vers une organisation au nom de l'entreprise** (ou si le compte a été rattaché). |
+| **Resend — plan d'envoi** | ⚠️ **À confirmer** | Vérifier le **quota/jour** vs le nombre total d'invitations des 2 forums (point critique avant l'événement). |
+| **Propriété Google / DNS Genious** | ⚠️ À confirmer | Comptes au nom de l'entreprise + 2 admins. |
+
+> Les lignes ⚠️ sont les seuls points ouverts. Tout le reste est en production et vérifié.
+
+---
+
 ## 1) OÙ EST LE CODE SOURCE
 
 - **Hébergement du code** : **GitHub**.
@@ -76,7 +100,7 @@ Networking-/
 | **Domaine connecté** | **app.oneafricaforums.com** (fichier `CNAME`, HTTPS forcé) |
 | **App participant** | `https://app.oneafricaforums.com/app/` |
 | **Console organisateur** | `https://app.oneafricaforums.com/app/admin.html` |
-| **Backend / base / API** | **Supabase** (projet `Oaf-project-prod`, ref `qxxjsqctkltnjptqdbye`) |
+| **Backend / base / API** | **Supabase Pro** (projet `Oaf-project-prod`, ref `qxxjsqctkltnjptqdbye`, org *OneAfricaForums*) |
 | **E-mails** | **Resend** (domaine vérifié `send.oneafricaforums.com`) |
 
 ### Comment ça se redéploie (automatique)
@@ -141,8 +165,9 @@ Networking-/
      `pg_dump "postgresql://postgres:[MDP]@db.qxxjsqctkltnjptqdbye.supabase.co:5432/postgres" -Fc -f oaf_backup.dump`
   3. Export rapide d'une table en CSV : Table Editor → **Export**.
 - **Restaurer** : sur un projet Supabase neuf → exécuter les fichiers `supabase/*.sql` (voir ordre dans `docs/AUDIT-2026-06-10.md`), puis `pg_restore` du dump, ou réimporter les CSV.
-- **Procédures de backup recommandées** :
-  - 🔴 **CRITIQUE** : le plan **Free n'a pas de sauvegarde automatique fiable**. **Soit** passer en **Supabase Pro** (sauvegardes quotidiennes + PITR 7 jours), **soit** faire un **`pg_dump` manuel hebdomadaire** (et avant/après chaque événement) stocké hors-ligne.
+- **Procédures de backup** :
+  - ✅ **Le projet est en Supabase Pro** : **sauvegardes quotidiennes automatiques + PITR (Point-in-Time Recovery) 7 jours** sont actives (Dashboard → Database → Backups).
+  - 🟢 **Bonne pratique complémentaire** (ceinture + bretelles) : faire un **`pg_dump` manuel avant et après chaque événement**, stocké hors-ligne.
   - Conserver aussi les **CSV sources** (déjà dans `docs/programmes/`).
 
 ---
@@ -153,8 +178,8 @@ Networking-/
 
 | Service | Usage | À conserver |
 |---|---|---|
-| **GitHub** (`hsidqui-dotcom`) | Code source + déploiement | Identifiants + droits sur le dépôt `Networking-` |
-| **Supabase** (`Oaf-project-prod`) | Base, auth, temps réel | Login + URL projet + clés (anon publique, **service_role secrète**) |
+| **GitHub** (dépôt `hsidqui-dotcom/Networking-`) | Code source + déploiement | Identifiants + droits sur le dépôt. ⚠️ Confirmer que le dépôt est rattaché à une **organisation au nom de l'entreprise** (voir §0). |
+| **Supabase Pro** (org *OneAfricaForums*, projet `Oaf-project-prod`) | Base, auth, temps réel, backups | Login + URL projet + clés (anon publique, **service_role secrète**) |
 | **Resend** | E-mails | Login + **clé API `re_…`** (aussi dans Supabase Vault `resend_api_key`) |
 | **Google Cloud Console** | Connexion Google (OAuth) | Login + **Client ID / Client Secret** OAuth |
 | **Registrar du domaine** | `oneafricaforums.com` (DNS) | Accès DNS (sous-domaines `app` et `send`) |
@@ -207,12 +232,12 @@ git add -A && git commit -m "ma modif" && git push
 
 | # | Risque | Action recommandée | Priorité |
 |---|---|---|---|
-| 1 | **Propriété des comptes** : si Supabase/GitHub/Resend/Google/DNS sont sur des comptes **personnels**, l'entreprise peut perdre l'accès. | Tout mettre **au nom de l'entreprise** (ou organisation GitHub) + accès partagés. | 🔴 |
-| 2 | **Sauvegardes** : le plan Supabase **Free** n'a pas de backup auto fiable. | **Pro** (backups quotidiens + PITR) **ou** `pg_dump` hebdo hors-ligne. | 🔴 |
+| 1 | **Propriété des comptes** : si Supabase/GitHub/Resend/Google/DNS sont sur des comptes **personnels**, l'entreprise peut perdre l'accès. | Supabase ✅ (org *OneAfricaForums*). **À confirmer** : dépôt GitHub rattaché à une org entreprise, Resend/Google/DNS au nom de l'entreprise + 2 admins. | 🟠 |
+| 2 | ~~Sauvegardes Supabase~~ | ✅ **RÉGLÉ** — Supabase **Pro** : backups quotidiens + PITR 7 jours actifs. Garder un `pg_dump` avant/après événement. | ✅ |
 | 3 | **Branche de déploiement** au nom auto-généré (`claude/…`). | **Fusionner sur `main`** et faire pointer `pages.yml` sur `main` (plus clair, plus robuste). | 🟠 |
 | 4 | **Dépendance CDN esm.sh** : si esm.sh tombe, la connexion casse. | **Héberger (vendoriser) `supabase-js` et `qrcode`** dans le dépôt (et adapter la CSP). | 🟠 |
-| 5 | **Capacité** : Free ≈ 200 connexions temps réel simultanées. | **Pro (+ add-on compute)** autour des grands événements ; valider par stress test. | 🟠 |
-| 6 | **Limites Resend** : free ≈ 100 e-mails/jour. | Plan payant adapté au volume d'invitations/codes le jour J. | 🟠 |
+| 5 | **Capacité temps réel** | ✅ **Pro actif** (limite relevée). Pour un très grand événement, envisager l'**add-on compute** ; **valider par stress test** (prévu au bureau). | 🟢 |
+| 6 | **Limites Resend** : à confirmer le **quota d'envoi/jour** du plan actuel. | Vérifier que le quota couvre le **total d'invitations + codes** des 2 forums le jour J ; sinon, plan adapté. **Point critique avant l'événement.** | 🔴 |
 | 7 | **Rotation des secrets** (clé Resend, secret Google). | Documenter + savoir les régénérer (procédure dans §6). | 🟡 |
 | 8 | **LinkedIn** désactivé (bouton masqué). | Configurer le provider quand prêt, puis réafficher (1 ligne dans `app/index.html`). | 🟡 |
 | 9 | **CSP avec `'unsafe-inline'`** (gestionnaires onclick). | Acceptable ; durcissement = refactor (phase 2). | 🟡 |
