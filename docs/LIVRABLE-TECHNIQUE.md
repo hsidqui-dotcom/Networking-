@@ -56,7 +56,8 @@ Networking-/
 │   ├── AUDIT-2026-06-10.md #   Audit expert + feuille de route
 │   ├── LIVRABLE-TECHNIQUE.md#  CE document
 │   ├── pilote-checklist.md, product-spec.md, …
-│   └── programmes/         #   CSV prêts (programmes APIDE + intervenants + participants)
+│   ├── programmes/         #   CSV prêts (programmes APIDE + intervenants + participants)
+│   └── diffusion/          #   Kit d'accès prêt à diffuser (QR, affiche A5, textes, DMARC, IT)
 │
 └── tests/                  # Tests & diagnostics
     ├── functional-checklist.md   # Checklist de tests fonctionnels
@@ -218,12 +219,30 @@ git add -A && git commit -m "ma modif" && git push
 
 ---
 
-## 9) ✅ CE QUE TU DOIS TÉLÉCHARGER, SAUVEGARDER, CONSERVER
+## 9) ACCÈS PARTICIPANTS & DÉLIVRABILITÉ E-MAIL (stratégie de production)
+
+L'accès à l'app **ne dépend jamais d'un seul canal**. Trois portes d'entrée, du plus fiable au moins fiable :
+
+1. **QR code** (badges, accueil, programme, slides) → fiabilité maximale, aucun filtre.
+2. **Lien partagé** `https://app.oneafricaforums.com/app/` (WhatsApp, LinkedIn, site) → arrive toujours.
+3. **E-mail nominatif** (envoyé depuis la console) → confort ; une partie peut être filtrée par les serveurs d'entreprise (Microsoft 365 quarantaine = *self-domain spoofing*). **Non bloquant** grâce aux canaux 1 et 2.
+
+**Kit prêt à diffuser** : `docs/diffusion/` — QR haute résolution (`qr-oaf-connect.png/.pdf`), affiche A5 d'accueil (`affiche-accueil-A5.pdf`), textes WhatsApp/programme (`KIT-DIFFUSION.md`), demande IT (`DEMANDE-WHITELIST-IT.md`), ticket DMARC Genious (`TICKET-DMARC-GENIOUS.md`).
+
+**Renforcement délivrabilité (durable)** :
+- **SPF + DKIM** : déjà en place et vérifiés sur `send.oneafricaforums.com` (chez Resend).
+- **DMARC** : à publier sur `oneafricaforums.com` via ticket Genious (mode `p=none` au départ, puis durcir `quarantine`/`reject` après l'événement). Valeur et procédure dans `docs/diffusion/TICKET-DMARC-GENIOUS.md`.
+- **Whitelist interne** : règle à poser une fois par l'IT pour débloquer les destinataires `@oneafricaforums.com`.
+- **Réputation** : le domaine d'envoi étant récent (vérifié juin 2026), la délivrabilité s'améliore avec des envois réguliers.
+
+---
+
+## 10) ✅ CE QUE TU DOIS TÉLÉCHARGER, SAUVEGARDER, CONSERVER
 
 1. **Le code** : GitHub → `Networking-` → **Download ZIP** (et/ou garder l'accès au dépôt).
 2. **Un export de la base** : `pg_dump` (voir §5) — au moins **avant et après chaque événement**.
 3. **Ce dossier** : `docs/LIVRABLE-TECHNIQUE.md` (+ `docs/AUDIT-2026-06-10.md`).
 4. **Les accès** (§6) dans un **gestionnaire de mots de passe** au nom de l'entreprise.
-5. **Les CSV sources** (`docs/programmes/`).
+5. **Les CSV sources** (`docs/programmes/`) et le **kit de diffusion** (`docs/diffusion/`).
 
 > Avec ces 5 éléments, le projet est **archivé, transmissible et indépendant** de tout environnement temporaire.
