@@ -254,6 +254,8 @@ L'accès à l'app **ne dépend jamais d'un seul canal**. Trois portes d'entrée,
 
 **Kit prêt à diffuser** : `docs/diffusion/` — QR haute résolution (`qr-oaf-connect.png/.pdf`), affiche A5 d'accueil (`affiche-accueil-A5.pdf`), textes WhatsApp/programme (`KIT-DIFFUSION.md`), demande IT (`DEMANDE-WHITELIST-IT.md`), ticket DMARC Genious (`TICKET-DMARC-GENIOUS.md`).
 
+**Débit d'envoi (rate limit)** : Resend limite à **5 requêtes/seconde**. Les envois groupés (console : « Inviter tous » et zone manuelle) sont **étalés côté client (~350 ms entre chaque e-mail)** avec compteur de progression, pour rester sous la limite et éviter les rejets **429** silencieux. *(Bug identifié et corrigé le 13/06/2026 via les logs Resend.)*
+
 **Renforcement délivrabilité (durable)** :
 - **SPF + DKIM** : déjà en place et vérifiés sur `send.oneafricaforums.com` (chez Resend).
 - **DMARC** : à publier sur `oneafricaforums.com` via ticket Genious (mode `p=none` au départ, puis durcir `quarantine`/`reject` après l'événement). Valeur et procédure dans `docs/diffusion/TICKET-DMARC-GENIOUS.md`.

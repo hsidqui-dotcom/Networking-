@@ -597,9 +597,13 @@ async function adSendInvites(){
   const appUrl=($('#invUrl').value||'').trim()||'https://app.oneafricaforums.com/app/';
   let sent=0, fail=0, lastErr='';
   try{
-    for(const email of emails){
-      const {error}=await sb.rpc('invite_event_guests',{ p_event: evId(), p_only: email, app_url: appUrl });
+    for(let i=0;i<emails.length;i++){
+      const {error}=await sb.rpc('invite_event_guests',{ p_event: evId(), p_only: emails[i], app_url: appUrl });
       if(error){ fail++; lastErr=error.message||String(error); } else { sent++; }
+      if(btn) btn.textContent=(lang==='fr'?'Envoi ':'Sending ')+(i+1)+'/'+emails.length+'…';
+      // THROTTLE : Resend limite à 5 requêtes/seconde. On espace les envois
+      // (~350 ms) pour rester sous la limite et éviter les rejets 429.
+      if(i<emails.length-1) await new Promise(r=>setTimeout(r,350));
     }
     if(sent) $('#invEmails').value='';
     adToast((lang==='fr'?'Invitations nominatives envoyées : ':'Personalized invitations sent: ')+sent+' ✉️'
@@ -631,8 +635,10 @@ async function adEmailTest(){
   finally{ if(btn){ btn.disabled=false; btn.textContent='🩺 '+(lang==='fr'?"Tester l'e-mail (Resend)":'Test email (Resend)'); } }
 }
 /* 1 clic : invite TOUS les participants importés (guests) du forum actif.
-   Les e-mails sont lus côté serveur (fonction SECURITY DEFINER) — l'admin n'a
-   pas à les coller, et ils restent masqués dans la console. */
+   Les e-mails sont lus côté serveur (guest_emails, SECURITY DEFINER), puis
+   envoyés UN PAR UN avec une pause (~350 ms) : Resend limite à 5 requêtes/seconde,
+   un envoi en rafale provoque des rejets 429 silencieux. Le débit contrôlé côté
+   client garantit que personne n'est oublié, et affiche la progression. */
 async function adInviteAllGuests(){
   if(!L()){ adToast(lang==='fr'?'Disponible sur la base réelle uniquement.':'Live database only.'); return; }
   const btn=$('#invAllBtn'); if(btn){ btn.disabled=true; btn.textContent='…'; }
@@ -643,12 +649,16 @@ async function adInviteAllGuests(){
     const list=(emails||[]).filter(Boolean);
     if(!list.length){ adToast(lang==='fr'?'Aucun e-mail importé sur ce forum.':'No imported emails for this event.'); return; }
     if(!confirm((lang==='fr'?'Envoyer une invitation NOMINATIVE à ':'Send a personalized invitation to ')+list.length+(lang==='fr'?' participants importés ?':' imported attendees?'))) { if(btn){btn.disabled=false;btn.textContent=lang==='fr'?'👥 Inviter tous les participants importés':'👥 Invite all imported attendees';} return; }
-    const {data,error}=await sb.rpc('invite_event_guests',{
-      p_event: evId(),
-      app_url:($('#invUrl').value||'').trim()||'https://app.oneafricaforums.com/app/'
-    });
-    if(error) throw error;
-    adToast((lang==='fr'?'Invitations envoyées : ':'Invitations sent: ')+((data&&data.sent)||list.length)+' ✉️');
+    const appUrl=($('#invUrl').value||'').trim()||'https://app.oneafricaforums.com/app/';
+    let sent=0, fail=0, lastErr='';
+    for(let i=0;i<list.length;i++){
+      const {error}=await sb.rpc('invite_event_guests',{ p_event: evId(), p_only: list[i], app_url: appUrl });
+      if(error){ fail++; lastErr=error.message||String(error); } else { sent++; }
+      if(btn) btn.textContent=(lang==='fr'?'Envoi ':'Sending ')+(i+1)+'/'+list.length+'…';
+      if(i<list.length-1) await new Promise(r=>setTimeout(r,350)); // < 5 req/s (limite Resend)
+    }
+    adToast((lang==='fr'?'Invitations envoyées : ':'Invitations sent: ')+sent+' ✉️'
+      +(fail?(' · '+(lang==='fr'?'échecs : ':'failed: ')+fail+(lastErr?(' ('+lastErr.slice(0,60)+')'):'')):''));
   }catch(e){ adToast(e.message||String(e)); }
   finally{ if(btn){ btn.disabled=false; btn.textContent=lang==='fr'?'👥 Inviter tous les participants importés':'👥 Invite all imported attendees'; } }
 }
