@@ -241,6 +241,8 @@ git add -A && git commit -m "ma modif" && git push
 | 7 | **Rotation des secrets** (clé Resend, secret Google). | Documenter + savoir les régénérer (procédure dans §6). | 🟡 |
 | 8 | **LinkedIn** désactivé (bouton masqué). | Configurer le provider quand prêt, puis réafficher (1 ligne dans `app/index.html`). | 🟡 |
 | 9 | **CSP avec `'unsafe-inline'`** (gestionnaires onclick). | Acceptable ; durcissement = refactor (phase 2). | 🟡 |
+| 10 | **Écran Google affiche le domaine technique** `qxxj…supabase.co` au lieu de la marque. **Config 100 % correcte** (client `500270555700-…` du projet *OAF Connect*, app *In production*, branding posé) — c'est **inhérent** au montage : Google affiche le domaine de **redirection** (`…supabase.co/auth/v1/callback`). **Cosmétique, non bloquant** (connexion OK). | **Custom Domain Supabase** → callback `auth.oneafricaforums.com` (add-on ~10 $/mois + 1 CNAME chez Genious). Le branding nom/logo n'y change rien. **À faire APRÈS l'événement.** | 🟡 |
+| 11 | **Client OAuth Google a 2 secrets** (un ancien + un nouveau, suite à une régénération). Avertissement Google d'hygiène de sécurité. **Non bloquant.** | Procédure **sûre** (ne pas bâcler) : (1) vérifier **lequel** des 2 secrets est dans *Supabase → Auth → Providers → Google*, (2) s'assurer que Supabase utilise le **nouveau**, (3) **puis seulement** supprimer l'ancien dans Google Cloud. ⚠️ Supprimer le mauvais secret **casse le login** instantanément. **À faire APRÈS l'événement, au calme.** | 🟡 |
 
 ---
 
