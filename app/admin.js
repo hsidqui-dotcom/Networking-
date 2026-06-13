@@ -588,17 +588,22 @@ async function adSendInvites(){
   const raw=$('#invEmails').value||'';
   const emails=raw.split(/[\s,;]+/).map(e=>e.trim().toLowerCase()).filter(e=>e.indexOf('@')>0);
   if(!emails.length){ adToast(lang==='fr'?'Ajoutez au moins une adresse.':'Add at least one address.'); return; }
-  const ev=OAF.currentEvent&&OAF.currentEvent(); const name=(ev&&ev.name)||'OneAfricaForums';
   const btn=$('#invBtn'); if(btn){ btn.disabled=true; btn.textContent='…'; }
+  // On passe par la MÊME fonction nominative que « Inviter tous » (invite_event_guests,
+  // mode p_only = une seule adresse). Si l'adresse correspond à un participant
+  // importé, l'e-mail est personnalisé (« Bonjour Prénom ») ; sinon il garde le
+  // nouveau modèle (« Bonjour »). Plus jamais l'ancien modèle texte.
+  const sb=OAFAuth.client();
+  const appUrl=($('#invUrl').value||'').trim()||'https://app.oneafricaforums.com/app/';
+  let sent=0, fail=0, lastErr='';
   try{
-    const {data,error}=await OAFAuth.client().rpc('send_event_invites',{
-      emails, event_name:name, app_url:($('#invUrl').value||'').trim()||location.origin,
-      event_id:(ev&&typeof ev.id==='number')?ev.id:null, from_email:($('#invFrom').value||'').trim()||undefined
-    });
-    if(error) throw error;
-    const n=(data&&data.sent)||emails.length;
-    $('#invEmails').value='';
-    adToast((lang==='fr'?'Invitations envoyées : ':'Invitations sent: ')+n+' ✉️');
+    for(const email of emails){
+      const {error}=await sb.rpc('invite_event_guests',{ p_event: evId(), p_only: email, app_url: appUrl });
+      if(error){ fail++; lastErr=error.message||String(error); } else { sent++; }
+    }
+    if(sent) $('#invEmails').value='';
+    adToast((lang==='fr'?'Invitations nominatives envoyées : ':'Personalized invitations sent: ')+sent+' ✉️'
+      +(fail?(' · '+(lang==='fr'?'échecs : ':'failed: ')+fail+(lastErr?(' ('+lastErr.slice(0,60)+')'):'')):''));
   }catch(e){ adToast(e.message||String(e)); }
   finally{ if(btn){ btn.disabled=false; btn.textContent='📨 '+(lang==='fr'?'Envoyer les invitations':'Send invitations'); } }
 }

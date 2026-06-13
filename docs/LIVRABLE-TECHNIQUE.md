@@ -22,7 +22,7 @@
 | **Service Worker (cache)** | ✅ `oaf-connect-v52` | à incrémenter à chaque évolution frontend. |
 | **Kit de diffusion** (QR, affiche, textes, DMARC, IT) | ✅ Livré | `docs/diffusion/`. |
 | **GitHub — propriété** | ⚠️ **À confirmer** | Le dépôt pointe encore vers `github.com/hsidqui-dotcom/Networking-`. Vérifier s'il a été **transféré vers une organisation au nom de l'entreprise** (ou si le compte a été rattaché). |
-| **Resend — plan d'envoi** | ⚠️ **À confirmer** | Vérifier le **quota/jour** vs le nombre total d'invitations des 2 forums (point critique avant l'événement). |
+| **Resend — plan d'envoi** | ⚠️ **Free (décision : upgrade Pro planifié avant l'événement)** | Free = **100 e-mails/jour / 3 000 mois**. Suffisant pour les tests du petit groupe. 🔴 **Upgrade Pro obligatoire avant le jour J** (sinon le plafond de 100/jour bloque invitations + codes de connexion). L'upgrade règle le **volume**, pas la délivrabilité. |
 | **Propriété Google / DNS Genious** | ⚠️ À confirmer | Comptes au nom de l'entreprise + 2 admins. |
 
 > Les lignes ⚠️ sont les seuls points ouverts. Tout le reste est en production et vérifié.
@@ -237,7 +237,7 @@ git add -A && git commit -m "ma modif" && git push
 | 3 | **Branche de déploiement** au nom auto-généré (`claude/…`). | **Fusionner sur `main`** et faire pointer `pages.yml` sur `main` (plus clair, plus robuste). | 🟠 |
 | 4 | **Dépendance CDN esm.sh** : si esm.sh tombe, la connexion casse. | **Héberger (vendoriser) `supabase-js` et `qrcode`** dans le dépôt (et adapter la CSP). | 🟠 |
 | 5 | **Capacité temps réel** | ✅ **Pro actif** (limite relevée). Pour un très grand événement, envisager l'**add-on compute** ; **valider par stress test** (prévu au bureau). | 🟢 |
-| 6 | **Limites Resend** : à confirmer le **quota d'envoi/jour** du plan actuel. | Vérifier que le quota couvre le **total d'invitations + codes** des 2 forums le jour J ; sinon, plan adapté. **Point critique avant l'événement.** | 🔴 |
+| 6 | **Limites Resend** : plan **Free = 100 e-mails/jour**. | **Décision** : rester en Free pour les tests du petit groupe, puis **upgrade Pro (~20 $/mois, 50 000/mois) quelques jours AVANT l'événement** (obligatoire — sinon le plafond bloque invitations + codes de connexion). L'upgrade règle le **volume**, pas la délivrabilité (DMARC/whitelist = autre sujet). | 🔴 |
 | 7 | **Rotation des secrets** (clé Resend, secret Google). | Documenter + savoir les régénérer (procédure dans §6). | 🟡 |
 | 8 | **LinkedIn** désactivé (bouton masqué). | Configurer le provider quand prêt, puis réafficher (1 ligne dans `app/index.html`). | 🟡 |
 | 9 | **CSP avec `'unsafe-inline'`** (gestionnaires onclick). | Acceptable ; durcissement = refactor (phase 2). | 🟡 |
