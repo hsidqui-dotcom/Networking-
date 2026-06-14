@@ -285,6 +285,10 @@ L'accès à l'app **ne dépend jamais d'un seul canal**. Trois portes d'entrée,
 > Le cache Service Worker est incrémenté à chaque évolution frontend.
 
 ### 14 juin 2026 — Retours des premiers utilisateurs
+- **Partenaires — import en masse (CSV)** : bouton « 📥 Importer des partenaires (CSV) »
+  + modèle téléchargeable dans la console. Une ligne = un partenaire (+ contact
+  principal). Mapping par en-tête, normalisation du niveau (platinum/gold/…),
+  `oui/non` → mise en avant, dé-doublonnage par nom. Fini la saisie un par un. *(cache v59)*
 - **Notifications — badges de non-lus (fonctionnalité A)** : pastilles rouges sur
   l'onglet **Chat** (messages reçus non lus), la tuile **📅 Rendez-vous** (demandes
   en attente) et la **🔔 cloche** (annonces non lues). Calcul à l'hydratation
