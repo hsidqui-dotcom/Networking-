@@ -1,5 +1,5 @@
 # 📦 DOSSIER TECHNIQUE DE LIVRAISON — OAF Connect (One Africa Forums)
-*Document d'archivage et de transmission. Dernière mise à jour : 13 juin 2026.*
+*Document d'archivage et de transmission. Dernière mise à jour : 14 juin 2026.*
 
 > But : pouvoir **archiver tout le projet**, le **reprendre par n'importe quel développeur**, et ne **jamais dépendre d'un seul environnement ou d'une seule personne**.
 
@@ -19,7 +19,7 @@
 | **Module Partenaires premium** | ✅ En production | logos, niveaux, contacts, liens. |
 | **Programmes APIDE (Abidjan + Lomé) + intervenants + participants test** | ✅ Importés | CSV dans `docs/programmes/`. |
 | **Bouton LinkedIn** | ✅ Masqué proprement | provider non configuré (réaffichable en 1 ligne). |
-| **Service Worker (cache)** | ✅ `oaf-connect-v52` | à incrémenter à chaque évolution frontend. |
+| **Service Worker (cache)** | ✅ `oaf-connect-v58` | à incrémenter à chaque évolution frontend. |
 | **Kit de diffusion** (QR, affiche, textes, DMARC, IT) | ✅ Livré | `docs/diffusion/`. |
 | **GitHub — propriété** | ⚠️ **À confirmer** | Le dépôt pointe encore vers `github.com/hsidqui-dotcom/Networking-`. Vérifier s'il a été **transféré vers une organisation au nom de l'entreprise** (ou si le compte a été rattaché). |
 | **Resend — plan d'envoi** | ⚠️ **Free (décision : upgrade Pro planifié avant l'événement)** | Free = **100 e-mails/jour / 3 000 mois**. Suffisant pour les tests du petit groupe. 🔴 **Upgrade Pro obligatoire avant le jour J** (sinon le plafond de 100/jour bloque invitations + codes de connexion). L'upgrade règle le **volume**, pas la délivrabilité. |
@@ -275,3 +275,42 @@ L'accès à l'app **ne dépend jamais d'un seul canal**. Trois portes d'entrée,
 5. **Les CSV sources** (`docs/programmes/`) et le **kit de diffusion** (`docs/diffusion/`).
 
 > Avec ces 5 éléments, le projet est **archivé, transmissible et indépendant** de tout environnement temporaire.
+
+---
+
+## 11) JOURNAL DES ÉVOLUTIONS (changelog)
+
+> Chaque ligne correspond à un commit poussé sur la branche de production
+> `claude/oneafricaforums-networking-app-hVvUm` (donc **sauvegardé et déployé**).
+> Le cache Service Worker est incrémenté à chaque évolution frontend.
+
+### 14 juin 2026 — Retours des premiers utilisateurs
+- **Notifications — badges de non-lus (fonctionnalité A)** : pastilles rouges sur
+  l'onglet **Chat** (messages reçus non lus), la tuile **📅 Rendez-vous** (demandes
+  en attente) et la **🔔 cloche** (annonces non lues). Calcul à l'hydratation
+  (requêtes `count` légères) + incrément **temps réel** à la réception d'un message.
+  Mémorisation « déjà vu » par appareil (localStorage). *(cache v58)*
+- **Annuaire — anti-doublon** : un invité importé qui s'inscrit (même nom qu'un
+  profil réel) n'apparaît plus en double. Dé-doublonnage d'affichage robuste aux
+  accents/espaces (aucune donnée supprimée). *(cache v56)*
+- **Annuaire — libellé** : « Profil importé » remplacé par le badge clair
+  **« ⏳ Pas encore connecté·e »** (les invités importés sont inscrits, juste pas
+  encore connectés). *(cache v57)*
+- **Chat — dates** : séparateurs de jour « Aujourd'hui / Hier / date » dans le fil
+  (avant : seule l'heure s'affichait). *(cache v55)*
+
+### 13 juin 2026 — Délivrabilité & invitations
+- **Resend 429 (rate limit 5 req/s)** : envois groupés et zone manuelle étalés
+  (~350 ms/e-mail) avec compteur de progression — plus aucun e-mail perdu en
+  rafale. Cause trouvée via les logs Resend. *(cache v54)*
+- **E-mail nominatif partout** : la zone d'envoi manuelle utilise désormais la
+  même fonction nominative que « Inviter tous » (fini l'ancien modèle texte). *(cache v53)*
+- **Dossier technique** : réconcilié avec l'état réel (Supabase **Pro**, section
+  §0 Statut, décision Resend) ; tâches post-événement #10 (custom domain Google)
+  et #11 (nettoyage des 2 secrets OAuth) documentées.
+- **Kit de diffusion** créé (`docs/diffusion/`) : QR, affiche A5, textes WhatsApp,
+  demande IT, ticket DMARC Genious.
+
+> **Procédure de mise à jour** (rappel) : éditer `app/` → incrémenter `const CACHE`
+> dans `app/sw.js` + le `?v=NN` des `<script>` dans `index.html`/`admin.html` →
+> `git commit` → `git push` sur la branche → déploiement automatique (~1 min).
