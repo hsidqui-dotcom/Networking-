@@ -392,6 +392,96 @@ function adCsvTemplate(){
   const link=document.createElement('a'); link.href=url; link.download='participants_modele.csv'; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
 }
 
+/* ---- Import PARTENAIRES en masse (CSV) — remontée admin : saisir 20+ partenaires
+   un par un était trop contraignant. Une ligne = un partenaire (+ contact principal). ---- */
+function normSponsorTier(v){
+  const s=String(v||'').trim().toLowerCase(); if(!s) return 'Sponsor';
+  const exact=SP_TIERS.find(t=>t.toLowerCase()===s); if(exact) return exact;
+  if(s.includes('platin')) return 'Platinum Partner';
+  if(s.includes('gold')) return 'Gold Partner';
+  if(s.includes('silver')) return 'Silver Partner';
+  if(s.includes('institu')) return 'Institutional Partner';
+  if(s.includes('strateg')||s.includes('stratég')) return 'Strategic Partner';
+  if(s.includes('exhib')||s.includes('expos')) return 'Exhibitor';
+  return 'Sponsor';
+}
+function parseSponsorsCsv(text){
+  text=String(text||'').replace(/^﻿/,''); // BOM
+  const truthy=v=>/^(1|true|vrai|oui|yes|y|o|x)$/i.test(String(v||'').trim());
+  const lines=text.split(/\r?\n/).filter(l=>l.trim().length);
+  if(!lines.length) return {rows:[],dupInFile:0};
+  const head=lines[0];
+  const delim=(head.split(';').length>head.split(',').length)?';':',';
+  const norm=s=>s.toLowerCase().replace(/[^a-z]/g,'');
+  const H=splitCsvLineDelim(head,delim).map(norm);
+  const col=(...names)=>{ for(const n of names){ const i=H.indexOf(n); if(i>=0) return i; } return -1; };
+  const ix={ name:col('name','nom','partenaire','partner','societe','entreprise','company'),
+    tier:col('tier','niveau','categorie','category','type'),
+    descfr:col('descriptionfr','descfr','descriptif','description','presentation'),
+    descen:col('descriptionen','descen','descriptionenglish'),
+    website:col('website','siteweb','site','web','url'),
+    linkedin:col('linkedin','linkedinurl'),
+    brochure:col('brochure','brochureurl','pdf'),
+    video:col('video','videourl','youtube'),
+    featured:col('featured','majeur','premium','miseenavant','vedette'),
+    cname:col('contactname','contact','nomcontact','contactnom'),
+    crole:col('contactrole','fonctioncontact','contactfonction','contacttitre'),
+    cemail:col('contactemail','emailcontact','contactmail'),
+    cphone:col('contactphone','telephonecontact','contacttelephone','contacttel','phone','telephone'),
+    clinkedin:col('contactlinkedin','linkedincontact') };
+  const hasHeader = ix.name>=0; const start = hasHeader?1:0;
+  const g=(c,arr)=>(c>=0&&c<arr.length)?(arr[c]||'').trim():'';
+  const seen=new Set(); let dupInFile=0; const rows=[];
+  for(let li=start; li<lines.length; li++){
+    const c=splitCsvLineDelim(lines[li],delim);
+    let name,tier,descfr,descen,website,linkedin,brochure,video,featured,cname,crole,cemail,cphone,clinkedin;
+    if(hasHeader){ name=g(ix.name,c); tier=g(ix.tier,c); descfr=g(ix.descfr,c); descen=g(ix.descen,c); website=g(ix.website,c); linkedin=g(ix.linkedin,c); brochure=g(ix.brochure,c); video=g(ix.video,c); featured=g(ix.featured,c); cname=g(ix.cname,c); crole=g(ix.crole,c); cemail=g(ix.cemail,c); cphone=g(ix.cphone,c); clinkedin=g(ix.clinkedin,c); }
+    else { name=(c[0]||'').trim(); tier=(c[1]||'').trim(); descfr=(c[2]||'').trim(); descen=(c[3]||'').trim(); website=(c[4]||'').trim(); linkedin=(c[5]||'').trim(); brochure=(c[6]||'').trim(); video=(c[7]||'').trim(); featured=(c[8]||'').trim(); cname=(c[9]||'').trim(); crole=(c[10]||'').trim(); cemail=(c[11]||'').trim(); cphone=(c[12]||'').trim(); clinkedin=(c[13]||'').trim(); }
+    name=(name||'').trim(); if(!name) continue;
+    const key=name.toLowerCase(); if(seen.has(key)){ dupInFile++; continue; } seen.add(key);
+    rows.push({ name, tier:normSponsorTier(tier), descfr, descen:descen||descfr, website, linkedin, brochure, video, featured:truthy(featured), contact: cname?{name:cname,role:crole,email:cemail,phone:cphone,linkedin:clinkedin}:null });
+  }
+  return {rows,dupInFile};
+}
+async function adImportSponsorsCsv(e){
+  const f=e.target.files[0]; if(!f)return;
+  let text=''; try{ text=await f.text(); }catch(_){ text=await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsText(f);}); }
+  e.target.value='';
+  if(!L()){ adToast(lang==='fr'?'(démo) Connexion requise.':'(demo) Sign in required.'); return; }
+  const {rows,dupInFile}=parseSponsorsCsv(text);
+  if(!rows.length){ adToast(a('csvEmpty')); return; }
+  const sb=OAFAuth.client(), ev=evId();
+  const existing=new Set((OAF.sponsors()||[]).map(s=>String(s.name||'').trim().toLowerCase()));
+  let sort=(OAF.sponsors().reduce((m,s)=>Math.max(m,s.sort||0),0))+1;
+  let imported=0, dupDb=0, fail=0; const btn=$('#spImpBtn');
+  if(btn) btn.style.opacity='.6';
+  for(let i=0;i<rows.length;i++){ const r=rows[i];
+    if(existing.has(r.name.toLowerCase())){ dupDb++; continue; }
+    const rec={ event_id:ev, name:r.name, tier:r.tier,
+      description:{fr:r.descfr||'',en:r.descen||r.descfr||''},
+      website:r.website||'', linkedin:r.linkedin||'', brochure_url:r.brochure||'', video_url:r.video||'',
+      featured:!!r.featured, sort_order:sort++ };
+    const {data,error}=await sb.from('sponsors').insert(rec).select('id').single();
+    if(error){ fail++; continue; }
+    existing.add(r.name.toLowerCase()); imported++;
+    if(r.contact&&r.contact.name){ await sb.from('sponsor_contacts').insert({sponsor_id:data.id,name:r.contact.name,role:r.contact.role||'',email:r.contact.email||'',phone:r.contact.phone||'',linkedin:r.contact.linkedin||'',sort_order:0}); }
+  }
+  if(btn) btn.style.opacity='';
+  await reloadAndRender();
+  const dup=dupInFile+dupDb;
+  const fr=imported+' partenaire(s) importé(s)'+(dup?' · '+dup+' doublon(s) ignoré(s)':'')+(fail?' · '+fail+' erreur(s)':'');
+  const en=imported+' partner(s) imported'+(dup?' · '+dup+' duplicate(s) skipped':'')+(fail?' · '+fail+' error(s)':'');
+  adToast(lang==='fr'?fr:en);
+}
+function adSponsorTemplate(){
+  const header='name,tier,description_fr,description_en,website,linkedin,brochure,video,featured,contact_name,contact_role,contact_email,contact_phone,contact_linkedin';
+  const r1='AfriBank Group,Platinum Partner,Banque panafricaine de la finance inclusive.,Pan-African inclusive finance bank.,https://afribank.example,https://linkedin.com/company/afribank,https://afribank.example/brochure.pdf,,oui,Awa Ndiaye,Directrice Partenariats,awa@afribank.example,+221 77 000 0000,https://linkedin.com/in/awandiaye';
+  const r2='PaySolutions,Gold Partner,Solutions de paiement mobile.,Mobile payment solutions.,https://paysolutions.example,,,,non,Karim Toure,Country Manager,karim@paysolutions.example,,';
+  const csv=header+'\n'+r1+'\n'+r2+'\n';
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const link=document.createElement('a'); link.href=url; link.download='partenaires_modele.csv'; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+}
+
 /* helpers live */
 function L(){ return window.OAF_LIVE && window.OAFAuth && OAFAuth.client(); }
 function evId(){ return OAF.currentEvent() ? OAF.currentEvent().id : null; }

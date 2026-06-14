@@ -131,6 +131,11 @@
       </div>
       <div class="panel"><h3 id="peSpoT">Partenaires</h3>
         <div class="desc">Créez une fiche complète (logo, niveau, descriptif, liens, contacts). Affichage premium côté participant.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px">
+          <label class="btn solid" id="spImpBtn" style="cursor:pointer">📥 Importer des partenaires (CSV)<input type="file" accept=".csv,text/csv" hidden onchange="adImportSponsorsCsv(event)"></label>
+          <button class="btn" type="button" onclick="adSponsorTemplate()" id="spTplBtn">⬇ Modèle CSV</button>
+        </div>
+        <div class="desc" style="margin:-6px 0 12px">Import en masse : une ligne = un partenaire (+ son contact principal). Le logo et les contacts supplémentaires s'ajoutent ensuite par fiche.</div>
         <input type="hidden" id="spEditId" value="" />
         <div class="grid2">
           <div class="field"><label>Nom *</label><input id="spName" placeholder="Ex. AfriBank Group" /></div>
@@ -257,9 +262,9 @@
   </div>
 </div>
 
-<script src="config.js?v=58"></script>
-<script src="supabase.js?v=58"></script>
-<script src="store.js?v=58"></script>
-<script src="admin.js?v=58"></script>
+<script src="config.js?v=59"></script>
+<script src="supabase.js?v=59"></script>
+<script src="store.js?v=59"></script>
+<script src="admin.js?v=59"></script>
 </body>
 </html>
