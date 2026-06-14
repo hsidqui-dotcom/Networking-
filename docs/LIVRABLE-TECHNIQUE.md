@@ -285,6 +285,19 @@ L'accès à l'app **ne dépend jamais d'un seul canal**. Trois portes d'entrée,
 > Le cache Service Worker est incrémenté à chaque évolution frontend.
 
 ### 14 juin 2026 — Retours des premiers utilisateurs
+- **Dashboard admin — pilotage événement** : fonction sécurisée `event_stats(p_event)`
+  (admin-only, SECURITY DEFINER, agrégats respectant la vie privée) + dashboard
+  redesigné (Adoption / Networking / Programme), taux d'activation & d'engagement,
+  top sessions, **export CSV**. Corrige l'ancien dashboard qui affichait les chiffres
+  perso de l'admin au lieu des totaux événement. `supabase/event-stats.sql`. *(cache v61)*
+- **Équipe / Admins self-service** : panneau (Réglages) pour promouvoir/retirer un
+  admin en 1 clic, sécurisé par `set_admin`/`list_admins` (SECURITY DEFINER, anti
+  auto-promotion et anti auto-révocation). `supabase/admin-team.sql`. *(cache v60)*
+- **Audit sécurité admin (vérifié en prod)** : confirmé qu'aucun participant ne peut
+  s'infiltrer côté admin — `is_admin` non modifiable par `authenticated` (C1), RLS
+  active sur les 19 tables, écritures admin protégées par `is_admin()`, politiques
+  participant limitées à `auth.uid()`. Compte parasite `hsidqui@oneafrica.com`
+  (faux admin, domaine erroné) supprimé.
 - **Partenaires — import en masse (CSV)** : bouton « 📥 Importer des partenaires (CSV) »
   + modèle téléchargeable dans la console. Une ligne = un partenaire (+ contact
   principal). Mapping par en-tête, normalisation du niveau (platinum/gold/…),

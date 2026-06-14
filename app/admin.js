@@ -65,12 +65,75 @@ function renderLabels(){
   [['#peImpBtn','peImpBtn'],['#setLogoBtn','setLogoBtn'],['#setCoverBtn','setCoverBtn'],['#pImpBtn','pImpBtn']].forEach(([sel,k])=>{const el=$(sel);if(el&&el.childNodes[0])el.childNodes[0].nodeValue=a(k);});
   $('#adEvent').textContent = OAF.currentEvent().name;
 }
-function renderKpis(){
-  const s=OAF.stats();
-  const items=[['kAtt',s.attendees,'#5b8def'],['kSpk',s.speakers,'#1B998B'],['kSpo',s.sponsors,'#9a6b00'],['kSes',s.sessions,'#111'],['kConn',s.connections,'#1E8C5A'],['kBook',s.bookmarks,'#b5559a']];
-  $('#kpis').innerHTML=items.map(([k,v,c])=>`<div class="kpi"><b>${v}</b><small>${a(k)}</small><div class="bar"><i style="width:${Math.min(100,v*8+10)}%;background:${c}"></i></div></div>`).join('');
-  const st=OAF.stats();
-  $('#engage').innerHTML=`<div class="li"><div class="av" style="width:38px;height:38px;background:#1E8C5A">🤝</div><div class="m"><b>${st.connections}</b><small>${a('engageConn')}</small></div></div><div class="li"><div class="av" style="width:38px;height:38px;background:#b5559a">⭐</div><div class="m"><b>${st.bookmarks}</b><small>${a('engageBook')}</small></div></div>`;
+let lastStats=null;
+function kpiCard(v,label,c){ const w=typeof v==='string'?(parseInt(v)||0):Math.min(100,(v||0)*6+12); return `<div class="kpi"><b>${v}</b><small>${escapeHtml(label)}</small><div class="bar"><i style="width:${w}%;background:${c}"></i></div></div>`; }
+function statRow(k,v,strong){ return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 2px;border-bottom:1px solid var(--line)"><span style="font-size:13.5px;color:${strong?'var(--ink)':'var(--muted)'};${strong?'font-weight:600':''}">${escapeHtml(k)}</span><b style="font-size:16px">${v}</b></div>`; }
+function dashHeadHtml(){ return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">`
+  +`<h3 style="margin:0">📊 ${lang==='fr'?"Pilotage de l'événement":'Event dashboard'}</h3>`
+  +`<div style="display:flex;gap:8px"><button class="btn" type="button" onclick="renderKpis()">↻ ${lang==='fr'?'Actualiser':'Refresh'}</button>`
+  +`<button class="btn" type="button" onclick="adExportStats()">⬇ ${lang==='fr'?'Export CSV':'Export CSV'}</button></div></div>`; }
+async function renderKpis(){
+  const box=$('#kpis'); if(!box) return;
+  const onDash=!!document.querySelector('.adpage[data-p="dash"].on');
+  if($('#dashHead')) $('#dashHead').innerHTML=dashHeadHtml();
+  // Mode démo / hors-ligne : stats locales basiques (le détail exige la base réelle).
+  if(!L()){
+    const s=OAF.stats();
+    box.innerHTML=kpiCard(s.attendees,lang==='fr'?'Participants':'Attendees','#5b8def')+kpiCard(s.speakers,lang==='fr'?'Intervenants':'Speakers','#1B998B')+kpiCard(s.sponsors,lang==='fr'?'Partenaires':'Partners','#9a6b00')+kpiCard(s.sessions,'Sessions','#111');
+    if($('#engage')) $('#engage').innerHTML='<div class="desc">'+(lang==='fr'?'Statistiques détaillées disponibles en mode réel.':'Detailed stats available in live mode.')+'</div>';
+    if($('#dProg')) $('#dProg').innerHTML='';
+    return;
+  }
+  if(!onDash) return; // évite d'interroger la base quand le dashboard n'est pas affiché
+  box.innerHTML='<div class="desc">'+(lang==='fr'?'Chargement…':'Loading…')+'</div>';
+  try{
+    const {data:st,error}=await OAFAuth.client().rpc('event_stats',{p_event:evId()});
+    if(error) throw error;
+    lastStats=st;
+    const pct=(n,d)=>d>0?Math.round(100*n/d):0;
+    const invited=(st.joined||0)+(st.pending_import||0);
+    // ADOPTION (cartes)
+    box.innerHTML=kpiCard(st.joined,lang==='fr'?'Inscrits (ont rejoint)':'Joined','#1E8C5A')
+      +kpiCard(st.pending_import,lang==='fr'?'Invités à activer':'Pending activation','#c98a00')
+      +kpiCard(pct(st.joined,invited)+'%',lang==='fr'?"Taux d'activation":'Activation rate','#5b8def')
+      +kpiCard(st.profiles_complete,lang==='fr'?'Profils complets':'Complete profiles','#7a5af0');
+    // NETWORKING (panneau « engage »)
+    if($('#engage')) $('#engage').innerHTML=
+       statRow(lang==='fr'?'Connexions (acceptées)':'Connections (accepted)', st.connections+' ('+st.connections_accepted+')', true)
+      +statRow(lang==='fr'?'Rendez-vous — total':'Meetings — total', st.meetings, true)
+      +statRow('• '+(lang==='fr'?'confirmés':'confirmed'), st.meetings_confirmed)
+      +statRow('• '+(lang==='fr'?'en attente':'pending'), st.meetings_pending)
+      +statRow('• '+(lang==='fr'?'refusés':'declined'), st.meetings_declined)
+      +statRow(lang==='fr'?'Messages échangés':'Messages', st.messages, true)
+      +statRow(lang==='fr'?'Participants actifs':'Active participants', st.active+' · '+pct(st.active,st.joined)+'%', true);
+    // PROGRAMME & Q&A (panneau « dProg »)
+    let top='';
+    if(st.top_sessions&&st.top_sessions.length){
+      top='<div class="desc" style="margin-top:12px">'+(lang==='fr'?'Top sessions (favoris)':'Top sessions (bookmarks)')+'</div>'
+        +st.top_sessions.map((x,i)=>`<div class="li"><div class="av" style="width:30px;height:30px;border-radius:9px;background:#b5559a">${i+1}</div><div class="m"><b>${escapeHtml(x.title)}</b><small>${x.n} ${lang==='fr'?'favoris':'bookmarks'}</small></div></div>`).join('');
+    }
+    if($('#dProg')) $('#dProg').innerHTML=
+       statRow(lang==='fr'?'Sessions au programme':'Sessions', st.sessions, true)
+      +statRow(lang==='fr'?'Favoris (total)':'Bookmarks (total)', st.bookmarks)
+      +statRow(lang==='fr'?'Questions posées':'Questions asked', st.questions)
+      +statRow(lang==='fr'?'Votes Q&A':'Q&A votes', st.question_votes)
+      +statRow(lang==='fr'?'Intervenants':'Speakers', st.speakers)
+      +statRow(lang==='fr'?'Partenaires':'Partners', st.sponsors)
+      +top;
+  }catch(e){ box.innerHTML='<div class="desc">'+escapeHtml(adminErr(e))+'</div>'; }
+}
+function adExportStats(){
+  if(!lastStats){ adToast(lang==='fr'?"Ouvre d'abord le tableau de bord.":'Open the dashboard first.'); return; }
+  const s=lastStats, ev=OAF.currentEvent()||{}; const pct=(n,d)=>d>0?Math.round(100*n/d):0; const invited=(s.joined||0)+(s.pending_import||0);
+  const rows=[['Indicateur','Valeur'],['Forum',ev.name||''],
+    ['Inscrits (ont rejoint)',s.joined],['Invités à activer',s.pending_import],["Taux d'activation %",pct(s.joined,invited)],['Profils complets',s.profiles_complete],
+    ['Connexions',s.connections],['Connexions acceptées',s.connections_accepted],
+    ['Rendez-vous total',s.meetings],['Rendez-vous confirmés',s.meetings_confirmed],['Rendez-vous en attente',s.meetings_pending],['Rendez-vous refusés',s.meetings_declined],
+    ['Messages',s.messages],['Participants actifs',s.active],["Taux d'engagement %",pct(s.active,s.joined)],
+    ['Sessions',s.sessions],['Favoris total',s.bookmarks],['Questions',s.questions],['Votes Q&A',s.question_votes],['Intervenants',s.speakers],['Partenaires',s.sponsors]];
+  const csv=rows.map(r=>r.map(x=>{const v=String(x==null?'':x); return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',')).join('\n');
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const link=document.createElement('a'); link.href=url; link.download='stats_'+String(ev.cityShort||'event').toLowerCase().replace(/\s+/g,'_')+'.csv'; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
 }
 function renderProgram(){
   const days=OAF.days();
