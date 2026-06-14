@@ -471,7 +471,7 @@ function renderPeople(){
   const slice=list.slice(0, peopleShown);
   let html = slice.map(p=>{
     const actions = p.guest
-      ? `<div style="font-size:11px;color:var(--muted);margin-top:10px;font-style:italic">${lang==='fr'?'📇 Profil importé — networking dès son inscription':'📇 Imported profile — networking once they sign in'}</div>`
+      ? `<div style="font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;background:#f1f3f6;color:#7a8190;border-radius:20px;padding:3px 9px;font-weight:600">${lang==='fr'?'⏳ Pas encore inscrit·e':'⏳ Not on the app yet'}</span><span style="font-style:italic">${lang==='fr'?'networking dès sa connexion':'networking once they join'}</span></div>`
       : `<div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button><button class="btn" onclick="openThread('${p.id}')" style="padding:11px 14px">💬</button><button class="btn" onclick="openPropose('${p.id}')" style="padding:11px 14px">📅</button></div>`;
     return `<div class="card"><div class="row">${avBox(p)}<div class="m"><b>${escapeHtml(p.name)}</b><small>${escapeHtml(p.role[lang])} · ${escapeHtml(p.country)}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">🎯 ${escapeHtml(p.why[lang])}</div>
@@ -557,7 +557,13 @@ async function hydrate(){
     const _myP=(prof.data||[]).find(p=>p.id===me.id)||{};
     const _myTags=_myP.interests||[]; const _myLook=_myP.looking_for||{fr:'',en:''};
     const attendees=(prof.data||[]).filter(p=>p.id!==me.id).map((p,i)=>{ const a={id:p.id,name:p.name||'—',role:p.role||{fr:'',en:''},country:p.country||'🌍',color:palette[i%palette.length],photo:p.photo_url||null,look:p.looking_for||{fr:'',en:''},tags:p.interests||[],evs:eaMap[p.id]||[]}; const m=buildMatch(_myTags,_myLook,a); a.score=m.score; a.why=m.why; return a; });
-    ((gu&&gu.data)||[]).forEach((g,i)=>{ const a={id:'g_'+g.id,gid:g.id,guest:true,name:g.name||'—',role:g.role||{fr:'',en:''},country:g.country||'🌍',color:palette[(attendees.length+i)%palette.length],photo:g.photo_url||null,look:g.looking_for||{fr:'',en:''},tags:g.interests||[],evs:[g.event_id]}; const m=buildMatch(_myTags,_myLook,a); a.score=m.score; a.why=m.why; attendees.push(a); });
+    // Dé-doublonnage d'affichage : si un invité importé s'est inscrit (un profil
+    // réel porte le même nom), on n'affiche QUE le profil réel. Sinon la personne
+    // apparaît deux fois (le claim serveur ne dédoublonne que si l'e-mail de
+    // connexion = l'e-mail importé ; ici on couvre aussi le cas e-mails différents).
+    const _norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase().replace(/\s+/g,' ');
+    const _profNames=new Set(); (prof.data||[]).forEach(p=>{ if(p.name) _profNames.add(_norm(p.name)); });
+    ((gu&&gu.data)||[]).forEach((g,i)=>{ if(g.name && _profNames.has(_norm(g.name))) return; const a={id:'g_'+g.id,gid:g.id,guest:true,name:g.name||'—',role:g.role||{fr:'',en:''},country:g.country||'🌍',color:palette[(attendees.length+i)%palette.length],photo:g.photo_url||null,look:g.looking_for||{fr:'',en:''},tags:g.interests||[],evs:[g.event_id]}; const m=buildMatch(_myTags,_myLook,a); a.score=m.score; a.why=m.why; attendees.push(a); });
     attendees.sort((a,b)=>b.score-a.score);
     const notifications=(no.data||[]).map(n=>({id:n.id,icon:n.icon||'🔔',ts:new Date(n.created_at).getTime(),title:n.title||{fr:'',en:''}}));
     const profById={}; (prof.data||[]).forEach(p=>profById[p.id]=p);
