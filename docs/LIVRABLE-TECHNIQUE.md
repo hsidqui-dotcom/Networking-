@@ -73,6 +73,8 @@ Networking-/
 │   ├── messaging-safety.sql# Blocage / anti-spam / signalements
 │   ├── sponsors-plus.sql   #   Partenaires enrichis + table sponsor_contacts
 │   ├── invitations.sql / invite-guests.sql / invite-all.sql  # E-mails (Resend)
+│   ├── admin-team.sql      #   set_admin / list_admins (gestion admins self-service)
+│   ├── event-stats.sql     #   event_stats (statistiques de pilotage, admin-only)
 │   ├── make-admin.sql, seed-demo.sql, add-event-*.sql, …      # Utilitaires
 │   └── README.md
 │
@@ -254,7 +256,9 @@ L'accès à l'app **ne dépend jamais d'un seul canal**. Trois portes d'entrée,
 2. **Lien partagé** `https://app.oneafricaforums.com/app/` (WhatsApp, LinkedIn, site) → arrive toujours.
 3. **E-mail nominatif** (envoyé depuis la console) → confort ; une partie peut être filtrée par les serveurs d'entreprise (Microsoft 365 quarantaine = *self-domain spoofing*). **Non bloquant** grâce aux canaux 1 et 2.
 
-**Kit prêt à diffuser** : `docs/diffusion/` — QR haute résolution (`qr-oaf-connect.png/.pdf`), affiche A5 d'accueil (`affiche-accueil-A5.pdf`), textes WhatsApp/programme (`KIT-DIFFUSION.md`), demande IT (`DEMANDE-WHITELIST-IT.md`), ticket DMARC Genious (`TICKET-DMARC-GENIOUS.md`).
+**Kit prêt à diffuser** : `docs/diffusion/` — QR haute résolution (`qr-oaf-connect.png/.pdf`), affiche A5 d'accueil (`affiche-accueil-A5.pdf`), **tuto visuel « Installer sur iPhone »** (`tuto-installation-iphone.png/.pdf`), textes WhatsApp/programme (`KIT-DIFFUSION.md`), demande IT (`DEMANDE-WHITELIST-IT.md`), ticket DMARC Genious (`TICKET-DMARC-GENIOUS.md`), et ce dossier en PDF (`LIVRABLE-TECHNIQUE.pdf`).
+
+**Installation (PWA, pas d'App Store)** : l'app s'installe sur iPhone via **Safari → Partager → « Sur l'écran d'accueil »** et sur Android via **Chrome → menu ⋮ → « Installer »**. Pas de présence App Store (PWA) — non nécessaire pour l'événement ; un wrapper natif resterait un projet à part (post-événement).
 
 **Débit d'envoi (rate limit)** : Resend limite à **5 requêtes/seconde**. Les envois groupés (console : « Inviter tous » et zone manuelle) sont **étalés côté client (~350 ms entre chaque e-mail)** avec compteur de progression, pour rester sous la limite et éviter les rejets **429** silencieux. *(Bug identifié et corrigé le 13/06/2026 via les logs Resend.)*
 
@@ -285,6 +289,8 @@ L'accès à l'app **ne dépend jamais d'un seul canal**. Trois portes d'entrée,
 > Le cache Service Worker est incrémenté à chaque évolution frontend.
 
 ### 14 juin 2026 — Retours des premiers utilisateurs
+- **Kit — tuto visuel « Installer sur iPhone »** (`docs/diffusion/tuto-installation-iphone.png/.pdf`) :
+  3 étapes (Safari → Partager → « Sur l'écran d'accueil »), à diffuser badges/WhatsApp/programme.
 - **Dashboard admin — pilotage événement** : fonction sécurisée `event_stats(p_event)`
   (admin-only, SECURITY DEFINER, agrégats respectant la vie privée) + dashboard
   redesigné (Adoption / Networking / Programme), taux d'activation & d'engagement,
