@@ -48,6 +48,26 @@ const t = k => (L[lang] && L[lang][k]) || L.en[k] || k;
 const ini = n => n.replace(/Dr\.\s|Fmr\.\s/,'').split(' ').map(x=>x[0]).slice(0,2).join('');
 const $ = s => document.querySelector(s);
 let curView = 'events', curDay = 0, curFilter = 'all', incomingReqs = [], chatWith = null, chatSubscribed = false;
+/* Badges de non-lus (remontée utilisateur : on doit VOIR sans aller chercher).
+   unreadChat = messages reçus non lus ; pendingMeetings = demandes de RDV en
+   attente reçues. Les badges sont recalculés à l'hydratation et en temps réel. */
+let unreadChat = 0, pendingMeetings = 0;
+function unreadNotifs(){
+  const seen = +localStorage.getItem('oaf_seen_notif') || 0;
+  try{ return (OAF.notifications()||[]).filter(n=>(n.ts||0) > seen).length; }catch(_){ return 0; }
+}
+function setTabBadge(tab, n){
+  const btn = document.querySelector('.tabbar button[data-t="'+tab+'"]'); if(!btn) return;
+  let s = btn.querySelector('.nbadge');
+  if(n>0){ if(!s){ s=document.createElement('span'); s.className='nbadge'; btn.appendChild(s); } s.textContent = n>9?'9+':n; }
+  else if(s){ s.remove(); }
+}
+function renderBadges(){
+  setTabBadge('chat', unreadChat);
+  const bell = $('#bell'); if(bell){ const dot=bell.querySelector('.dot'); if(dot) dot.style.display = unreadNotifs()>0 ? 'block' : 'none'; }
+  const tile = document.querySelector('#hTiles .tile[data-tile="meetings"]');
+  if(tile){ let s=tile.querySelector('.nbadge'); if(pendingMeetings>0){ if(!s){ s=document.createElement('span'); s.className='nbadge'; tile.appendChild(s);} s.textContent = pendingMeetings>9?'9+':pendingMeetings; } else if(s){ s.remove(); } }
+}
 let curSession = null, curSpeaker = null, qaChannel = null, qaList = [], nameMap = {};
 let blockedIds = new Set(); // ids des contacts bloqués (dans un sens ou l'autre)
 
@@ -66,7 +86,8 @@ function show(v){
   if (v === 'partners') renderPartners();
   if (v === 'partner') renderPartnerDetail();
   if (v === 'info') renderInfo();
-  if (v === 'notif') renderNotif();
+  if (v === 'notif'){ renderNotif(); localStorage.setItem('oaf_seen_notif', Date.now()); renderBadges(); }
+  if (v === 'chat' || v === 'thread'){ localStorage.setItem('oaf_seen_chat', Date.now()); unreadChat=0; renderBadges(); }
   if (v === 'chat') renderConversations();
   if (v === 'meetings') loadMeetings();
 }
@@ -315,7 +336,8 @@ function renderHome(){
   $('#hTheme').textContent=(e.theme&&e.theme[lang])||''; $('#hCity').textContent=e.city||'';
   $('#hTiles').innerHTML = [
     ['🗓️','tiProgram','program'],['🎤','tiSpeakers','people'],['🤝','tiPeople','people'],['📅','tiMeet','meetings'],['⭐','tiPartners','partners'],['ℹ️','tiInfo','info']
-  ].map(([ic,k,v])=>`<div class="tile" onclick="show('${v}')"><div class="ic">${ic}</div><b>${t(k)}</b></div>`).join('');
+  ].map(([ic,k,v])=>`<div class="tile" data-tile="${v}" onclick="show('${v}')"><div class="ic">${ic}</div><b>${t(k)}</b></div>`).join('');
+  renderBadges();
   // live + matches
   const live = OAF.sessions(e.id,0).find(s=>s.track[lang].toLowerCase().includes('invest')||s.title[lang].includes('Keynote'))||OAF.sessions(e.id,0)[0];
   $('#hLive').innerHTML = live?`<div class="card"><div class="row"><div class="av" style="background:#111;border-radius:12px">🎤</div><div class="m"><b>${escapeHtml(live.title[lang])}</b><small>${escapeHtml(live.room[lang])} · ${escapeHtml(live.time)}</small></div><span class="tag live">${t('live')}</span></div></div>`:`<div class="card" style="color:var(--muted);font-size:13px">${lang==='fr'?'Le programme en direct s’affichera ici pendant le forum.':'Live sessions will appear here during the forum.'}</div>`;
@@ -496,6 +518,7 @@ function resetDemo(){OAF.reset();lang=OAF.lang();renderAll();show('events');toas
 function renderAll(){renderChrome();renderEvents();renderAgenda();renderPeople();renderNotif();
   // refresh event-scoped header if inside an event
   if(curView!=='events'){const e=OAF.currentEvent();$('#abTitle').textContent=e.name;$('#abSub').textContent=e.cityShort;$('#hTheme').textContent=e.theme[lang];$('#hCity').textContent=e.city;}
+  renderBadges();
 }
 
 /* live refresh when admin (other tab) changes the store */
@@ -594,6 +617,19 @@ async function hydrate(){
     });
     renderAll();
     lastHydrate=Date.now();
+    // Badges de non-lus : messages reçus depuis la dernière ouverture du Chat +
+    // demandes de RDV en attente. Requêtes légères (count, sans charger les lignes).
+    try{
+      const ev2=OAF.currentEvent(); const seenChat=+localStorage.getItem('oaf_seen_chat')||0;
+      let mq=sb.from('meetings').select('id',{count:'exact',head:true}).eq('guest',me.id).eq('status','pending');
+      if(ev2&&ev2.id!=null) mq=mq.eq('event_id',ev2.id);
+      const [cRes,mRes]=await Promise.all([
+        sb.from('messages').select('id',{count:'exact',head:true}).eq('recipient',me.id).gt('created_at',new Date(seenChat).toISOString()),
+        mq
+      ]);
+      unreadChat=cRes.count||0; pendingMeetings=mRes.count||0;
+    }catch(_){ }
+    renderBadges();
     maybeOnboard();
     subscribeChat();
     subscribeContent();
@@ -738,7 +774,7 @@ function subscribeChat(){
     sb.channel('msg-'+me.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`recipient=eq.${me.id}`},payload=>{
       const m=payload.new;
       if(chatWith && String(m.sender)===String(chatWith.id) && curView==='thread'){ appendBubble('them',m.body); }
-      else { toast(t('newMsg')); }
+      else { toast(t('newMsg')); unreadChat++; renderBadges(); }
       if(curView==='chat') renderConversations();
     }).subscribe();
     chatSubscribed=true;
@@ -829,6 +865,7 @@ function renderMeetings(){
   wrap.innerHTML = inc.length ? `<div class="sec"><b>${t('meReqT')}</b></div>`+inc.map(m=>`<div class="card"><div class="row"><div class="av" style="background:#111">${ini(nameOf(m.counterId))}</div><div class="m"><b>${escapeHtml(nameOf(m.counterId))}</b><small>${escapeHtml(m.label)}</small></div></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="meetAct('${m.id}','confirmed')">${t('accept')}</button><button class="btn" onclick="meetAct('${m.id}','declined')">${t('decline')}</button></div></div>`).join('') : '';
   const rest=myMeetings.filter(m=>!(m.incoming && m.status==='pending'));
   $('#meetList').innerHTML = rest.length ? rest.map(m=>`<div class="card"><div class="row"><div class="av" style="background:#1B998B">${ini(nameOf(m.counterId))}</div><div class="m"><b>${escapeHtml(nameOf(m.counterId))}</b><small>${escapeHtml(m.label)}</small></div>${statusTag(m.status)}</div></div>`).join('') : `<div class="empty" style="color:var(--muted);font-size:13px;padding:14px">${t('meEmpty')}</div>`;
+  pendingMeetings=inc.length; renderBadges();
 }
 function meetAct(id,status){
   if(OAFAuth&&OAFAuth.live()&&OAFAuth.client()){ OAFAuth.client().from('meetings').update({status}).eq('id',id).then(({error})=>{ if(error){toast(error.message);return;} loadMeetings(); toast(status==='confirmed'?t('tMeetOk'):t('tMeetNo')); }); }
