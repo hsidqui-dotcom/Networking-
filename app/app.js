@@ -471,7 +471,7 @@ function renderPeople(){
   const slice=list.slice(0, peopleShown);
   let html = slice.map(p=>{
     const actions = p.guest
-      ? `<div style="font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;background:#f1f3f6;color:#7a8190;border-radius:20px;padding:3px 9px;font-weight:600">${lang==='fr'?'⏳ Pas encore inscrit·e':'⏳ Not on the app yet'}</span><span style="font-style:italic">${lang==='fr'?'networking dès sa connexion':'networking once they join'}</span></div>`
+      ? `<div style="font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;background:#f1f3f6;color:#7a8190;border-radius:20px;padding:3px 9px;font-weight:600">${lang==='fr'?'⏳ Pas encore connecté·e':'⏳ Not on the app yet'}</span><span style="font-style:italic">${lang==='fr'?'networking dès sa connexion':'networking once they join'}</span></div>`
       : `<div style="display:flex;gap:8px;margin-top:10px"><button class="btn solid" style="flex:1" onclick="doConnect('${p.id}',this)">${OAF.isConnected(p.id)?t('connected'):t('connect')}</button><button class="btn" onclick="openThread('${p.id}')" style="padding:11px 14px">💬</button><button class="btn" onclick="openPropose('${p.id}')" style="padding:11px 14px">📅</button></div>`;
     return `<div class="card"><div class="row">${avBox(p)}<div class="m"><b>${escapeHtml(p.name)}</b><small>${escapeHtml(p.role[lang])} · ${escapeHtml(p.country)}</small></div><div class="score" style="--p:${p.score}%"><span>${p.score}</span></div></div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">🎯 ${escapeHtml(p.why[lang])}</div>
