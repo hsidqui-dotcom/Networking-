@@ -639,10 +639,31 @@ function authSignOut(){
 
 /* ============ CHAT 1:1 ============ */
 function nameOf(id){ const a=OAF.attendees().find(x=>String(x.id)===String(id)); if(a) return a.name; return nameMap[id]||'—'; }
-function appendBubble(side,text,time){
+/* Séparateurs de jour dans le fil : « Aujourd'hui / Hier / vendredi 13 juin ».
+   Sans ça, l'historique n'affichait que l'heure (remontée utilisateur). */
+let lastBubbleDay = null;
+function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+function dayLabel(d){
+  const now=new Date(); const y=new Date(now); y.setDate(now.getDate()-1);
+  if(sameDay(d,now)) return lang==='fr'?"Aujourd'hui":'Today';
+  if(sameDay(d,y))   return lang==='fr'?'Hier':'Yesterday';
+  const opts={weekday:'long', day:'numeric', month:'long'};
+  if(d.getFullYear()!==now.getFullYear()) opts.year='numeric';
+  return d.toLocaleDateString(lang==='fr'?'fr-FR':'en-GB', opts);
+}
+function appendBubble(side,text,when){
   const th=$('#thread'); if(!th) return;
+  const d = when ? new Date(when) : new Date();
+  if(!lastBubbleDay || !sameDay(d,lastBubbleDay)){
+    const sep=document.createElement('div');
+    sep.textContent=dayLabel(d);
+    sep.setAttribute('style','text-align:center;margin:14px 0 6px;color:var(--muted);font-size:11.5px;font-weight:600;text-transform:capitalize');
+    th.appendChild(sep);
+    lastBubbleDay=d;
+  }
   const b=document.createElement('div'); b.className='bub '+side; b.textContent=text;
-  const s=document.createElement('small'); s.textContent=time||(new Date()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); b.appendChild(s);
+  const s=document.createElement('small'); s.textContent=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  s.title=d.toLocaleString(lang==='fr'?'fr-FR':'en-GB'); b.appendChild(s);
   th.appendChild(b); th.scrollTop=th.scrollHeight; $('#scroll').scrollTop=$('#scroll').scrollHeight;
 }
 function openThread(id){
@@ -653,12 +674,13 @@ function openThread(id){
   show('thread'); loadMessages(id);
 }
 function loadMessages(id){
+  lastBubbleDay=null; // on repart à zéro pour les séparateurs de jour
   if(!(OAFAuth&&OAFAuth.live()&&OAFAuth.client())){ $('#thread').innerHTML=`<div class="empty" style="color:var(--muted);font-size:13px">${lang==='fr'?'(démo) Tapez un message ci-dessous.':'(demo) Type a message below.'}</div>`; return; }
   const sb=OAFAuth.client(), me=OAFAuth.user();
   sb.from('messages').select('*').or(`and(sender.eq.${me.id},recipient.eq.${id}),and(sender.eq.${id},recipient.eq.${me.id})`).order('created_at',{ascending:true}).then(({data,error})=>{
     if(error){ $('#thread').innerHTML=`<div class="empty">${error.message}</div>`; return; }
-    $('#thread').innerHTML='';
-    (data||[]).forEach(m=>appendBubble(m.sender===me.id?'me':'them', m.body, new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})));
+    $('#thread').innerHTML=''; lastBubbleDay=null;
+    (data||[]).forEach(m=>appendBubble(m.sender===me.id?'me':'them', m.body, m.created_at));
     if(!data||!data.length) $('#thread').innerHTML=`<div class="empty" style="color:var(--muted);font-size:13px">${lang==='fr'?'Démarrez la conversation 👋':'Start the conversation 👋'}</div>`;
   });
 }
