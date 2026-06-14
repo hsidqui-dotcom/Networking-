@@ -135,6 +135,49 @@ function renderSettings(){
   set('evStart', isoToLocal(ce.starts)); set('evEnd', isoToLocal(ce.ends));
   adToggleAutoFields();
   const inf=ce.info||{}; set('infVenue',inf.venue); set('infAddress',inf.address); set('infHours',inf.hours); set('infWifi',inf.wifi); set('infContact',inf.contact); set('infEmail',inf.email); set('infEmergency',inf.emergency); set('infNotesFr',inf.notes&&inf.notes.fr); set('infNotesEn',inf.notes&&inf.notes.en);
+  renderAdmins();
+}
+/* ---- Équipe / Administrateurs (self-service, sécurisé par set_admin/list_admins) ---- */
+function adminErr(e){
+  const m=String((e&&e.message)||e||'');
+  if(/OAF_NOT_ADMIN/.test(m)) return lang==='fr'?'Réservé aux administrateurs.':'Admins only.';
+  if(/OAF_NO_USER/.test(m))   return lang==='fr'?"Aucun compte avec cet e-mail. La personne doit d'abord se connecter à l'app.":'No account with this email — they must sign in to the app first.';
+  if(/OAF_SELF/.test(m))      return lang==='fr'?'Vous ne pouvez pas retirer vos propres droits (demandez à un autre admin).':'You cannot remove your own rights (ask another admin).';
+  if(/OAF_NO_PROFILE/.test(m))return lang==='fr'?'Profil introuvable.':'Profile not found.';
+  return m;
+}
+async function renderAdmins(){
+  const box=$('#admList'); if(!box) return;
+  if(!L()){ box.innerHTML='<div class="desc">'+(lang==='fr'?'(démo) Disponible en mode réel.':'(demo) Available in live mode.')+'</div>'; return; }
+  try{
+    const {data,error}=await OAFAuth.client().rpc('list_admins'); if(error) throw error;
+    const me=OAFAuth.user(); const rows=data||[];
+    box.innerHTML = rows.length ? rows.map(r=>{
+      const isMe = me && String(r.id)===String(me.id);
+      return `<div class="li"><div class="av" style="width:38px;height:38px;background:#111">${ini(r.name||r.email)}</div>`
+        +`<div class="m"><b>${escapeHtml(r.name||r.email)}</b><small>${escapeHtml(r.email)}</small></div>`
+        +(isMe?`<span class="tag">${lang==='fr'?'vous':'you'}</span>`:`<button class="btn danger" type="button" onclick="adRevokeAdmin('${escapeHtml(r.email)}')">${lang==='fr'?'Retirer':'Remove'}</button>`)
+        +`</div>`;
+    }).join('') : '<div class="desc">'+(lang==='fr'?'Aucun admin.':'No admin.')+'</div>';
+  }catch(e){ box.innerHTML='<div class="desc">'+escapeHtml(adminErr(e))+'</div>'; }
+}
+async function adPromoteAdmin(){
+  if(!L()){ adToast(lang==='fr'?'(démo) Mode réel requis.':'(demo) Live mode required.'); return; }
+  const email=($('#admEmail').value||'').trim().toLowerCase();
+  if(!email){ adToast(lang==='fr'?'Saisis un e-mail.':'Enter an email.'); return; }
+  const btn=$('#admAddBtn'); if(btn) btn.disabled=true;
+  try{
+    const {error}=await OAFAuth.client().rpc('set_admin',{p_email:email,p_value:true}); if(error) throw error;
+    $('#admEmail').value=''; adToast(lang==='fr'?'Admin ajouté ✓':'Admin added ✓'); await renderAdmins();
+  }catch(e){ adToast(adminErr(e)); }
+  finally{ if(btn) btn.disabled=false; }
+}
+async function adRevokeAdmin(email){
+  if(!confirm(lang==='fr'?('Retirer les droits admin de '+email+' ?'):('Remove admin rights from '+email+'?'))) return;
+  try{
+    const {error}=await OAFAuth.client().rpc('set_admin',{p_email:email,p_value:false}); if(error) throw error;
+    adToast(lang==='fr'?'Droits retirés ✓':'Rights removed ✓'); await renderAdmins();
+  }catch(e){ adToast(adminErr(e)); }
 }
 /* datetime-local <-> ISO helpers (le navigateur travaille en heure locale) */
 function isoToLocal(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
