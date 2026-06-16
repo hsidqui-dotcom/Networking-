@@ -1,3 +1,6 @@
+-- Désactive la validation des corps de fonction (références en avant sur base neuve).
+set check_function_bodies = off;
+
 -- ============================================================================
 -- SCHÉMA STAGING (stress test) — OAF Connect
 -- À exécuter UNE fois dans le SQL Editor du projet Supabase 'oaf-staging'.
