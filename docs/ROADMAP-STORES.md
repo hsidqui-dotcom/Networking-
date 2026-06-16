@@ -16,10 +16,15 @@
 
 ## PHASE 0 — Prérequis à lancer MAINTENANT (le « long pole »)
 
+> **État au 16 juin 2026 :**
+> - ✅ **Apple ID entreprise créé** : `info@oneafricaforums.com` (compte développeur gratuit activé).
+> - ✅ **D-U-N-S obtenu** : **`353954140`** — ONE AFRICA FORUMS (nom légal), forme juridique **SARL**, Casablanca.
+> - ⏳ **Reste** : enrôlement Apple Developer Program **Organisation** (99 $/an) + compte **Google Play** — à faire **après l'événement**.
+
 | Élément | Détail | Coût | Délai |
 |---|---|---|---|
 | **Apple Developer Program — Organisation** | Au **nom de l'entreprise** (pas perso, pour l'image de marque). Nécessite un **numéro D-U-N-S**. | **99 $/an** | enrôlement quelques jours |
-| **Numéro D-U-N-S** | Identifiant entreprise (Dun & Bradstreet). À demander via le lien Apple. | **Gratuit** | **1 à 14 jours** ⚠️ |
+| **Numéro D-U-N-S** | Identifiant entreprise (Dun & Bradstreet). ✅ **DÉJÀ OBTENU : `353954140`** (ONE AFRICA FORUMS). | **Gratuit** | ✅ Fait |
 | **Google Play Console — Organisation** | Compte développeur entreprise + vérification d'identité (D-U-N-S aussi requis désormais). | **25 $ (unique)** | 1-3 jours |
 | **Politique de confidentialité (URL)** | Page hébergée obligatoire pour les deux stores. | gratuit | à rédiger |
 
